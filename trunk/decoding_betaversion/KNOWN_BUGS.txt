@@ -1,0 +1,17 @@
+OPEN BUGS
+
+B7: If input mask_index to decoding.m, then sz not defined.
+
+B6: decoding_generate_output, L28: set_ind not provided.
+
+B5: Using correlation (MVPA) with more than two trials per run generates an error. Need to correct the last line of MVPA and true labels or better make it possible
+to test MVPA trialwise, i.e. with more than one trial per run (the correlation will be calculated with all left out trials, possibly putting half in one and the
+other half in the other condition. Then again what happens with unbalanced test data (which is valid).
+
+
+RESOLVED BUGS
+B3: Spherical does not work with wrapping, because M.Z-values & .dz values do not fit to sz(3) z-size of image in get_ind().
+    Possible solutions: Either pass max(x,y,z) to get_ind() instead of sz(1-3), or change M.X/Y/Z & .dx/y/z in decoding_prepare_searchlight
+    TEST: Run decoding_tutorial_example_kai with and without wrap (check that spherical = 1) --> solved
+
+B4: method 'correlation' (mvpa.m) gives strange results (tried it with LOO-CV). -> SOLVED!

@@ -1,4 +1,4 @@
-% function [results, cfg, data] = decoding(cfg, data, mask_index)
+% function [results, cfg, passed_data] = decoding(cfg, passed_data)
 % 
 % Decoding Toolbox, Version: 2.0 beta, by Martin Hebart & Kai Goergen
 %
@@ -7,14 +7,20 @@
 % of running several different brain image decoding analyses (searchlight 
 % decoding, region of interest (ROI) decoding, and wholebrain decoding). 
 % Several commonly used methods are implemented, including classification, 
-% regression, and correlation. In addition, feature selection will be added
-% to version 1.1 beta.
+% regression, and correlation.
 % The toolbox has several subfunctions to which new methods can easily be 
 % appended for individual adjustments (see tutorial for details).
 %
 % To get started, type "help decoding_example" and run that function
 % to perform a standard decoding analysis (searchlight, ROI, or wholebrain) 
 % on your specified data.
+%
+% REMARK: We are currently working on implementing FEATURE SELECTION.
+% This is currently in an experimental stage, but does not work at the
+% moment. However, some lines already contain code that is required for 
+% that. So don't be confused by that, nor do expect that you can use
+% feature selection at the moment.
+%
 %
 % REQUIRED INPUT:
 %   cfg: Structure containing all necessary configuration information
@@ -46,8 +52,8 @@
 %           mask_index: contains the brain mask indices of all masks in
 %               case they are needed again.
 %   cfg: returns the configuration file that was used in the decoding.
-%   data: returns all brain imaging data that was used for decoding. Useful
-%       for passing it back to the decoding toolbox for further analyses.
+%   passed_data: all brain imaging data is necessary to pass to decoding.m 
+%        to perform another analyses using the same data.
 %   
 %
 % All other input is provided in decoding_defaults unless changed.
@@ -102,11 +108,41 @@
 %       doing cross-classification with different test data in each set).
 %       These could of course be called in different analyses, but it saves
 %       time to do them all together.
+%
+%
+% PASSING DATA (optional): 
+% If you pass passed_data, then these will be
+% taken instead of reading both from files. Some checks are done to
+% assure that the data fits to the filenames. 
+% 
+%   passed_data: struct with all data that is necessary to do the decodings
+%                as provided by decoding_load_data. 
+%       Required fields:
+%       .data: nSamples x nVoxels matrix of data that is used for decoding.
+%              This is not all data from the data files, but only the data
+%              that corresponds to the voxels that are selected in
+%              .mask_index.
+%       .mask_index: indices of those voxels that were selected by the
+%                    mask minus those that are nan in the input data.
+%       .files: Contains file information as in cfg.files, especially
+%               filenames of datafiles (.name) and mask(s) (.mask) as cell
+%               of strings
+%       .hdr: a header from either a mask or a data file (if
+%             cfg.files.mask{1} == 'all voxels'). '' is ok if no hdr is
+%             needed for writing results.
+%       .dim: 1x3 vector containing the dimension of original
+%             dimensionality of the data.
+%       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
+%                   calculated)
+
 
 % TODO: add check to basic checks that chosen software can perform
-% classification, regression or correlation
+%   classification, regression or correlation (see also next)
+% TODO: better: check that current software can deliver the requested
+%   output
 
-function [results, cfg, data, mask_index] = decoding(cfg, data, mask_index)
+
+function [results, cfg, passed_data] = decoding(cfg, passed_data)
 
 %% Prepare decoding analysis 
 
@@ -120,29 +156,14 @@ global verbose % MH: don't worry, Kai, this is the only case where global is bet
 verbose = cfg.verbose;
 
 % Display version
-ver = [mfilename ', Martin Hebart & Kai Goergen, v2012/03/01 2.00 beta'];
+ver = [mfilename ', Martin Hebart & Kai Goergen, v2012/03/12 2.01 beta'];
 cfg.info.ver = ver;
 dispv(1,ver)
 
 % Basic checks
 [cfg, n_files, n_steps] = basic_checks(cfg,nargout);
 
-% Get an index to all in-mask voxels
-if ~exist('mask_index','var') % if mask_index was not passed
-    % Load the brain or ROI mask(s)
-    [mask_vol, mask_hdr, sz] = load_mask(cfg);
-    cfg.sz = sz;
-    mask_index = find(mask_vol);
-elseif ~issorted(mask_index)
-    mask_index = sort(mask_index); % it is crucial that mask_index is sorted!
-    warning('DECODING:maskIndex','mask_index must be sorted. Sorting!');
-end
-
-[x,y,z] = ind2sub(sz,mask_index); % needed for read_voxels
-
-% Prepare searchlight template (output will be empty for other methods)
-[cfg,sl_template] = decoding_prepare_searchlight(cfg,mask_hdr);
-
+%% open file to write all filenames that we load
 if cfg.results.write == 1
     % Open filename to save details for each decoding step
     inputfilenames_fname = [cfg.results.filestart '_' cfg.results.output{1} '_filedetails.txt'];
@@ -153,63 +174,22 @@ else
     inputfilenames_fid = '';
 end
 
-%% Load data
+%% Load masked data
 
-% If data was passed, use this data
-if exist('data', 'var') && (~isempty(data) || ~strcmp(data,'') )
-    % check data consistency
-    if length(cfg.files.name) ~= size(data, 1)
-        error('length(cfg.files.name) ~= size(data, 1)')
-    end
-    warning('DECODING:passedData','Using passed data, assuming that this data corresponds to content of files')
-    
-% If data was not passed, initialize data    
+if ~exist('passed_data', 'var')
+    % load data
+    [passed_data, cfg] = decoding_load_data(cfg);
 else
-    
-    dispv(1,'Loading data from files')
-    if ischar(cfg.files.name) % to deal with different types of inputfiles.name)
-        cfg.files.name = num2cell(cfg.files.name,2);
-    end
-    n_files = length(cfg.files.name);
-    data = zeros(n_files, length(mask_index)); % mask_index is number of voxel indices
-    
-    for file_ind = 1:n_files
-        
-        fname = cfg.files.name{file_ind};
-        
-        dispv(2,'  Loading file %i: %s', file_ind, fname)
-        hdr = read_header(cfg.software,fname); % get header of image
-        
-        % check dimension
-        if exist('sz','var')
-            if ~isequal(hdr.dim(1:3), sz)
-               error('Dimension of image in file %s \n is different from dimension of the mask file(s), please check!', fname)
-            end
-        else
-            sz = hdr.dim(1:3);
-            warning('DECODING:maskPassed',...
-                ['Using passed mask_index. Not possible to check if \n',...
-                'dimension of image files applies to mask_index or if NaNs\n',...
-                'have already been removed.'])
-        end
-        
-        data(file_ind, :) = read_voxels(cfg.software,hdr,[x y z]); % get in-mask voxels of image
-        
-    end
+    % check that passed_data fits to cfg, otherwise load data from files
+    [passed_data, cfg] = decoding_load_data(cfg, passed_data);
 end
+    
+% unpack all fields from passed_data to shorten names in this function
+data = passed_data.data;
+mask_index = passed_data.mask_index;
+sz = passed_data.dim;
 
-% Check if data contains any NaNs (may happen e.g. with ROI masks generated
-% independently and sampling occurs from outside of the decoding volume).
-nan_index = isnan(sum(data,1)); % find voxels where any image contains NaN
-if sum(nan_index)
-    data = data(:,~nan_index); % reduce data
-    lin_index_out = mask_index(nan_index);
-    mask_index = setdiff(mask_index,lin_index_out); % reduce indices
-    warning('DECODING:nansPresent',['Data contains %i NaNs. \n ',...
-        'There might be problems with the definition of data files or ',...
-        'mask file. \n Parts of masks are non-overlapping with data. NaNs are masked...'],sum(nan_index))
-end
-results.mask_index = mask_index;
+%% Prepare the decoding
 
 % Scale all data in advance if requested
 if strcmpi(cfg.scale.estimation,'all')
@@ -224,22 +204,24 @@ n_decodings = get_n_decodings(cfg,mask_index);
 n_outputs = length(cfg.results.output);
 n_sets = length(unique(cfg.design.set));
 n_cond = sum(unique(cfg.design.label) ~= 0);
+results = {};
+
+% Prepare searchlight template (if needed, sl_template will be empty for other methods)
+[cfg,sl_template] = decoding_prepare_searchlight(cfg);
 
 for i_output = 1:n_outputs
-    
+    outname = cfg.results.output{i_output};
     % Set chancelevel needed for some decodings (if it is not needed, it won't disturb anyway)
-    results(i_output).chancelevel = 100/n_cond; %#ok<AGROW>
+    results.(outname).chancelevel = 100/n_cond;
     % Preallocation
-    results(i_output).output = zeros(n_decodings,1); %#ok
+    results.(outname).output = zeros(n_decodings,1);
     
     if cfg.results.setwise
         for i_set = 1:n_sets
-            results(i_output).set(i_set).output = zeros(n_decodings,1); %#ok
+            results.(outname).set(i_set).output = zeros(n_decodings,1); %#ok
         end
     end
-    
 end
-
 
 
 %% PERFORM Decoding Analysis
@@ -272,9 +254,12 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
     
     previous_itrain = []; % init
     
+    % TODO: Get a better order of the decodings steps (i.e. sort them so
+    % that the same training is used in neighbouring columns)
+    
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
-
+        
         % Get indices for training
         itrain = find(cfg.design.train(:, i_step) > 0);
         % Get indices for testing
@@ -303,6 +288,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
         
         % TODO: feature selection should give vector of selected voxels as
         % output, then vectors_test can be adjusted later on 
+        % TODO: This is in an experimental stage and won't work at the
+        % moment
         if ~strcmpi(cfg.feature_selection.method,'none')
             if ~skip_training
                 % pack
@@ -379,13 +366,12 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
-    results = decoding_generate_output(cfg,results,decoding_out,i_decoding);
+    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,model);
     
 end % End decoding iterations (e.g. voxel)
 
 % done
 dispv(1,'All %s steps finished successfully!',cfg.analysis)
-
 
 %% Save and write results
 
@@ -512,8 +498,15 @@ if ischar(cfg.results.output)
     cfg.results.output = num2cell(cfg.results.output,2);
 end
 
-if ischar(cfg.files.mask)
-    cfg.files.mask = num2cell(cfg.files.mask,2);
+% check if masks exist, and maybe correct it. Otherwise set it to "auto"
+
+if isfield(cfg.files, 'mask')
+    if ischar(cfg.files.mask)
+        cfg.files.mask = num2cell(cfg.files.mask,2);
+    end
+else % mask does not exist, set it to auto
+    dispv(1, 'No mask file detected, using all voxels')
+    cfg.files.mask = {'all voxels'}; % will generate a mask later (using all voxels)
 end
 
 results_out_flag = output_arguments >= 1; % flag showing whether the results are returned from the function

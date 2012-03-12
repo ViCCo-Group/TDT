@@ -23,7 +23,8 @@ labelname1 =
 labelname2 = 
 
 % Set additional parameters manually if you want (see decoding.m or
-% decoding_defaults.m)
+% decoding_defaults.m). Below some example parameters that you might want 
+% to use:
 
 % cfg.searchlight.unit = 'mm';
 % cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12mm.

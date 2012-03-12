@@ -7,10 +7,10 @@
 %% First, set the defaults and define the analysis you want to perform
 
 % add path to this toolbox
-addpath('/home/kai/projects/decoding_tool/Code/decoding_betaversion')
+addpath('/Users/kai/Documents/!Projekte/Decoding_Toolbox/trunk/decoding_betaversion')
 
 % add path to SPM
-addpath('/data01/kai/spm/spm8')
+addpath('/Users/kai/Documents/!Studium/Software/matlab libraries/spm8')
 
 % Get the decoding defaults
 % You have to do this for all decodings unless you enter all possible
@@ -22,7 +22,7 @@ cfg = decoding_defaults;
  % it to be on the safe side
 cfg.analysis = 'searchlight';
 
-cfg.results.overwrite = 0;
+cfg.results.overwrite = 1;
 cfg.testmode = 1;
 warning('RUNNING IN TEST MODE')
 keyboard
@@ -30,11 +30,7 @@ keyboard
 cfg.searchlight.wrap_control = 1; % to check that wrapping works
 
 % Specify where the results should be saved
-if cfg.searchlight.wrap_control
-    cfg.results.dir = ['/analysis/kai/decoding_results_test_wrapcontrol'];
-else
-    cfg.results.dir = ['/analysis/kai/decoding_results_test_nowrap'];
-end
+cfg.results.dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results'];
 
 % If you now look at the cfg structure, you will see a lot of entries that have
 % been set automatically. You can change each of these manually. They are
@@ -54,15 +50,16 @@ end
 % using only one model for all runs (i.e. have only one SPM.mat file), use
 % the following:
 
-% this directory represents the filepath to your SPM.mat and all related betas:
-beta_dir = ['/analysis/kai/masterthesis/sub02/spm8/level1/onesided_lr_presses_HRF_minus1.5'];
+% this directory represents the filepath to your SPM.mat and all related
+beta_dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/onesided_lr_presses_HRF_minus1.5'];
 % the following label names are the names that you gave your regressors of
 % interest in the SPM analysis (e.g. 'button left' and 'button right')
 labelname1 = ['c1']; % e.g. 'button left';
 labelname2 = ['c2'];
 
 % Also get the brain mask (e.g. that created by SPM: mask.img):
-cfg.files.mask = ['/analysis/kai/masterthesis/sub02/spm8/level1/onesided_lr_presses_HRF_minus1.5/mask.img'];
+cfg.files.mask = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/onesided_lr_presses_HRF_minus1.5/mask.img'];
+
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat
@@ -70,7 +67,7 @@ regressor_names = design_from_spm(beta_dir);
 
 % Now with the names of the labels, we can extract the filenames and the 
 % run numbers of each label. The labels will be -1 and 1.
-cfg.files = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 
 % === Manual Creation ===
 % Otherwise, you have to load all images and labels you want to use separately, e.g.
@@ -139,4 +136,4 @@ cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0'; % (l
 %% Fifth, run the decoding analysis
 
 % Fingers crossed it will not generate any error messages ;)
-results = decoding(cfg);
+[results, cfg] = decoding(cfg);

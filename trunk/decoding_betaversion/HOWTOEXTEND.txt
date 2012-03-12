@@ -52,19 +52,29 @@ cfg.decoding.train.classification.model_parameters = {param1, param2};
 
 We provide a number of classifier outputs that can be used to evaluate the 
 performance of the classifier. All methods have in common that they 
-evaluate the predicted and the true labels Standard methods are 'accuracy' for 
-classification and 'zcorr' (z-transformed correlation) for regression. 
+evaluate the predicted vs. the true labels. Standard methods are 'accuracy' 
+for classification and 'zcorr' (z-transformed correlation) for regression. 
 We also recommend trying out 'sensitivity' and 'specificity' which provide 
-separate performance estimates for each of both input labels. Check out 
-the function "decoding_transform_results.m" for more output methods.
+separate performance estimates for each of both input labels, or 'AUC'
+which provides you with the Area Under the ROC-Curve. Check out the 
+function "decoding_transform_results.m" for more output methods.
 
 If you want to use other methods than the ones provided, the best way is 
-to create a separate function in the folder "transform_results". You can 
-also add it directly to the function "decoding_transform_results", but 
-the output would be deleted with every update of the toolbox.
+to create a separate function in the folder "transform_results". In 
+principle can you can also add it directly to the function 
+"decoding_transform_results", but in this case your function will might be 
+deleted if you update the toolbox and it is harder to distribute it to 
+others.
 
 The format of this function is as follows:
-  function output = myfunction(decoding_out,chancelevel);
+  function output = transres_MYFUNCTION(decoding_out,chancelevel)
+where you should replace MYFUNCTION by your function name. To call it, use
+MYFUNCTION in cfg.results.output.
+E.g., if your transformation should be called 'superstar', call your method
+transres_superstar.m and use cfg.results.output = 'superstar' to use it.
+In this case, your results will be saved to res_superstar.* in the results
+folder and returned in results.superstar from decoding.m.
+
 "decoding_out" is a 1 x n_steps structure with the fields 
 "predicted_labels" and "true_labels", where n_steps is the number of 
 decoding steps (e.g. cross-validation runs), and where the values are 
@@ -93,3 +103,5 @@ out the functions of "spm8".
 =============================================
 4. How to use other feature selection methods
 =============================================
+
+In preparation

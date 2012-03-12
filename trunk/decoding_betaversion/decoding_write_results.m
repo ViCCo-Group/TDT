@@ -36,15 +36,15 @@ if strcmpi(cfg.analysis,'searchlight')
     
     for i_output = 1:n_outputs
         
-        %     results(i_output).output = zeros(n_decodings,1); %#ok
-        %     results(i_output).set(i_set).output = zeros(n_decodings,1); %#ok
+        %     results.(outputname).output = zeros(n_decodings,1); %#ok
+        %     results.(outputname).set(i_set).output = zeros(n_decodings,1); %#ok
         
         outputname = cfg.results.output{i_output};
         
         %%%%%%%%%%%%%%%%%%%%%
         % WRITE AS MAT-FILE %
         %%%%%%%%%%%%%%%%%%%%%
-        if iscell(results(i_output).output) || fallback
+        if iscell(results.(outputname).output) || fallback
             
             fdir = cfg.results.dir;
             fname = fullfile(fdir,sprintf('%s.mat',cfg.results.resultsname{i_output}));
@@ -58,7 +58,7 @@ if strcmpi(cfg.analysis,'searchlight')
                     [old_results_path, old_results_file, dummy_ending] = fileparts(fname);
                     old_fname = fullfile(old_results_path, old_results_file);
                     backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
+                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
                     
                     fext = '.mat';
                     source = [old_fname, fext];
@@ -70,23 +70,23 @@ if strcmpi(cfg.analysis,'searchlight')
             
             dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
             
-            output = results(i_output).output; %#ok<NASGU>
-            resultdim = cfg.sz; %#ok<NASGU>
+            output = results.(outputname).output; %#ok<NASGU>
+            resultdim = cfg.datainfo.dim; %#ok<NASGU>
             
             save(fname,'output','mask_index','resultdim')
             
-            results(i_output).(outputname).fname = fname;
+            results.(outputname).(outputname).fname = fname;
             
             % Save set results (should each set be saved separately?)
             if cfg.results.setwise
                 for i_set = 1:n_sets
                     fname = fullfile(fdir,sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, i_set));
                     dispv(2,'Saving results for set %i to %s', i_set, fname)
-                    output = results(i_output).set(i_set).output; %#ok<NASGU>
+                    output = results.(outputname).set(i_set).output; %#ok<NASGU>
                     
                     save(fname,'output','mask_index','resultdim')
 
-                    results(i_output).set.fname{i_set} = fname;
+                    results.(outputname).set.fname{i_set} = fname;
                 end
             end
             
@@ -105,7 +105,7 @@ if strcmpi(cfg.analysis,'searchlight')
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
             resultsvol = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
-            resultsvol(mask_index) = results(i_output).output;
+            resultsvol(mask_index) = results.(outputname).output;
             
             if exist(resultsvol_hdr.fname,'file')
                 if cfg.results.overwrite
@@ -131,7 +131,7 @@ if strcmpi(cfg.analysis,'searchlight')
             
             write_image(cfg.software,resultsvol_hdr,resultsvol);
                         
-            results(i_output).(outputname).fname = resultsvol_hdr.fname;
+            results.(outputname).(outputname).fname = resultsvol_hdr.fname;
             
             % Save set results (should each set be saved separately?)
             if cfg.results.setwise
@@ -140,10 +140,10 @@ if strcmpi(cfg.analysis,'searchlight')
                     resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
                     resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
                     resultsvol_set = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
-                    resultsvol_set(mask_index) = results(i_output).set(i_set).output;
+                    resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
                     dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
                     write_image(cfg.software,resultsvol_hdr,resultsvol_set);
-                    results(i_output).set.fname{i_set} = resultsvol_hdr.fname;
+                    results.(outputname).set.fname{i_set} = resultsvol_hdr.fname;
                 end
             end
         end
@@ -155,26 +155,26 @@ elseif strcmpi(cfg.analysis,'ROI') || strcmpi(cfg.analysis,'wholebrain')
 
         % TODO: add input roinames to cfg to be able to apply names later.
 
-        outputname = cfg.results.output{i_output};
+        outname = cfg.results.output{i_output};
 
         % Save overall results and save to returning variable
         fname = sprintf('%s.mat',cfg.results.resultsname{i_output});
         resultsmat_fname = fullfile(cfg.results.dir,fname);
-        resultsmat = results(i_output).output; %#ok<NASGU>
+        resultsmat = results.(outname).output; %#ok<NASGU>
         dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsmat_fname)
         save(resultsmat_fname,'resultsmat')
 
-        results(i_output).(outputname).fname = resultsmat_fname;
+        results.(outname).fname = resultsmat_fname;
 
         % Save set results (should each set be saved separately?)
         if cfg.results.setwise
             for i_set = 1:n_sets
                 fname = sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, i_set);
                 resultsmat_fname = fullfile(cfg.results.dir,fname);
-                resultsmat_set = results(i_output).set(i_set).output; %#ok<NASGU>
+                resultsmat_set = results.(outname).set(i_set).output; %#ok<NASGU>
                 dispv(2,'Saving results for set %i to %s', i_set, resultsmat_fname)
                 save(resultsmat_fname,'resultsmat_set');
-                results(i_output).set.fname{i_set} = resultsmat_fname;
+                results.(outname).set.fname{i_set} = resultsmat_fname;
             end
         end
 

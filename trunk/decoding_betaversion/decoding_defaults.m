@@ -1,6 +1,15 @@
 % function cfg = decoding_defaults(cfg)
 %
-% Function where all defaults are declared and paths are set for decoding toolbox.
+% Function where all defaults are declared and paths are set for decoding
+% toolbox.
+%
+% Usage:
+%  cfg = decoding_defaults
+%       Get all decoding defaults (OVERWRITES cfg)
+%
+%  cfg = decoding_defaults(cfg)
+%       Puts default values to all fields that are not defined in the
+%       passed cfg (UPDATES cfg).
 
 % Martin H. 2011/03
 
@@ -66,10 +75,10 @@ defaults.decoding.test.regression.model_parameters = '';
 % that mm is assumed together with the number of voxels in the searchlight
 
 % Results specific defaults
-defaults.results.output = {'accuracy'};
+defaults.results.output = {'accuracyMinusChance'};
 defaults.results.write = 1; % write results
 defaults.results.overwrite = 0; % don't overwrite existing results
-defaults.results.setwise = 1; % return results of each decoding set separately
+defaults.results.setwise = 0; % return results of each decoding set separately
 defaults.results.filestart = 'res';
 defaults.results.dir = fullfile(fpath,'decoding_results');
 

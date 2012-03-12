@@ -4,7 +4,9 @@
 % decoding from a SPM design matrix.
 %
 % INPUT:
-% spm_folder: The folder where the design matrix is stored as SPM.mat .
+% spm_folder: The folder where the design matrix is stored as SPM.mat.
+%   Alternatively, the matrix can also be stored in a *_SPM.mat file (e.g.
+%   to reduce the filesize when data is passed on to someone else).
 %
 % OUTPUT:
 % regressor_names: a 2-by-n cell matrix where the first row refers to the
@@ -14,7 +16,12 @@
 % will be extended by a string ' bin 1' to ' bin m' where m refers to the 
 % number of basis functions.
 %
-% by Martin Hebart, 2011/03/01 
+% by Martin Hebart & Kai G?rgen, 2012/03/01 
+
+% History:
+% 2012/03/09, Kai
+%   Also *_SPM.mat files will be used (if no SPM.mat is found)
+% 2012/03/01, Martin: v1
 
 function regressor_names = design_from_spm(spm_folder)
 
@@ -22,7 +29,16 @@ spm_file = fullfile(spm_folder,'SPM.mat');
 regressor_file = fullfile(spm_folder,'regressor_names.mat');
 
 if ~exist(spm_file,'file')
-    error('No SPM.mat could be found in %s',spm_folder)
+    % check if *_SPM.mat exists, if so, take this
+    otherSPM = dir(fullfile(spm_folder, '*_SPM.mat'));
+    if length(otherSPM) == 1
+        dispv(1, 'design_from_spm: Could not find SPM.mat in %s, but found %s instead.',spm_folder,otherSPM.name);
+        spm_file = fullfile(spm_folder, otherSPM.name);
+    elseif length(otherSPM) > 1
+        error('Could not find a SPM.mat in %s, but multiple other *_SPM.mat files. Please make sure that only one such file exists.',spm_folder);
+    else    
+        error('No SPM.mat or *_SPM.mat could be found in %s',spm_folder);
+    end
 end
 
 % Check for existence of regressor_names
@@ -39,7 +55,7 @@ if exist(regressor_file,'file')
 end
 
 
-load(fullfile(spm_folder,'SPM.mat'))
+load(spm_file)
 
 regressors = SPM.xX.name;
 

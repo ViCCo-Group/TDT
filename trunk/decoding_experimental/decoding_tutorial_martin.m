@@ -3,23 +3,39 @@
 %
 % Every decoding analysis needs a cfg structure as input. This structure 
 % contains all information necessary to perform a decoding analysis.
+%
+% Remark: This script only presents some of the available option.
+% For a full list, see DECODING.m.
 
 %% First, set the defaults and define the analysis you want to perform
 
-% add path to this toolbox
+% Add path to this toolbox
 addpath(genpath(pwd))
 
-% If you want to try it with only one decoding iteration first, set testmode to 1
-cfg.testmode = 0;
- % the standard decoding method is searchlight, but we should still enter 
- % it to be on the safe side
+% Init the cfg to avoid strange effects if a cfg is still in the workspace
+cfg = {};
+
+% If you want to try it with only one decoding iteration first, set 
+% cfg.testmode to 1
+cfg.testmode = 1;
+% Just to let you know your running in testmode
+if cfg.testmode && ~strcmpi('y', input('Do you really want to run the testmode (y/n): ', 's'))
+    error('Aborting')
+end
+
+
+% Choose the decoding method
+% The standard decoding method is searchlight, but we should still enter 
+% it to be on the safe side
 cfg.analysis = 'searchlight';
 
 % Add your software to access brain images, e.g. SPM8
 cfg.software = 'spm8';
+% If the path to this software is not already added, please add it now
+% addpath([PATH TO ACCESS SOFTWARE (e.g. SPM)]
 
 % Specify where the results should be saved
-cfg.results.dir = 'd:\temp\output10\'; 
+cfg.results.dir = '/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results'; 
 
 % If you now look at the cfg structure, you will see a lot of entries that have
 % been set automatically. You can change each of these manually. They are
@@ -40,14 +56,14 @@ cfg.results.dir = 'd:\temp\output10\';
 % the following:
 
 % this directory represents the filepath to your SPM.mat and all related betas:
-beta_dir = 'D:\temp\buttonpresses';
+beta_dir = '/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/tutorial_files';
 % the following label names are the names that you gave your regressors of
 % interest in the SPM analysis (e.g. 'button left' and 'button right')
 labelname1 = 'Press left'; % e.g. 'button left';
 labelname2 = 'Press right';
 
 % Also get the brain mask (e.g. that created by SPM: mask.img):
-cfg.files.mask = {'D:\temp\buttonpresses\mask.img'};
+cfg.files.mask = {'/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/tutorial_files/mask.img'};
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat
@@ -116,16 +132,21 @@ cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12mm.
 cfg.searchlight.spherical = 0;
 
 % Other parameters of interest:
-cfg.verbose = 1; % you want all information to be printed on screen
+cfg.verbose = 2; % you want all information to be printed on screen
 % parameters for libsvm (linear SV classification, cost = 1, no screen output)
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
 
 cfg.scale.method = 'none';
 cfg.scale.estimation = 'none';
 
-cfg.results.overwrite = 1;
+cfg.results.overwrite = 1; % 1: automatically overwrites the results, 0: error, if results exist
 cfg.decoding.method = 'classification';
-cfg.results.output = {'accuracy'};
+cfg.results.output = {'accuracy'}; % IMPORTANT: 'accuracy' does not return 
+                    % the real accuracy values, but accuracy - chancelevel.
+                    % E.g., if you have 2 classes, chancelevel would be .5,
+                    % and thus a accuarcy of .5 would be output as 0.
+                    % This makes it easier to use SPM for statistical
+                    % tests, because SPM tests for deviation from 0.
 
 %% Fifth, run the decoding analysis
 

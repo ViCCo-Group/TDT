@@ -6,20 +6,23 @@
 % values that you don't set are automatically assigned using the function
 % 'decoding_defaults' (for all possible parameters, see decoding.m and
 % decoding_defaults.m).
+%
 % If you want to know the defaults now, enter:
-% cfg = decoding_defaults;
+%   cfg = decoding_defaults;
 % and now look at the cfg structure, you will see a lot of entries that have
 % been set automatically. You can change each of these manually. They are
-% all explained in the functions decoding and decoding_defaults.
+% all explained in the functions decoding.m and decoding_defaults.m.
 
 %% First, set the defaults and define the analysis you want to perform
 
-% add path to this toolbox (or remove if this function is in same path as
-% toolbox)
+% Add path to this toolbox
+% If this function is in same path as the toolbox, simply comment the line
+% (then the path will be set automatically).
 addpath([$ADD PATH AS STRING$])
 
-% the standard decoding method is searchlight, but we should still enter 
-% it to be on the safe side
+% Enter which analysis method you like
+% The standard decoding method is searchlight, but we should still enter 
+% it to be on the safe side.
 cfg.analysis = 'searchlight';
 
 % Specify where the results should be saved
@@ -39,46 +42,52 @@ cfg.results.dir = [$ADD PATH AS STRING$];
 % === Automatic Creation === 
 % a) If you generated all parameter estimates (beta images) in SPM and were 
 % using only one model for all runs (i.e. have only one SPM.mat file), use
-% the following:
+% the following block.
 
-% this directory represents the filepath to your SPM.mat and all related betas:
+% Specify the directory to your SPM.mat and all related beta images:
 beta_dir = [$ADD PATH AS STRING$];
-% the following label names are the names that you gave your regressors of
-% interest in the SPM analysis (e.g. 'button left' and 'button right')
-% case sensitive!
+% Specify the label names that you gave your regressors of interest in the 
+% SPM analysis (e.g. 'button left' and 'button right').
+% Case sensitive!
 labelname1 = [$NAME OF LABEL1 AS STRING$]; % e.g. 'button left';
 labelname2 = [$NAME OF LABEL2 AS STRING$];
 
-% Also get the brain mask(s) (e.g. that created by SPM: mask.img, or your ROI masks as cell or string matrices):
+% Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
+% Alternatively, you can specify (multiple) ROI masks as a cell or string 
+% matrix).
 cfg.files.mask = [$ADD PATH AS STRING$];
 
 % The following function extracts all beta names and corresponding run
-% numbers from the SPM.mat (and adds 'bin 1' to 'bin m' for FIR designs)
+% numbers from the SPM.mat (and adds 'bin 1' to 'bin m', if a FIR design 
+% was used)
 regressor_names = design_from_spm(beta_dir);
 
 % Now with the names of the labels, we can extract the filenames and the 
 % run numbers of each label. The labels will be -1 and 1.
 % Important: You have to make sure to get the label names correct and that
-% they have been uniquely assigned, so please check them in the regressor_names.
+% they have been uniquely assigned, so please check them in regressor_names
 cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 %
-% For cross classification it would look something like this:
-% cfg = decoding_prepare_design(cfg,{labelname1classA labelname2classA labelname1classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
+% Other examples:
+% For a cross classification, it would look something like this:
+% cfg = decoding_prepare_design(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
 %
-% And for SVR and a linear relationship like this:
+% Or for SVR with a linear relationship like this:
 % cfg = decoding_prepare_design(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
 
 % === Manual Creation ===
-% Otherwise, you have to load all images and labels you want to use separately, e.g.
-% with spm_select. This is not part of this example, but you should end up
-% with the following fields:
-% cfg.files.name: a 1xn cell array of file names
-% cfg.files.step: a 1xn vector of run numbers
-% cfg.files.label: a 1xn vector of labels (you can choose any two numbers)
+% Alternatively, you can also manually prepare the files field.
+% For this, you have to load all images and labels you want to use 
+% separately, e.g. with spm_select. This is not part of this example, but 
+% if you do it later, you should end up with the following fields:
+%   cfg.files.name: a 1xn cell array of file names
+%   cfg.files.step: a 1xn vector of run numbers
+%   cfg.files.label: a 1xn vector of labels (for decoding, you can choose 
+%       any two numbers as class labels)
 
 %% Third, create your design for the decoding analysis
 
-% In a design, there are several matrices, one for training, one for test
+% In a design, there are several matrices, one for training, one for test,
 % and one for the labels that are used (there is also a set vector which we
 % don't need right now). In each matrix, a column represents one decoding 
 % step (e.g. cross-validation run) while a row represents one sample (i.e.
@@ -104,21 +113,28 @@ cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names
 % Again, a design can be created automatically (with a design function) or
 % manually. If you use a design more often, then it makes sense to create
 % your own design function.
+%
+% If you are a bit confused what the three matrices (train, test & label)
+% mean, have a look at them in cfg.design after you executed the next step.
+% This should make it easier to understand.
 
 % === Automatic Creation ===
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg);
 
 % === Automatic Creation - alternative ===
-% Alternatively, you can create the design in the function, by specifying
-% the following parameter:
+% Alternatively, you can create the design during runtim of the decoding 
+% function, by specifying the following parameter:
 % cfg.design.function = 'make_design_cv';
-% This creates the design online.
+% For the current example, this is not helpful, because you can already
+% create the design now. However, you might run into cases in which you
+% can't create the design at this stage (e.g. if your design depends on the
+% outcome of some previous runs, and then this function will become handy.
 
 % === Manual Creation ===
 % After having explained the structure of the design file above, it should
 % be easy to create the structure yourself. You can then check it by visual
-% inspection. Dependences between training and test set will be checked
+% inspection. Dependencies between training and test set will be checked
 % automatically in the main function.
 
 %% Fourth, set additional parameters manually
@@ -133,7 +149,11 @@ cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12mm.
 cfg.searchlight.spherical = 0;
 
 % Other parameters of interest:
-cfg.verbose = 1; % you want the most important information to be printed on screen
+% The verbose level allows you to determine how much output you want to see
+% on the console while the program is running (0: no output, 1: normal 
+% output, 2: high output).
+cfg.verbose = 1;
+
 % parameters for libsvm (linear SV classification, cost = 1, no screen output)
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
 

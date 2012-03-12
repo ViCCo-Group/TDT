@@ -1,13 +1,59 @@
-function output = decoding_transform_results(method,decoding_out,chancelevel)
+% function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
+%
+% This function caculates a lot of different result measures defined by
+% "method":
+%
+% accuracy: decoding accuracy
+% accuracy_minus_chance: decoding accuracy - chance level (useful for SPM 2nd
+%   level)
+% sensitivity, specificity
+% dprime
+% loglikelihood
+% AUC: Area under the ROC (Receiver Operator Characteristics) Curve
+% AUC_minus_chance: like AUC, but - chance level(useful for SPM 2nd level)
+% corr: Correlation
+% zcorr: z-transformed correlation
+%
+% In addition, the function also allows adding new result transformation functions by 
+% calling
+%
+%   output = transres_METHOD(decoding_out,chancelevel);
+%
+% where METHOD will be replaced by the provided method name.
+% E.g., if you want to write your own result transformation function
+% "yourmethod", the method shall be named "transres_yourmethod", take
+% decoding_out and chancelevel as input, and provide your desired output
+% measure as output.
+%
+% IN
+%   method: desired method name as string (s. above)
+%   decoding_out: struct with result from last decoding step
+%   cfg: the standard decoding cfg struct that was used for the last
+%        decoding
+%   model: the model that was used for the last decoding
+%
+% OUT
+%   output: can be either a single number or a struct ({}) that can contain
+%       any type of data. For nomal application, output contains the fields
+%           output.predicted_labels
+%           output.true_labels
+%       which are both 1 x n_step double vectors containing the predicted
+%       and the true labels, so that these can be compared. However, in
+%       principle output contains whatever the decoding method puts out
+%       (e.g. if you write your own method).
 
-% TODO: split this function up to ease the process of adding new functions
 
-if strcmpi(method, 'accuracy')
+function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
+
+if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
     output = 100 * mean(predicted_labels == true_labels);
-    output = output - chancelevel; % subtract chancelevel from all output entries
+    
+    if strcmpi(method, 'accuracy_minus_chance')
+        output = output - chancelevel; % subtract chancelevel from all output entries
+    end
     
 elseif strcmpi(method, 'sensitivity') % where the first label is correct
     predicted_labels =  vertcat(decoding_out.predicted_labels);
@@ -45,13 +91,15 @@ elseif strcmpi(method, 'loglikelihood')
     
     [dprime,output] = dprimestats(true_labels,predicted_labels);
     
-elseif strcmpi(method, 'AUC')
+elseif strcmpi(method, 'AUC') ||Êstrcmpi(method, 'AUC_minus_chance')
     decision_values = vertcat(decoding_out.decision_values);
     true_labels = vertcat(decoding_out.true_labels);
     
     labels = unique(true_labels);
     output = AUCstats(decision_values,true_labels,labels,0);
-    output = 100*output - chancelevel; % center around 0 and express in percent
+    if strcmpi(method, 'AUC_minus_chance')
+        output = 100*output - chancelevel; % center around 0 and express in percent
+    end
     
 elseif strcmpi(method, 'corr')
        
@@ -73,10 +121,10 @@ elseif strcmpi(method, 'zcorr')
     
 else % all other methods
     
-    fhandle = str2func(method);
-    output = feval(fhandle,decoding_out,chancelevel);
+    fhandle = str2func(['transres_' method]);
+    output = feval(fhandle,decoding_out,chancelevel,cfg,model);
     % e.g. if method = 'yourmethod', this calls:
-    %  output = yourmethod(decoding_out,chancelevel);
+    %  output = transres_yourmethod(decoding_out,chancelevel,cfg,model);
     
 end
 

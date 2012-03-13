@@ -91,7 +91,7 @@ elseif strcmpi(method, 'loglikelihood')
     
     [dprime,output] = dprimestats(true_labels,predicted_labels);
     
-elseif strcmpi(method, 'AUC') ||Êstrcmpi(method, 'AUC_minus_chance')
+elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
     decision_values = vertcat(decoding_out.decision_values);
     true_labels = vertcat(decoding_out.true_labels);
     

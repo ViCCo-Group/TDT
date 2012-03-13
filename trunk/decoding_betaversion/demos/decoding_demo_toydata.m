@@ -3,6 +3,10 @@
 
 clear all
 
+%% TEMP: To test set
+cfg.results.setwise = 1;
+
+
 %% Generate the toy data
 % define number of "runs" and center means
 nruns = 4; % lets simulate we have n runs
@@ -56,8 +60,8 @@ cfg = decoding_defaults(cfg);
 
 % Set the analysis that should be performed (here we only want to do 1
 % decoding)
-% cfg.analysis = 'wholebrain';
-cfg.analysis = 'searchlight';
+cfg.analysis = 'wholebrain';
+% cfg.analysis = 'searchlight';
 cfg.results.output = {'accuracy', 'binomial_probability', 'model_parameters', 'primal_SVM_weights'};
 % Set the output directory where data will be saved
 cfg.results.dir = fullfile(pwd, 'toyresults');
@@ -69,7 +73,15 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 % Create s leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
+%% add a not working design
+cfg.design.train(:, 5) = [ones(4,1); zeros(4,1)];
+cfg.design.test(:, 5) = [zeros(4,1); ones(4,1)];
+cfg.design.label(:, 5) = [1 1 2 2 1 1 2 2]';
+
+cfg.design.set = [1 1 1 1 2];
+
 print_design(cfg);
+
 
 %% Play around with the decoding parameters
 
@@ -141,4 +153,4 @@ plot(x, y);
 hold off
 
 %% predict some values (just for fun)
-[predicted, acc, decision_values] = svmpredict(0,[0, 2.867],weights.model,cfg.decoding.test.classification.model_parameters)
+[predicted, acc, decision_values] = svmpredict(0,[0, 2.867],weights.model,cfg.decoding.test.classification.model_parameters);

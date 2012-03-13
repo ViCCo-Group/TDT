@@ -89,7 +89,7 @@
 %   cfg.feature_selection: Select most important features (voxels) for 
 %       decoding. See function 'decoding_feature_selection' for details
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
-%   cfg.results.setwise: Should results of each set be returned separately [default = 1]
+%   cfg.results.setwise: Should results of each set be returned separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
 %   cfg.sn: Provide subject number for status messages
 %   cfg.verbose: How much output should be printed to the screen

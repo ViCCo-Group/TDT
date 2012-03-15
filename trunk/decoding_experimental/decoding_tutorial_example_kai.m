@@ -22,6 +22,9 @@ cfg = decoding_defaults;
  % it to be on the safe side
 cfg.analysis = 'searchlight';
 
+% define what you want to get as outputs
+cfg.results.output = {'accuracy_minus_chance', 'binomial_probability'}
+
 cfg.results.overwrite = 1;
 % cfg.testmode = 1;
 % warning('RUNNING IN TEST MODE')

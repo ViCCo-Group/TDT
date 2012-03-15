@@ -44,7 +44,7 @@ if strcmpi(cfg.analysis,'searchlight')
         %%%%%%%%%%%%%%%%%%%%%
         % WRITE AS MAT-FILE %
         %%%%%%%%%%%%%%%%%%%%%
-        if iscell(results.(outputname).output) || fallback
+        if iscell(results.(outputname).output) || isstruct(results.(outputname).output) || fallback
             
             fdir = cfg.results.dir;
             fname = fullfile(fdir,sprintf('%s.mat',cfg.results.resultsname{i_output}));

@@ -24,7 +24,10 @@ ntests = length(predicted_labels);
 
 % calculate probability for this accuracy given the number of steps & the
 % chancelevel
-output.p_H0 = binopdf(accuracy/100*ntests, ntests, chancelevel/100);
-output.parameter.ntests = ntests;
-output.parameter.accuracy = accuracy;
-output.parameter.p = chancelevel/100;
+output = binopdf(accuracy/100*ntests, ntests, chancelevel/100); % save only number to get image
+
+% If you want to get the full output, uncomment the next lines
+% output.p_H0 = binopdf(accuracy/100*ntests, ntests, chancelevel/100);
+% output.parameter.ntests = ntests;
+% output.parameter.accuracy = accuracy;
+% output.parameter.p = chancelevel/100;

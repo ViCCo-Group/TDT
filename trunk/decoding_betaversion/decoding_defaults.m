@@ -75,7 +75,7 @@ defaults.decoding.test.regression.model_parameters = '';
 % that mm is assumed together with the number of voxels in the searchlight
 
 % Results specific defaults
-defaults.results.output = {'accuracyMinusChance'};
+defaults.results.output = {'accuracy_minus_chance'};
 defaults.results.write = 1; % write results
 defaults.results.overwrite = 0; % don't overwrite existing results
 defaults.results.setwise = 0; % return results of each decoding set separately

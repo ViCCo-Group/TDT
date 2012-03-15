@@ -10,15 +10,16 @@ cfg.results.setwise = 1;
 %% Generate the toy data
 % define number of "runs" and center means
 nruns = 4; % lets simulate we have n runs
-set1.mean = [0 0];
-set2.mean = [.2 .2]; % should have the same dim as set1, otherwise it wont work (and would not make sense, either)
+set2.mean = [0 0];
+set1.mean = [.2 .2]; % should have the same dim as set1, otherwise it wont work (and would not make sense, either)
 
 % generate the data
 
 % two shifted lines
 x = rand(nruns, 1);
-data1 = [x, x.*(-1) + 1];
-data2 = data1 + repmat(set2.mean, nruns, 1);
+dat = [x, x.*(-1) + 1];
+data1 = dat + repmat(set1.mean, nruns, 1);
+data2 = dat + repmat(set2.mean, nruns, 1);
 
 % uniform
 % data1 = rand(nruns, length(set1.mean)) + repmat(set1.mean, nruns, 1);
@@ -43,7 +44,7 @@ cfg.files.mask = '';
 
 %% plot the data (if 2d)
 if size(data, 2) == 2
-    scatter(data(:, 1), data(:, 2), 20, cfg.files.label);
+    scatter(data(:, 1), data(:, 2), 30, cfg.files.label);
 end
 
 %% Prepare data for passing
@@ -74,11 +75,12 @@ cfg.verbose = 2; % you want all information to be printed on screen
 % Create s leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
 %% add a not working design
-cfg.design.train(:, 5) = [ones(4,1); zeros(4,1)];
-cfg.design.test(:, 5) = [zeros(4,1); ones(4,1)];
-cfg.design.label(:, 5) = [1 1 2 2 1 1 2 2]';
-
-cfg.design.set = [1 1 1 1 2];
+% cfg.design.train(:, 5) = [ones(4,1); zeros(4,1)];
+% cfg.design.test(:, 5) = [zeros(4,1); ones(4,1)];
+% cfg.design.label(:, 5) = [1 1 2 2 1 1 2 2]';
+% 
+% cfg.design.set = [1 1 1 1 2];
+design2 = make_design_boot_cv(cfg, 16); 
 
 print_design(cfg);
 
@@ -150,7 +152,18 @@ b_lo = -(w0-1)/w(2);
 y = a*x + b_lo;
 plot(x, y);
 
-hold off
+xlim([-2 3])
+ylim([-2 3])
 
-%% predict some values (just for fun)
-[predicted, acc, decision_values] = svmpredict(0,[0, 2.867],weights.model,cfg.decoding.test.classification.model_parameters);
+%% plot weight vector
+plot([0 w(1)], [0 w(2)])
+
+%% predict some values to create a meshgrid
+% [X, Y] = meshgrid(-2:.11:3);
+% Z = X;
+% [predicted, acc, decision_values] = svmpredict(zeros(size(X(:))),[X(:), Y(:)],weights.model,cfg.decoding.test.classification.model_parameters);
+% Z(:) = decision_values;
+% hold on
+% contour(X,Y,Z, -5:5);
+
+hold off

@@ -23,9 +23,9 @@ cfg = decoding_defaults;
 cfg.analysis = 'searchlight';
 
 cfg.results.overwrite = 1;
-cfg.testmode = 1;
-warning('RUNNING IN TEST MODE')
-keyboard
+% cfg.testmode = 1;
+% warning('RUNNING IN TEST MODE')
+% keyboard
 
 cfg.searchlight.wrap_control = 1; % to check that wrapping works
 

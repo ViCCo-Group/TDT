@@ -42,6 +42,7 @@
 %       principle output contains whatever the decoding method puts out
 %       (e.g. if you write your own method).
 
+% TODO: Remove chancelevel here as explicit input.
 
 function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
 

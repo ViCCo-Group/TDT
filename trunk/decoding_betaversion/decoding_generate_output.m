@@ -16,11 +16,25 @@ for i_output = 1:n_outputs
 
     % in case chance-level is not provided (which should only happen for
     % parameter selection or feature selection where it doesn't really matter
-    if ~isfield(results.(outname),'chancelevel')
-        results.(outname).chancelevel = 0;
-    end
+    
+    % TODO: Find some way to get the chancelevel back for each measure
+    %   Question: Do we have everything here that we need for this?
+%     if ~isfield(results.(outname),'chancelevel')
+%         results.(outname).chancelevel = 0;
+%     end
 
-    output = decoding_transform_results(outname,decoding_out,results.(outname).chancelevel,cfg,model);
+    chancelevel = 1/results.n_cond;    
+
+    if strcmpi(outname, 'accuracy') || strcmpi(outname, 'accuracy_minus_chance') || ...
+            strcmpi(outname, 'sensitivity') || strcmpi(outname, 'specificity') || ...
+            strcmpi(outname, 'AUC') || strcmpi(outname, 'AUC_minus_chance')
+        results.(outname).chancelevel = chancelevel;
+    else
+        % dont save it as chancelevel % TODO: CHANGE TRANSRES so that they
+        % can also return chancelevels if asked!!!
+    end
+    
+    output = decoding_transform_results(outname,decoding_out,chancelevel,cfg,model);
 
     % This is a lazy initialization (Martin would call it workaround) for
     % the case in which the output has more than one element (e.g. weights
@@ -41,7 +55,7 @@ for i_output = 1:n_outputs
     if cfg.results.setwise
         for i_set = 1:n_sets
             current_set = unique_sets(i_set);
-            output = decoding_transform_results(outname,decoding_out(cfg.design.set == current_set),results.(outname).chancelevel,cfg,model);
+            output = decoding_transform_results(outname,decoding_out(cfg.design.set == current_set),chancelevel,cfg,model);
 
             % This is a lazy initialization (Martin would call it workaround) for
             % the case in which the output has more than one element (e.g. weights

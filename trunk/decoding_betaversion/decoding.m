@@ -211,8 +211,10 @@ results = {};
 
 for i_output = 1:n_outputs
     outname = cfg.results.output{i_output};
-    % Set chancelevel needed for some decodings (if it is not needed, it won't disturb anyway)
-    results.(outname).chancelevel = 100/n_cond;
+    
+    % Save number of conditions (e.g. to get the chancelevel later)
+    results.n_cond = n_cond;
+        
     % Preallocation
     results.(outname).output = zeros(n_decodings,1);
     

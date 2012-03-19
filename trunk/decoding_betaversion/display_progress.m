@@ -34,7 +34,7 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
     est_time_left_str = datestr(est_time_left, 'dd HH:MM:SS');
     est_finish = start_time + est_time;
     est_finish_str = datestr(est_finish, 'yyyy/mm/dd HH:MM:SS');
-    message = [message ', time running: ' el_time_str ', time to go: ' est_time_left_str ', finish: ' est_finish_str];
+    message = [message ', time to go: ' est_time_left_str ', finish: ' est_finish_str ', time running: ' el_time_str];
     msg_length = length(message);
 
     % print message

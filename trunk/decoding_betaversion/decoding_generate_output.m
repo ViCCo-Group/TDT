@@ -23,15 +23,16 @@ for i_output = 1:n_outputs
 %         results.(outname).chancelevel = 0;
 %     end
 
-    chancelevel = 1/results.n_cond;    
+    chancelevel = 1/results.n_cond * 100; % chancelevel in percent    
 
     if strcmpi(outname, 'accuracy') || strcmpi(outname, 'accuracy_minus_chance') || ...
             strcmpi(outname, 'sensitivity') || strcmpi(outname, 'specificity') || ...
             strcmpi(outname, 'AUC') || strcmpi(outname, 'AUC_minus_chance')
         results.(outname).chancelevel = chancelevel;
     else
-        % dont save it as chancelevel % TODO: CHANGE TRANSRES so that they
-        % can also return chancelevels if asked!!!
+        % dont save it as chancelevel 
+        % TODO: Should we change TRANSRES_ functions so that they can also 
+%             return an (optional) chancelevels if asked?
     end
     
     output = decoding_transform_results(outname,decoding_out,chancelevel,cfg,model);

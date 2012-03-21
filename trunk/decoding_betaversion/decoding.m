@@ -418,19 +418,7 @@ function [cfg, n_files, n_steps] = basic_checks(cfg,output_arguments)
 % Display image access software that is used
 dispv(1, 'Image access with: %s',cfg.software);
 
-% Built-in check for SPM
-if length(cfg.software)>=3 && strcmpi(cfg.software(1:3),'spm')
-    try
-        spm_ver = spm('ver');
-    catch %#ok<CTCH>
-        error('SPM is not in your path!')
-    end
-    if ~strcmpi(spm_ver,cfg.software)
-        error('''cfg.software'' = %s , but spm version in path = %s',...
-            cfg.software,spm_ver);
-    end
-
-end
+cfg = check_software(cfg);
 
 % TODO: make sure that the chosen program can perform
 % the chosen algorithm (e.g. can libsvm perform SVR)

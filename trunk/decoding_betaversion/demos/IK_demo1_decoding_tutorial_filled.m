@@ -17,6 +17,9 @@
 
 cfg = {};
 
+cfg.testmode = 0
+if cfg.testmode, display('Testmode'), keyboard, end
+
 % Add path to this toolbox
 % If this function is in same path as the toolbox, simply comment the line
 % (then the path will be set automatically).
@@ -28,7 +31,7 @@ addpath(['/Users/kai/Documents/!Projekte/Decoding_Toolbox/trunk/decoding_betaver
 cfg.analysis = 'searchlight';
 
 % Specify where the results should be saved
-cfg.results.dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results/buttonpress_onehand']; 
+cfg.results.dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results/buttonpress_onehand1']; 
 cfg.results.overwrite = 1;
 %% Second, get the file names, labels and run number of each brain image
 % file to use for decoding.

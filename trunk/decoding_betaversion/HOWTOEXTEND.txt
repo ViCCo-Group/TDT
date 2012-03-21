@@ -94,11 +94,11 @@ BrainVoyager), please send us the necessary files.
 
 If you want to add a new method, go to the folder "access_images". There 
 are five m-files. Create a folder named after your method (e.g. 
-"brainvoyager"). In that folder, create five functions with the same 
-name as those in "access_images", but with the suffix "_brainvoyager" or 
-the method you would like to add. The necessary input and output is 
-explained in the functions in "access_images", and for an example check 
-out the functions of "spm8".
+"brainvoyager"). In that folder, create six functions with the same 
+name as those in "access_images", but with the suffix of  the method you 
+would like to add (e.g. "_brainvoyager").
+The necessary input and output is  explained in the functions in 
+"access_images", and for an example check out the functions of "spm8".
 
 =============================================
 4. How to use other feature selection methods

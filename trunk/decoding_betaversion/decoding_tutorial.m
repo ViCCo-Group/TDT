@@ -18,7 +18,7 @@
 % Add path to this toolbox
 % If this function is in same path as the toolbox, simply comment the line
 % (then the path will be set automatically).
-addpath([$ADD PATH AS STRING$])
+% addpath([$ADD PATH AS STRING$])
 
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 

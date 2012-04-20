@@ -119,6 +119,9 @@ cfg.design = make_design_cv(cfg);
 % inspection. Dependences between training and test set will be checked
 % automatically in the main function.
 
+%% Print your design to look at it
+print_design(cfg);
+
 %% Fourth, set additional parameters manually
 
 % This is an optional step. For example, you want to set the searchlight 

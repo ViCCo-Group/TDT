@@ -1,4 +1,6 @@
 % function table = print_design(cfg)
+%   or
+% function table = print_design(cfg.design)
 %
 % Prints the design matrices (train, test & label) in a nice(r) form.
 %

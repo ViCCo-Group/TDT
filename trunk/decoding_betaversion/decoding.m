@@ -256,8 +256,9 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
     
     previous_itrain = []; % init
     
-    % TODO: Get a better order of the decodings steps (i.e. sort them so
-    % that the same training is used in neighbouring columns)
+    % TODO: Get a better order of the decodings steps (i.e. reorder the
+    % decoding step index i_step so that the same training is used in 
+    % successive steps)
     
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
@@ -418,7 +419,10 @@ function [cfg, n_files, n_steps] = basic_checks(cfg,output_arguments)
 % Display image access software that is used
 dispv(1, 'Image access with: %s',cfg.software);
 
-cfg = check_software(cfg);
+% File check here not necessary anymore.
+% Moved the check to when a file function is used for the first time.
+% - Kai
+% check_software(cfg);
 
 % TODO: make sure that the chosen program can perform
 % the chosen algorithm (e.g. can libsvm perform SVR)

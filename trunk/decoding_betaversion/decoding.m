@@ -254,7 +254,10 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,i_decoding,sz,sl_template);
     
+    % init variables that are used to check whether the previous training
+    % set equals the current decoding (used below to skip these trainings)
     previous_itrain = []; % init
+    previous_trainlabels = []; % init
     
     % TODO: Get a better order of the decodings steps (i.e. reorder the
     % decoding step index i_step so that the same training is used in 
@@ -274,9 +277,9 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
         labels_train = cfg.design.label(itrain, i_step);
         labels_test = cfg.design.label(itest, i_step);
 
-        % Skip feature selection and training if training set is identical
-        % to previous iteration (saves time)
-        skip_training = isequal(previous_itrain, itrain);
+        % Skip feature selection and training if training set & training 
+        % labels are identical to previous iteration (saves time)
+        skip_training = isequal(previous_itrain, itrain) & isequal(previous_trainlabels, labels_train);
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
@@ -343,7 +346,10 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
             model(i_step) = model(i_step-1); %#ok
         end
         
+        % store current trainin indices & training labels to check if they
+        % are equal in the next decoding step
         previous_itrain = cfg.design.train(:,i_step); % update for next step
+        previous_trainlabels = labels_train;
         
         %    TEST DATA    %
         %%%%%%%%%%%%%%%%%%%

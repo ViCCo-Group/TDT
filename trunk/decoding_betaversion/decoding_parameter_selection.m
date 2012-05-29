@@ -65,9 +65,9 @@ for i_parameter = 1:length(parameters)
     try
         currstr = str(find(str == strpos)+1);
         numend = currstr-2;
-        default_params = [default_params(1:numstart) '%d' default_params(numend+1:end)];
+        default_params = [default_params(1:numstart) '%f' default_params(numend+1:end)];
     catch %#ok<CTCH>
-        default_params = [default_params(1:numstart) '%d'];
+        default_params = [default_params(1:numstart) '%f'];
     end
     
 end

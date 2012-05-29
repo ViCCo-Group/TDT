@@ -145,7 +145,6 @@ a) Linux users: get the latest version of gcc.
 b) Windows users: get the appropriate compiler for your version of Matlab 
 (check the Mathworks website). Then set the installation path manually to 
 Matlab using
+> mex -setup
 c) Mac users: install the gcc compiler by downloading and installing 
 Xcode (need to register).
-
-> mex -setup

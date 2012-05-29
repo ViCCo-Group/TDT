@@ -58,7 +58,7 @@
 %     train: [12x6 double]
 %      test: [12x6 double]
 %     label: [12x6 double]
-%       set: [12x6 double]
+%       set: [1x6 double]
 % 
 % >> cfg.design.train
 % ans =
@@ -180,8 +180,8 @@ for i_set = 1:n_sets
         design.test(test_filter, counter) = 1;
     end
     
-    design.label = [design.label repmat(cfg.files.label(set_filter), 1, counter)];
-    design.set = [design.set repmat(i_set,1,counter)];
+    design.label = [design.label repmat(cfg.files.label(set_filter), 1, n_steps)];
+    design.set = [design.set repmat(i_set,1,n_steps)];
     
 end
 

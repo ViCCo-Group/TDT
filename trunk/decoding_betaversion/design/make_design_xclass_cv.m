@@ -17,6 +17,9 @@
 %       cfg.files.name. This variable is used to distinguish training
 %       and test data. Cross classification is performed from the lower to
 %       the higher number (e.g. from 1 to 2).
+%   cfg.files.twoway: 1 or 0 (optional input). If 1, then two-way cross 
+%       classification is carried out (i.e. training on 1 and testing 2 as 
+%       well as training on 2 and testing on 1).
 %       
 %
 % OUT
@@ -34,10 +37,12 @@
 %
 % >> cfg.files
 % ans = 
-%      name: {24x1 cell}
-%      step: [24x1 double]
-%      label: [24x1 double]
-%      set:  [24x1 double]
+%      name:   {24x1 cell}
+%      step:   [24x1 double]
+%      label:  [24x1 double]
+%      set:    [24x1 double]
+%      xclass: [24x1 double]
+%      twoway: 0
 %
 % >> [cfg.files.step, cfg.files.label cfg.files.xclass]
 % ans =
@@ -74,7 +79,7 @@
 %     train: [24x6 double]
 %      test: [24x6 double]
 %     label: [24x6 double]
-%       set: [24x6 double]
+%       set: [1x6 double]
 % 
 % >> cfg.design.train
 % ans =
@@ -175,6 +180,10 @@ if ~isfield(cfg.files,'set') || isempty(cfg.files.set)
     cfg.files.set = ones(size(cfg.files.label));
 end
 
+if ~isfield(cfg.files,'twoway')
+    cfg.files.twoway = 0;
+end
+
 % Make sure that input has the right orientation
 if size(cfg.files.step,1) == 1
     warning('cfg.files.step has the wrong orientation. Flipping.'); %#ok<WNTAG>
@@ -207,35 +216,44 @@ n_files = length(cfg.files.step);
 counter = 0;
 design.label = [];
 design.set = [];
-design.train(n_files,1) = 0; % sets size along x dimension
+design.train(n_files,1) = 0; % sets size along x-dimension
 design.test(n_files,1) = 0;
 
-for i_set = 1:n_sets
+n_twoway = 1;
+if cfg.files.twoway, n_twoway = 2; end
 
-    set_filter = cfg.files.set == i_set;
+for i_twoway = 1:n_twoway
     
-    step_numbers = unique(cfg.files.step(set_filter));
-    n_steps = length(step_numbers);
-    
-    for i_step = 1:n_steps
-        
-        counter = counter + 1;
-        
-        % set all training entries
-        train_filter = cfg.files.step(set_filter) ~= step_numbers(i_step) & cfg.files.xclass == xclass_numbers(1);
-        design.train(train_filter, counter) = 1;
-        
-        % set all test entries
-        test_filter = cfg.files.step(set_filter) == step_numbers(i_step) & cfg.files.xclass == xclass_numbers(2);
-        design.test(test_filter, counter) = 1;
+    if i_twoway == 2
+        xclass_numbers = [xclass_numbers(2) xclass_numbers(1)];
     end
     
-    design.label = [design.label repmat(cfg.files.label(set_filter), 1, counter)];
-    design.set = [design.set repmat(i_set,1,counter)];
+    for i_set = 1:n_sets
+        
+        set_filter = cfg.files.set == i_set;
+        
+        step_numbers = unique(cfg.files.step(set_filter));
+        n_steps = length(step_numbers);
+        
+        for i_step = 1:n_steps
+            
+            counter = counter + 1;
+            
+            % set all training entries
+            train_filter = cfg.files.step ~= step_numbers(i_step) & cfg.files.xclass == xclass_numbers(1) & set_filter;
+            design.train(train_filter, counter) = 1;
+            
+            % set all test entries
+            test_filter = cfg.files.step == step_numbers(i_step) & cfg.files.xclass == xclass_numbers(2) & set_filter;
+            design.test(test_filter, counter) = 1;
+        end
+        
+        design.label = [design.label repmat(cfg.files.label, 1, n_steps)];
+        design.set = [design.set repmat(i_set,1,n_steps)];
+        
+    end
     
 end
-
-
 
 if ~isfield(cfg,'design') || ~isfield(cfg.design,'msg') || ~isfield(cfg.design.msg,mfilename)
 fprintf('Design for CV and cross classification decoding for %i files x %i steps created\n', n_files, counter)

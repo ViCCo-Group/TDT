@@ -123,7 +123,7 @@
 %              that corresponds to the voxels that are selected in
 %              .mask_index.
 %       .mask_index: indices of those voxels that were selected by the
-%                    mask minus those that are nan in the input data.
+%                    mask minus those that are NaN in the input data.
 %       .files: Contains file information as in cfg.files, especially
 %               filenames of datafiles (.name) and mask(s) (.mask) as cell
 %               of strings
@@ -346,7 +346,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
             model(i_step) = model(i_step-1); %#ok
         end
         
-        % store current trainin indices & training labels to check if they
+        % store current training indices & training labels to check if they
         % are equal in the next decoding step
         previous_itrain = cfg.design.train(:,i_step); % update for next step
         previous_trainlabels = labels_train;

@@ -8,7 +8,7 @@ if cnt == 1
 end
 
 if n_decodings > 50
-    display_values = [1 2 5 10 25 50 100 500 n_decodings]; % display progress of these voxels
+    display_values = [1 2 5 10 15 20 30 40 50 100 200 300 400 500 n_decodings]; % display progress of these voxels
 else
     display_values = 1:n_decodings;
 end
@@ -29,12 +29,14 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
     p = cnt / n_decodings * 100;
     el_time = now - start_time;
     el_time_str = datestr(el_time, 'dd HH:MM:SS');
+    if str2double(el_time_str(1:2)) == 0, el_time_str = el_time_str(4:end); end
     est_time = (el_time / p) * 100;
     est_time_left = est_time - el_time;
     est_time_left_str = datestr(est_time_left, 'dd HH:MM:SS');
+    if str2double(est_time_left_str(1:2)) == 0, est_time_left_str = est_time_left_str(4:end); end    
     est_finish = start_time + est_time;
     est_finish_str = datestr(est_finish, 'yyyy/mm/dd HH:MM:SS');
-    message = [message ', time to go: ' est_time_left_str ', finish: ' est_finish_str ', time running: ' el_time_str];
+    message = [message ', time to go: ' est_time_left_str ', time running: ' el_time_str ', finish: ' est_finish_str];
     msg_length = length(message);
 
     % print message

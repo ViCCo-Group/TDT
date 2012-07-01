@@ -528,7 +528,11 @@ else
     dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
 end
 
-if ischar(cfg.files.name), cfg.files.name = num2cell(cfg.files.name); end
+if ischar(cfg.files.name)
+    cfg.files.name = num2cell(cfg.files.name,2);
+    warning('File names provided as string, not as cell matrix. Converting to cell...') %#ok 
+end
+
 if length(cfg.files.name) ~= length(unique(cfg.files.name))
     warning('Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!') %#ok
 else

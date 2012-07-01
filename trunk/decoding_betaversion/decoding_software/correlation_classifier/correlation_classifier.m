@@ -1,4 +1,4 @@
-% function [predicted_labels decision_values] = correlation_classifier(labels_train,vectors_train,labels_test,vectors_test)
+% function [predicted_labels decision_values] = correlation_classifier(labels_test,vectors_test,model)
 %
 % This function uses a Haxby style MVPA analysis where multivoxel patterns
 % *within* one class are simply correlated and tested against another 
@@ -23,21 +23,28 @@ function [predicted_labels decision_values] = correlation_classifier(labels_test
 
 [labels,tmp,labels_ind] = unique(labels_test);
 
+n_labels = size(labels,1);
+
+if n_labels ~= 2, error('Correlation classifier cannot yet deal with more than two labels at a time.\n Run all pairs separately.'), end
+
 vectors_train = model.vectors_train;
-labels_test = model.labels_train;
+labels_train = model.labels_train;
 
-% TODO: possibly replace mean by sum(...,1)/sum(labels_train==labels(1)) to gain speed
-train1 = mean(vectors_train(labels_train==labels(1),:),1); 
-train2 = mean(vectors_train(labels_train==labels(2),:),1);
-test1 = mean(vectors_test(labels_test==labels(1),:),1); % TODO: manage case for more than two training data points (e.g. with for loop)
-test2 = mean(vectors_test(labels_test==labels(2),:),1);
+% create training and test vectors
+train = cell(n_labels,1);
+test = cell(n_labels,1);
+for i_label = 1:n_labels
+    % TODO: possibly replace mean by % sum(...,1)/sum(labels_train==i_label) to gain speed
+    train{i_label} = mean(vectors_train(labels_train==labels(i_label),:),1);
+    test{i_label} = mean(vectors_test(labels_test==labels(i_label),:),1);
+end
 
-if numel(train1>1) % normal case in which more than one voxel is present
+if numel(train{1,1}>1) % normal case in which more than one voxel is present
     
-corr_within(1) = correl(train1,test1);
-corr_within(2) = correl(train2,test2);
-corr_between(1) = correl(train1,test2);
-corr_between(2) = correl(train2,test1);
+corr_within(1,1) = correl(train{1},test{1});
+corr_within(2,1) = correl(train{2},test{2});
+corr_between(1,1) = correl(train{1},test{2});
+corr_between(2,1) = correl(train{2},test{1});
 
 else % if only one voxel is present, a correlation is not possible
    
@@ -45,11 +52,11 @@ warning('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxe
 % Instead choose predicted labels based on distance, normalized across all
 % and with very small absolute values to reduce the size of the effect, but 
 % still yield interpretable results in terms of predicted_labels.
-maxval = max([train1(:); test1(:); train2(:); test2(:)].^2);
-corr_within(1) = 0.001 * (train1-test1).^2/maxval;
-corr_within(2) = 0.001 * (train2-test2).^2/maxval;
-corr_between(1) = 0.001 * (train1-test2).^2/maxval;
-corr_between(2) = 0.001 * (train1-test2).^2/maxval;
+maxval = max([train{1}(:); test{1}(:); train{2}(:); test{2}(:)].^2);
+corr_within(1,1) = 0.001 * (train{1}-test{1}).^2/maxval;
+corr_within(2,1) = 0.001 * (train{2}-test{2}).^2/maxval;
+corr_between(1,1) = 0.001 * (train{1}-test{2}).^2/maxval;
+corr_between(2,1) = 0.001 * (train{1}-test{2}).^2/maxval;
     
 end
 
@@ -69,9 +76,9 @@ zcorr_within = atanh(corr_within);
 zcorr_between = atanh(corr_between);
 
 % this is not the same as decision values, but we just call it so to keep the variable structure
-decision_values = [zcorr_within(1)-zcorr_between(1), -(zcorr_within(2)-zcorr_between(2))];
-predicted_labels(decision_values > 0) = labels(1);
-predicted_labels(decision_values <= 0) = labels(2);
+decision_values = [zcorr_within(1,1)-zcorr_between(1,1); -(zcorr_within(2,1)-zcorr_between(2,1))];
+predicted_labels(decision_values > 0, 1) = labels(1);
+predicted_labels(decision_values <= 0, 1) = labels(2);
 
 predicted_labels = predicted_labels(labels_ind);
 

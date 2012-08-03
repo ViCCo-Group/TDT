@@ -333,7 +333,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
         % Do scaling on training set if requested
         if strcmpi(cfg.scale.method,'across') && ~skip_training
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.method), end
-            [vectors_train,scaleparams] = scale_data(cfg,vectors_train);
+            [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 
         % Estimate Model
@@ -358,7 +358,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
         
         % Do scaling on test data if requested
         if strcmpi(cfg.scale.method,'across')
-            [vectors_test] = scale_data(cfg,vectors_test,scaleparams);
+            [vectors_test] = decoding_scale_data(cfg,vectors_test,scaleparams);
         end
         
         % Test Estimated Model

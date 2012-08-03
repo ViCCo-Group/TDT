@@ -64,10 +64,10 @@ defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur
 defaults.decoding.method = 'classification'; % classification as standard
 defaults.decoding.software = 'libsvm'; % libsvm as a standard
 % parameters (in defaults for libsvm)
-defaults.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0'; % linear classification
-defaults.decoding.train.regression.model_parameters = '-s 4 -t 0 -c 1 -n 0.5 -b 0'; % nu-SVR (adapt cost to control speed)
-defaults.decoding.test.classification.model_parameters = '';
-defaults.decoding.test.regression.model_parameters = '';
+defaults.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % linear classification
+defaults.decoding.train.regression.model_parameters = '-s 4 -t 0 -c 1 -n 0.5 -b 0 -q'; % nu-SVR (adapt cost to control speed)
+defaults.decoding.test.classification.model_parameters = '-q';
+defaults.decoding.test.regression.model_parameters = '-q';
 
 % warning('No unit for searchlight provided. Assuming voxels...') #ok<WNTAG>
 % TODO: move this warning somewhere else (best in function where we can

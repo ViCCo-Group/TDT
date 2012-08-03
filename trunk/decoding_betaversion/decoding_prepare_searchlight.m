@@ -1,11 +1,10 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Get searchlight template %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [cfg,sl_template] = decoding_prepare_searchlight(cfg)
 % function [cfg,sl_template] = decoding_prepare_searchlight(cfg)
 %
-% This function computes a reference sphere around zero to use in the 
-% definition of searchlights.
+% This function computes a reference sphere of coordinates around zero to 
+% use in the definition of searchlights. When shifted to the current
+% searchlight center, it can be used to get the coordinates of all voxels
+% in that searchlight.
 % Output sl_template is a struct containing x,y,z displacement for each
 % sl_template.index voxel relative to the center of the searchlight (may be
 % necessary in get_ind.m)
@@ -14,7 +13,8 @@ function [cfg,sl_template] = decoding_prepare_searchlight(cfg)
 % When non-isotropic voxels are used, then the searchlight in real space is
 % not spherical, but stretched along the longer dimension. The code below 
 % can correct for this by squeezing the searchlight in voxel space. This 
-% leads to less voxels in a searchlight, but the appropriate volume.
+% leads to less voxels in a searchlight, but the appropriate volume in real
+% space.
 %
 % INPUT
 %   cfg: Standard decoding cfg
@@ -48,7 +48,7 @@ if cfg.searchlight.spherical
     if exist('voxdims', 'var')
         proportions = voxdims./min(voxdims); % this gets the voxel proportions
     else
-        error('Voxelsize is not set in cfg.datainfo.voxelsize. Thus cannot create a spherical searchlight. Please make sure voxelsize is set, or use cfg.searchlight.spherical = 0')
+        error('Voxelsize is not set in cfg.datainfo.voxelsize. Cannot create a spherical searchlight. Please make sure voxelsize is set, or use cfg.searchlight.spherical = 0')
 
     end
 else
@@ -60,14 +60,20 @@ if strcmpi(cfg.searchlight.unit,'voxels')
 elseif strcmpi(cfg.searchlight.unit,'mm')
     % check that voxeldimensions exist
     if exist('voxdims', 'var')
-        radius = cfg.searchlight.radius / min(voxdims); % this converts radius from mm to voxels
+        % this converts radius from mm to voxels and/or defines the radius
+        % relative to the smallest voxel dimension (which is used for
+        % correction by the variable proportions
+        radius = cfg.searchlight.radius / min(voxdims);
     else
         error('Voxelsize is not set in cfg.datainfo.voxelsize. Thus cannot create a searchlight in mm. Please make sure voxelsize is set, or use cfg.searchlight.unit = ''voxels''')
     end
 end
 % This calculates the searchlight indices as a template that will be
-% shifted around the volume; it is done in all eight corners of the volume
-% and later summed up to prevent problems with a very large searchlight radius
+% shifted around the volume; in the beginning we used the center of the
+% volume as a reference and shifted it to 0. This, however, cannot deal 
+% with very very large searchlights. As a workaround, this function 
+% calculates the sphere in all eight corners of the volume and is later 
+% summed up to prevent this problem.
 ct = 0;
 sl_template.index = cell(1,8);
 for i_x = [1 dim(1)]

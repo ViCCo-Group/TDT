@@ -144,8 +144,8 @@ cfg.design = make_design_cv(cfg);
 % searchlight to be spherical in real space.
 
 % Searchlight-specific parameters
-cfg.searchlight.unit = 'mm';
-cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12mm.
+cfg.searchlight.unit = 'mm'; % comment or set to 'voxels' if you want normal voxels
+cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12 units (here: mm).
 cfg.searchlight.spherical = 0;
 
 % Other parameters of interest:

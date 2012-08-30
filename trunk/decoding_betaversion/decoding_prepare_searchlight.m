@@ -55,6 +55,8 @@ else
     proportions = [1 1 1];
 end
 
+% Set Unit
+% Remark: Update error msg and help text if you introduce a new unit
 if strcmpi(cfg.searchlight.unit,'voxels')
     radius = cfg.searchlight.radius;
 elseif strcmpi(cfg.searchlight.unit,'mm')
@@ -67,7 +69,10 @@ elseif strcmpi(cfg.searchlight.unit,'mm')
     else
         error('Voxelsize is not set in cfg.datainfo.voxelsize. Thus cannot create a searchlight in mm. Please make sure voxelsize is set, or use cfg.searchlight.unit = ''voxels''')
     end
+else
+    error(['Unkown cfg.searchlight.unit = ''' cfg.searchlight.unit '''. Units available: ''voxels'', ''mm''. Please correct.'])
 end
+
 % This calculates the searchlight indices as a template that will be
 % shifted around the volume; in the beginning we used the center of the
 % volume as a reference and shifted it to 0. This, however, cannot deal 

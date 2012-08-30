@@ -203,7 +203,7 @@ n_decodings = get_n_decodings(cfg,mask_index);
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
 n_sets = length(unique(cfg.design.set));
-n_cond = sum(unique(cfg.design.label) ~= 0);
+n_cond = sum(unique(cfg.design.label) ~= 0); % TODO: BUG: If 0 is used as label (which is ok) it won't count as class. Also, this does not make any sense for e.g. regression...
 results = {};
 
 % Prepare searchlight template (if needed, sl_template will be empty for other methods)

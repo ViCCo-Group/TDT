@@ -4,9 +4,18 @@ function model = newton_train(labels_train,vectors_train,cfg)
 persistent alreadyVisited
 if isempty(alreadyVisited)
     alreadyVisited = true; % prevent that this message is shown a second time
-    display(sprintf(['-------\n' ...
-        'NEWTON_SVM: TODO: ADD AUTHOR, COPYRIGHT, ETC INFORMATION HERE!\n' ...
-        '-------']))
+    display(char({'-------'
+        'The sourcecode for NSVM Newton Support Vector Machine has been downloaded from http://research.cs.wisc.edu/dmi/svm/nsvm'
+        ''
+        'Authors:'
+        'Glenn Fung'
+        'Olvi L. Mangasarian'
+        ''
+        'Copyright:'
+        'The software is free for academic use. For commercial use, please contact Olvi Mangasarian (olvi@cs.wisc.edu).'
+        ''
+        'See also newton_svm/newton_copyright.txt'
+        '-------'}))
 end
 
 % call training

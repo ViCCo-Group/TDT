@@ -137,7 +137,7 @@ cfg.searchlight.spherical = 1;
 cfg.verbose = 2; % you want all information to be printed on screen
 
 % standard parameters for libsvm
-cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0'; % (linear SV classification, cost = 1)
+% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % (linear SV classification, cost = 1)
 
 %% Fifth, run the decoding analysis
 

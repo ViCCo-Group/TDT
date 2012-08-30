@@ -1,2 +1,8 @@
-TODO!
-Also add to newton_train.m
+The sourcecode for NSVM Newton Support Vector Machine has been downloaded from http://research.cs.wisc.edu/dmi/svm/nsvm
+
+Authors:
+Glenn Fung
+Olvi L. Mangasarian
+
+Copyright:
+The software is free for academic use. For commercial use, please contact Olvi Mangasarian (olvi@cs.wisc.edu).

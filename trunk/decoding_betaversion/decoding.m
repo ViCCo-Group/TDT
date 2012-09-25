@@ -88,6 +88,11 @@
 %       See function 'decoding_parameter_selection' for details
 %   cfg.feature_selection: Select most important features (voxels) for 
 %       decoding. See function 'decoding_feature_selection' for details
+%   cfg.searchlight.subset: if you want to execute only a subset of
+%       searchlights, you can either enter an Nx1 vector where each value of
+%       n corresponds to the index within the searchlight mask is executed 
+%       (not the voxel index of the whole volume!), or you can enter an 
+%       Nx3 matrix corresponding to the XYZ coordinates of the volume
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
 %   cfg.results.setwise: Should results of each set be returned separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
@@ -198,12 +203,12 @@ if strcmpi(cfg.scale.estimation,'all')
 end
 
 % Get number of voxels for searchlight and number of ROIs for ROI (and 1 for wholebrain)
-n_decodings = get_n_decodings(cfg,mask_index);
+[n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz);
 
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
 n_sets = length(unique(cfg.design.set));
-n_cond = sum(unique(cfg.design.label) ~= 0); % TODO: BUG: If 0 is used as label (which is ok) it won't count as class. Also, this does not make any sense for e.g. regression...
+n_cond = sum(unique(cfg.design.label) ~= 0); % TODO: MINOR BUG: If 0 is used as label (which is ok) it won't count as class. Also, this does not make any sense for e.g. regression...
 results = {};
 
 % Prepare searchlight template (if needed, sl_template will be empty for other methods)
@@ -220,7 +225,7 @@ for i_output = 1:n_outputs
     
     if cfg.results.setwise
         for i_set = 1:n_sets
-            results.(outname).set(i_set).output = zeros(n_decodings,1); %#ok
+            results.(outname).set(i_set).output = zeros(n_decodings,1);
         end
     end
 end
@@ -245,11 +250,15 @@ end
 % Report files
 report_files(cfg,n_steps,inputfilenames_fid);
 
+k_decodings = length(decoding_subindex); % for display_progress
+startval = decoding_subindex(1);
+endval = decoding_subindex(end);
+
 % Start
-for i_decoding = 1:n_decodings % e.g. voxels for searchlight
+for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
 
     % Display status info (i.e. how far is the analysis?)
-    if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
+    if verbose, [msg_length] = display_progress(cfg,i_decoding,k_decodings,startval,endval,start_time,msg_length); end
     
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,i_decoding,sz,sl_template);
@@ -332,7 +341,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight
         
         % Do scaling on training set if requested
         if strcmpi(cfg.scale.method,'across') && ~skip_training
-            if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.method), end
+            if i_decoding == decoding_subindex(1) && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.method), end
             [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 

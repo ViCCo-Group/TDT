@@ -20,6 +20,9 @@
 % (then the path will be set automatically).
 % addpath([$ADD PATH AS STRING$])
 
+% Clear cfg (otherwise if you re-run this script, previous parameters may still be present)
+clear cfg
+
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 
 % it to be on the safe side.

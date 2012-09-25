@@ -108,7 +108,7 @@ end
 % load masks or generate a mask for all voxels, if asked
 if strcmp(cfg.files.mask{1}, 'all voxels');
     % use all voxels from data
-    dispv(1,'Using a ALL VOXEL mask')
+    dispv(1,'Using an ALL VOXEL mask')
     
     % figure out how big the data is
     % load the first data file header to get dimensions and set a full

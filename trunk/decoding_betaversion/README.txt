@@ -2,7 +2,7 @@
 GENERAL
 =======
 
-The Decoding toolbox has been created for classification of structural and 
+The Decoding Toolbox has been created for classification of structural and 
 functional brain images. It is currently optimized for SPM2, SPM5, and 
 SPM8, but can also be extended to other brain image analysis tools.
 
@@ -32,7 +32,8 @@ The advantages of it are:
 
 1. SIMPLICITY: It is very easy to use. Just try out the decoding_example 
 on your SPM.mat using leave-one-run out crossvalidation. 
-It is one line of code.
+It is one line of code. If you want more detail, work your way through the
+decoding_tutorial.m (one page).
 
 2. GENERALITY: It is quite general purpose (you can do searchlight 
 decoding, whole brain decoding or ROI decoding with it). In the current 
@@ -43,7 +44,7 @@ and includes feature selection.
 
 3. FLEXIBILITY: It has a well-defined modular structure and can easily be 
 set up for all sorts of classification designs. In addition, it can easily 
-be extended by your own algorithm.
+be extended by your own algorithm (check the HOWTOEXTEND.txt).
 
 4. READABILITY: You should be able to easily read and adjust the code. 
 Although sometimes you have to dig for subfunctions if you want to hack 
@@ -54,7 +55,9 @@ code to their needs.
 
 5. SPEED: It is comparably fast (considering that it uses mainly 
 uncompiled code) and uses custom-made functions to speed up processing 
-(for example running many F-tests in feature selection in matrix format).
+(for example running many F-tests in feature selection in matrix format or 
+a custom-made correlation function which is up to 20x faster than that
+provided by Matlab).
 
 =======================================
 Functionality of the toolbox and basics
@@ -70,11 +73,11 @@ As input, you typically have a number of brain images belonging to several
 categories which you would like to classify. As output you get for each 
 subject one or several classification volumes (for searchlight analyses) 
 or individual values (e.g. mean cross-validation accuracy in ROIs). In a 
-second step be tested easily using your brain image analysis toolbox (e.g. 
-second-level analysis in SPM) or simple statistics (e.g. a one-sample 
-t-test in Matlab). For simplicity, we set chance to 0 and set all other 
-values around 0 (i.e. for 2 classes and chance level of 50%, values range 
-from -50 to 50).
+second step the statistical significance can be tested easily using your 
+brain image analysis toolbox (e.g. second-level analysis in SPM) or simple 
+statistics (e.g. a one-sample t-test in Matlab). For simplicity, we set 
+chance to 0 as a default and set all other values around 0 (i.e. for 2 
+classes and chance level of 50%, values range from -50 to 50).
 
 ================
 Compiling libsvm
@@ -88,12 +91,14 @@ http://www.mathworks.de/support/solutions/en/data/1-2RQL4L/index.html
 Alternatively, you may want to use your own compilation or a later version 
 of libsvm, so you can follow these 6 steps. 
 
-1. Download libsvm from
+1. Use the mex-files provided or download libsvm from
 http://www.csie.ntu.edu.tw/~cjlin/libsvm/#download
 
 2. Unzip libsvm and navigate to the folder "Matlab".
 
-3. Make the following adjustments:
+3. If your version is before 3.12, make the following adjustments (on our 
+request the authors of libsvm have introduced the quiet mode -q to the 
+svmpredict options)
 
 a) Open svmpredict.c in Matlab and find and delete (or
 comment by using // ) the following code:

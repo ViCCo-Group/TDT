@@ -40,7 +40,7 @@ labelname2 =
 regressor_names = design_from_spm(beta_dir);
 
 % Extract all information for the cfg.files structure (labels will be [-1 1] )
-cfg.files = decoding_prepare_design(cfg.files,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_prepare_design(cfg.files,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 

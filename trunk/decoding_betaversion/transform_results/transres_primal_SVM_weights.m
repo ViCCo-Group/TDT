@@ -39,6 +39,11 @@
 
 % Kai, 2012-03-12
 
+% History
+% 2012-11-30
+%   Added more efficient method to calculate primal weights.
+%   This method can be extended to multiclass. Link to howto below. 
+
 function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model)
 
 %% check that the model was a linear SVM 
@@ -59,42 +64,59 @@ if isempty(findstr(libsvm_options, '-t 0'))
     error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
 end
 
-    
-% get the size of the current primal source space
-[nSVs, primal_dim] = size(model(1).SVs);
 
-% init a matrix that contains orthogonal + 1 entries
-X = [eye(primal_dim); ones(1, primal_dim)];
-% generate labels (values are unimportant, we are interested in decision_values only)
-labels = ones(size(X, 1), 1);
-    
-% "reverse-engineer" the model for each step
+%% new version (unsing alphas and SVs)
+% see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804
+
 for i_model = 1:length(model)
-
     m = model(i_model);
-    
-    % get the predictions from this model
-    switch lower(cfg.decoding.method)
-        case 'classification'
-            [predicted, acc, decision_values] = svmpredict(labels,X,m,cfg.decoding.test.classification.model_parameters);
-        case 'regression'
-            [predicted, acc, decision_values] = svmpredict(labels,X,m,cfg.decoding.test.regression.model_parameters);
+    if strcmpi(cfg.decoding.method, 'classification') && length(unique(m.Label)) > 2
+        error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
     end
-        
-    % calculate w and b
-    %  using
-    % Y = w' X + b --> Y = [wb]' [X1] --> Y / [X1] = [wb]'
-    % mit X = eye(size(...))
-
-    wb = decision_values' / [X, ones(size(decision_values))]';
-
-    w = wb(1:end-1);
-    b = wb(end);
-
-    weights.w = w;
-    weights.b = b;
-    weights.model = m; % also save the model
     
+    weights.w = m.SVs' * m.sv_coef;    
+    weights.b = -m.rho;
     output.weights{i_model} = weights;
-    
 end
+
+
+% %% old version
+% The old version works for smaller problems, but not for e.g. wholebrain
+% decoding. So I replaced it by a one that should works.
+% % get the size of the current primal source space
+% [nSVs, primal_dim] = size(model(1).SVs);
+% 
+% % init a matrix that contains orthogonal + 1 entries
+% X = [eye(primal_dim); ones(1, primal_dim)];
+% % generate labels (values are unimportant, we are interested in decision_values only)
+% labels = ones(size(X, 1), 1);
+%     
+% % "reverse-engineer" the model for each step
+% for i_model = 1:length(model)
+% 
+%     m = model(i_model);
+%     
+%     % get the predictions from this model
+%     switch lower(cfg.decoding.method)
+%         case 'classification'
+%             [predicted, acc, decision_values] = svmpredict(labels,X,m,cfg.decoding.test.classification.model_parameters);
+%         case 'regression'
+%             [predicted, acc, decision_values] = svmpredict(labels,X,m,cfg.decoding.test.regression.model_parameters);
+%     end
+%         
+%     % calculate w and b
+%     %  using
+%     % Y = w' X + b --> Y = [wb]' [X1] --> Y / [X1] = [wb]'
+%     % mit X = eye(size(...))
+% 
+%     wb = decision_values' / [X, ones(size(decision_values))]';
+% 
+%     w = wb(1:end-1);
+%     b = wb(end);
+% 
+%     weights.w = w;
+%     weights.b = b;
+%     
+%     output.weights{i_model} = weights;
+%     
+% end

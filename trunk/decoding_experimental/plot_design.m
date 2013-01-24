@@ -2,7 +2,7 @@
 %
 % This function plots your current design (analog to print_design.m).
 %
-% It works, but at the moment the output is somewhat ugly.
+% It works, but the output is somewhat ugly.
 %
 % If you like and/or know how to design nice figures in matlab, feel free
 % to improve the design.
@@ -18,10 +18,25 @@ function plot_design(cfg)
 max_color = [.7, .5, .2]; % RGB values for the max color -- min color is black at the moment
 background_color = [.5, .5, .5];
 
+%% define position of subplots
+% we use a 4x4 grid and specify the number of all positions that should be
+% used
+pos.train = [1, 2, 5, 6, 9, 10];
+pos.test = [3, 4, 7, 8, 11, 12];
+% Text is positioned, not aligend to a grid, using 
+% subplot('Position', )
+pos.text = [14, 15, 16];
+% to create a bit more space for text and legend, we add extra space by
+% using a 8x4 grid
+pos.legend = [29];
+
 %% get min and max label for later scaling
 
 min_label = min(cfg.design.label(:));
 max_label = max(cfg.design.label(:));
+
+%% create figure
+figure('name', 'Decoding Design')
 
 %% show train design (incl. labels)
 clear show_train
@@ -32,8 +47,7 @@ for rgb = 1:3
     show_train(:, :, rgb) = currcol;
 end
     
-figure('name', 'Decoding Design')
-subplot(2,2,1)
+subplot(4, 4, pos.train)
 image(show_train)
 title('Training Data')
 
@@ -65,8 +79,29 @@ else
 	% keep fnames as they are (not cutted)
 end
 
+set(gca,'YTick', 1:size(fnames,1))
 set(gca,'YTickLabel', fnames)
 xlabel('Training Data - Step number')
+
+%% add remaining text
+subplot(4, 4, pos.text);
+
+outtext = {'TDT - Decoding details'};
+if ~isempty(filestart)
+    outtext{end+1} = ['Common input: ' filestart];
+end
+
+if isfield(cfg.results, 'dir')
+    outtext{end+1} = ['Results: ' cfg.results.dir];
+else
+    outtext{end+1} = ['Results: not written to file'];
+end
+
+axis off
+
+text(.05,.5,outtext, 'Interpreter', 'none', 'BackgroundColor',[.7 .9 .7]);
+
+
 
 %% same for test
 clear show_test
@@ -77,7 +112,7 @@ for rgb = 1:3
     show_test(:, :, rgb) = currcol;
 end
     
-subplot(2,2,2)
+subplot(4, 4, pos.test)
 image(show_test)
 title('Test Data')
 set(gca, 'YTick', 1:size(cfg.files.name, 1))
@@ -88,7 +123,11 @@ xlabel('Test Data - Step number')
 
 if isfield(cfg.files, 'description')
     % move yaxis to the right
-    set(gca, 'YAxisLocation', 'right');
+    set(gca, 'YAxisLocation', 'right')
+    if size(cfg.files.description, 1) == 1
+        cfg.files.description = cfg.files.description';
+    end
+    
     set(gca, 'YTick', 1:size(cfg.files.description, 1))
     set(gca,'YTickLabel', cfg.files.description);
 else
@@ -97,7 +136,7 @@ end
 
 %% add legend (this is still ugly)
 
-clear show_legend
+clear show_legends
 unique_labels = sort(unique(cfg.design.label(:)))';
 for rgb = 1:3
     currcol = (unique_labels-min_label)./(max_label-min_label).*max_color(rgb);
@@ -105,14 +144,11 @@ for rgb = 1:3
     show_legend(:, :, rgb) = currcol;
 end
     
-subplot(2,2,3)
+subplot(8, 4, pos.legend)
 image(show_legend)
-xlabel('Unique label values (NOT necessary linearly scaled)')
+title({'Unique label values'; '(NOT necessary linearly scaled)'})
 set(gca, 'ytick', [])
 set(gca, 'XTick', 1:length(unique_labels)+1)
 set(gca, 'XTickLabel', [sprintf('%i|', unique_labels) 'unused'])
 
-
-subplot(2,2,2)
-title('color <-> values')
 

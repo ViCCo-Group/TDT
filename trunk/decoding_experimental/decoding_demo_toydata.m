@@ -66,6 +66,7 @@ for ifile = 1:size(data, 1)
     
     cfg.files.name(ifile) = {sprintf('%s_%s_run%i', form, color, cfg.files.step(ifile))};
 end
+cfg.files.description = cfg.files.name;
 % add an empty mask file
 cfg.files.mask = '';
 

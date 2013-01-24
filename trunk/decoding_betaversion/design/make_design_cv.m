@@ -109,9 +109,14 @@
 % ans =
 %      1     1     1     1     1     1
 % ------------------------------------
+%
+% See also: make_design_xclass.m, make_design_xclass_cv.m,
+%   make_design_boot_cv.m
+%
 % By: Kai Goergen & Martin Hebart, 2010/06/13
 
 % History:
+% - througing error if cfg.files.xclass is not empty
 % - introduced sets variable MH: 11-06-13
 % - Changed fieldname cfg.cond to cfg.label, output of train and test
 %   to be binary and label names to be separately provided (more general
@@ -125,8 +130,17 @@ function design = make_design_cv(cfg)
 
 %% generate design matrix (CV)
 
-design.info.ver = [mfilename ' Martin H., v20100802'];
+design.info.ver = [mfilename ' Kai, v20130124'];
 
+if isfield(cfg.files, 'xclass') && ~isempty(cfg.files.xclass)
+    error(sprintf(['xclass for standard cross-validation design\n' ...
+           'You tried to create a standard cross-validation design, but cfg.files.xclass contains data.\n' ...
+           'The xclass field is only needed if you want to do cross-set decoding.\n' ...
+           'Possible solutions:\n' ...
+           '1. For standard cv decoding: set cfg.files.xclass = [] before calling make_design_cv.\n' ...
+           '2. For cross-set cross-validation, use make_design_xclass_cv.m instead.']))
+end
+       
 if ~isfield(cfg.files,'set') || isempty(cfg.files.set)
     cfg.files.set = ones(size(cfg.files.label));
 end

@@ -23,6 +23,7 @@
 %
 % by Martin Hebart 11/06/12
 
+% KG: added cfg.files.description = regressor_name + step_number: 13/01/24
 % MH: added cross classification and help file: 11/09/05
 
 function cfg = decoding_prepare_design(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
@@ -34,6 +35,7 @@ cfg.files.step = [];
 cfg.files.label = [];
 cfg.files.set = [];
 cfg.files.xclass = [];
+cfg.files.description = {};
 
 if length(labelnames) ~= length(labels)
     error('Label names have to be of equal size than label numbers!')
@@ -60,6 +62,10 @@ for i_input = 1:n_inputs
     cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
     cfg.files.step = [cfg.files.step cell2mat(regressor_names(2,label_index))];
     cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
+    % add a description for the current files
+    for li = find(label_index)
+        cfg.files.description{end+1, 1} = [regressor_names{1, li} '_' int2str(regressor_names{2, li})];
+    end
     if exist('xclass','var')
         cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
     end

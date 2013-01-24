@@ -4,9 +4,12 @@
 %
 % Prints the design matrices (train, test & label) in a nice(r) form.
 %
+% For a graphical representation, see  plot_design.m
+%
+% See also: plot_design.m
+
 % Potential improvements
 %
-% - Add common file parts (as we use it for logfiles)
 % - Multiple blocks for long designs (e.g. after 20 steps)
 
 function table = print_design(cfg)
@@ -46,7 +49,7 @@ else
 	% keep fnames as they are (not cutted)
 end
 
-% get first columen (filenames + header) as string
+% get first column (filenames + header) as string
 % filename_str = char([{'files.name'}; {'---'}; cfg.files.name; {'---'}; {'design.set'}]);
 filename_str = char([{'files.name'}; {'---'}; fnames; {'---'}; {'design.set'}]);
 

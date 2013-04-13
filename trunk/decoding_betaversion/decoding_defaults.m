@@ -78,7 +78,7 @@ defaults.decoding.test.regression.model_parameters = '-q';
 defaults.results.output = {'accuracy_minus_chance'};
 defaults.results.write = 1; % write results
 defaults.results.overwrite = 0; % don't overwrite existing results
-defaults.results.setwise = 0; % return results of each decoding set separately
+defaults.results.setwise = 1; % return results of each decoding set separately
 defaults.results.filestart = 'res';
 defaults.results.dir = fullfile(fpath,'decoding_results');
 

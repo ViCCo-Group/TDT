@@ -1,4 +1,4 @@
-% function [data,scaleparams] = scale_data(cfg,data,scaleparams)
+% function [data,scaleparams] = decoding_scale_data(cfg,data,scaleparams)
 %
 % Function to perform data scaling on training or on test data.
 %
@@ -13,12 +13,17 @@
 %
 %
 % Input variables:
-%    cfg                : struct containing configuration information
-%    cfg.scale.method   : 'z', 'min0max1', 'none'. Defines type of scaling.
-%    [cfg.scale.cutoff] : optional input for outlier reduction, 1x2 vector
+%    cfg                 : struct containing configuration information
+%    cfg.scale.method    : 'z', 'min0max1', 'none'. Defines type of scaling.
+%    cfg.scale.estimation: 'all', 'across' or 'none'. When all is selected,
+%                          all data is scaled, and when across is selected, 
+%                          data is scaled for training separately than for 
+%                          testing (only necessary when data is not 
+%                          balanced and slower).
+%    [cfg.scale.cutoff]  : optional input for outlier reduction, 1x2 vector
 %                         ([lower bound upper bound])
-%    data               : contains samples to be scaled
-%    [scaleparams]      : possibly needed for action 'test', generated from
+%    data                : contains samples to be scaled
+%    [scaleparams]       : possibly needed for action 'test', generated from
 %                         action 'train'
 %
 % Output:
@@ -84,5 +89,3 @@ end
 % Remove outliers (default cutoff: [-Inf Inf])
 data(data<cfg.scale.cutoff(1)) = cfg.scale.cutoff(1);
 data(data>cfg.scale.cutoff(2)) = cfg.scale.cutoff(2);
-
-end

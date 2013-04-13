@@ -340,8 +340,8 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
         % TODO: include variable set here and rename to scaling within set
         
         % Do scaling on training set if requested
-        if strcmpi(cfg.scale.method,'across') && ~skip_training
-            if i_decoding == decoding_subindex(1) && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.method), end
+        if strcmpi(cfg.scale.estimation,'across') && ~skip_training
+            if i_decoding == decoding_subindex(1) && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 
@@ -366,7 +366,7 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
         % TODO: introduce column scaling (mean removal, zscore, etc.)
         
         % Do scaling on test data if requested
-        if strcmpi(cfg.scale.method,'across')
+        if strcmpi(cfg.scale.estimation,'across')
             [vectors_test] = decoding_scale_data(cfg,vectors_test,scaleparams);
         end
         

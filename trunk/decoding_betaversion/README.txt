@@ -148,8 +148,15 @@ correlation_classifier).
 Compiler:
 a) Linux users: get the latest version of gcc.
 b) Windows users: get the appropriate compiler for your version of Matlab 
-(check the Mathworks website). Then set the installation path manually to 
-Matlab using
+(check the Mathworks website), probably Microsoft Visual C++ 2010 Express.
+If Matlab wants an earlier version (e.g. 2008), a later version will work, 
+too! Then set the installation path manually to Matlab using
 > mex -setup
+Would you like mex to locate installed compilers -> n
+Select a compiler: -> select the compiler which is most similar to yours.
+If a warning message appears and you are asked: "use path anyway?" -> n
+Manually enter the pathname which is similar to the suggested one (e.g. if 
+the suggestion is "Microsoft Visual Studio 8.0", then use "Microsoft Visual 
+Studio 10.0")
 c) Mac users: install the gcc compiler by downloading and installing 
 Xcode (need to register).

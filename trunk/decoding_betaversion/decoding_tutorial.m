@@ -45,7 +45,7 @@ cfg.results.dir = [$ADD PATH AS STRING$];
 % === Automatic Creation === 
 % a) If you generated all parameter estimates (beta images) in SPM and were 
 % using only one model for all runs (i.e. have only one SPM.mat file), use
-% the following block.
+% the following block. If not, go to "Manual Creation".
 
 % Specify the directory to your SPM.mat and all related beta images:
 beta_dir = [$ADD PATH AS STRING$];
@@ -79,7 +79,9 @@ cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names
 % cfg = decoding_prepare_design(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
 
 % === Manual Creation ===
-% Alternatively, you can also manually prepare the files field.
+% If you have used "Automatic Creation", you can skip this step.
+% Alternatively to the automatic extraction of relevant information for 
+% your decoding, you can also manually prepare the "files" field.
 % For this, you have to load all images and labels you want to use 
 % separately, e.g. with spm_select. This is not part of this example, but 
 % if you do it later, you should end up with the following fields:
@@ -126,13 +128,14 @@ cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names
 cfg.design = make_design_cv(cfg);
 
 % === Automatic Creation - alternative ===
-% Alternatively, you can create the design during runtim of the decoding 
+% Alternatively, you can create the design during runtime of the decoding 
 % function, by specifying the following parameter:
 % cfg.design.function = 'make_design_cv';
-% For the current example, this is not helpful, because you can already
-% create the design now. However, you might run into cases in which you
-% can't create the design at this stage (e.g. if your design depends on the
-% outcome of some previous runs, and then this function will become handy.
+% For the current example this is not helpful, because you can already
+% create the design at this point. However, you might run into cases in 
+% which you cannot prespecify the design (e.g. if your design depends on 
+% the outcome of some previous runs), and then this function will become
+% useful.
 
 % === Manual Creation ===
 % After having explained the structure of the design file above, it should

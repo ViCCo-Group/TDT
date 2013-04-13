@@ -54,4 +54,6 @@ if strcmpi(cfg.analysis,'searchlight') && isfield(cfg.searchlight,'subset')
 
     end
     
+    if size(decoding_subindex,2) == 1, decoding_subindex = decoding_subindex'; end % make sure that it is a row vector
+    
 end

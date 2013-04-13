@@ -16,7 +16,7 @@
 % will be extended by a string ' bin 1' to ' bin m' where m refers to the 
 % number of basis functions.
 %
-% by Martin Hebart & Kai G?rgen, 2012/03/01 
+% by Martin Hebart & Kai Görgen, 2012/03/01 
 
 % History:
 % 2012/03/09, Kai

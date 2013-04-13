@@ -1,6 +1,6 @@
 1. ADD IMAGE PROCESSING SOFTWARE (Default: SPM8)
 By default, download & "install" SPM8 (i.e. extract it and add it to your matlab path. By default, SPM8 is used to read & write brain images.
-Alternatively, you can also use SPM2 & SPM5, or another toolbox, in case is is implemented. See README.txt on how to do this.
+Alternatively, you can also use SPM2 & SPM5, or another toolbox, in case it is implemented. See README.txt on how to do this.
 
 
 2. THE TOOLBOX

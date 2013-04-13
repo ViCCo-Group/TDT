@@ -9,7 +9,7 @@
 %   cfg: configuration file (see decoding.m)
 %   labelnames: 1xn cell array, containing all label names used in the SPM
 %       design matrix. These are the regressor names that are entered in the
-%       first-level analysis and which should serve as basis of the decoding.
+%       first-level analysis and which should serve as basis for the decoding.
 %   regressor_names: A file location where all regressor names are stored.
 %       This file is created by the function design_from_spm.
 %   beta_dir: Directory where images are stored that are used for decoding
@@ -17,14 +17,23 @@
 %   xclass (optional): Useful for simple cross classification. Assigns 
 %       separate numbers to each label. The cross classification will go from 
 %       class 1 to class 2. For classification, an example could look like this:
-%       labelnames = {'yourtraininglabel1','yourtraininglabel2','yourtestlabel1','yourtestlabel2'};
+%       labelnames = {'traininglabelAX','traininglabelBX','testlabelAY','testlabelBY'};
 %       labels = [1 -1 1 -1];
 %       xclass = [1 1 2 2];
+%       In this case, you classify A vs. B (e.g. face vs. house) and want 
+%       to generalize (cross-classify) from X to Y (e.g. from stimulus left to
+%       right). Because you classify A vs. B, your labels will be 1 -1 1 -1
+%       (if you want to classify X vs. Y, then they would be 1 1 -1 -1).
+%       The vector xclass is just used to keep the cross-classification
+%       samples separate.
 %
 % by Martin Hebart 11/06/12
 
-% KG: added cfg.files.description = regressor_name + step_number: 13/01/24
 % MH: added cross classification and help file: 11/09/05
+% TODO: add wildcards, but make sure a warning is printed when wildcards
+% are used across bins (which should rarely be done, otherwise it may
+% happen that several bins are accidentally grouped)
+
 
 function cfg = decoding_prepare_design(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
 
@@ -35,7 +44,6 @@ cfg.files.step = [];
 cfg.files.label = [];
 cfg.files.set = [];
 cfg.files.xclass = [];
-cfg.files.description = {};
 
 if length(labelnames) ~= length(labels)
     error('Label names have to be of equal size than label numbers!')
@@ -62,10 +70,6 @@ for i_input = 1:n_inputs
     cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
     cfg.files.step = [cfg.files.step cell2mat(regressor_names(2,label_index))];
     cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
-    % add a description for the current files
-    for li = find(label_index)
-        cfg.files.description{end+1, 1} = [regressor_names{1, li} '_' int2str(regressor_names{2, li})];
-    end
     if exist('xclass','var')
         cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
     end
@@ -76,6 +80,3 @@ cfg.files.step = cfg.files.step';
 cfg.files.label = cfg.files.label';
 cfg.files.set = cfg.files.set';
 cfg.files.xclass = cfg.files.xclass';
-    
-
-

@@ -196,6 +196,8 @@ end
 
 n_steps = size(ps_cfg.design.train,2);
 
+decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
+
 for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
     itrain = find(ps_cfg.design.train(:, i_step) > 0);

@@ -45,7 +45,8 @@
 %                    percentage between 0 and 1 or as total number of
 %                    voxels). The optimum is determined by nested CV. When
 %                    the string 'automatic' is entered, all voxels will be
-%                    used for selection.
+%                    used for selection and the optimal number will be
+%                    determined automatically.
 %
 %       nested_n_vox:Optional input for method 'embedded.RFE'. Determines
 %                    range of voxels in which to search in nested CV.
@@ -55,7 +56,7 @@
 %       external_fname: Optional input for method 'filter.external'. 1 x n
 %                    cell matrix of file names. Provides full path to files
 %                    used as external ranking input (e.g. previously
-%                    computed F-contrasts). May be one image (when contrast
+%                    computed F-contrasts). Can be one image (when contrast
 %                    is independent of labels) or one per decoding step
 %                    (e.g. one per run).
 %
@@ -65,10 +66,10 @@
 %                    independent t-map that does not carry information
 %                    about the category which is decoded). Also, the output
 %                    generated in results.feature_selection can be used to
-%                    draw plots of information depending on number of
+%                    draw plots of information depending on the number of
 %                    features selected. Nested feature selection searches 
 %                    are not permitted and will lead to the same results as
-%                    a standard analysis to prevent unintentional abuse.
+%                    a standard analysis to prevent unintentional misuse.
 %
 %   files.label: n_steps x 1 vector, specifying the label for each file
 %   files.step:  n_steps x 1 vector, specifying the decoding step of each label
@@ -153,17 +154,21 @@ end
 [n_vox,nested_n_vox] = basic_checks(cfg,size(data,2),i_step);
 
 % Scale features first
-data_scaled = decoding_scale_data(cfg,data); % because training data are balanced, currently the default for scaling is 'all' or 'none'
+data_scaled = decoding_scale_data(cfg.feature_selection,data); % because training data are balanced, currently the default for scaling is 'all' or 'none'
 
 %% Run feature selection as filter
 if strcmpi(cfg.feature_selection.method,'filter')
 
-[fs_index,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,nested_n_vox,i_step);
+[fs_index,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step);
     
 %% Run feature selection as embedded method (currently only RFE)
 
-elseif strcmpi(cfg.feature_selection.method,'embedded') && ...
-       strcmpi(cfg.feature_selection.embedded,'RFE')
+elseif strcmpi(cfg.feature_selection.method,'embedded')
+    
+    if ~strcmpi(cfg.feature_selection.embedded,'RFE')
+        error(['Currently, for embedded feature selection methods, only recursive ',...
+               'feature elimination is implemented. Please set cfg.feature_selection.embedded = ''RFE'''])
+    end
 
 [fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,data_scaled,n_vox,nested_n_vox,i_step);
 
@@ -171,10 +176,11 @@ end
 
 %% Generate ouput
 
-fs_results.n_vox_selected = n_vox_selected;
+fs_results.n_vox_steps = n_vox_steps;
+fs_results.output = output;
+fs_results.n_vox_selected = length(fs_index);
+
 if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
-    fs_results.n_vox_steps = n_vox_steps;
-    fs_results.output = output;
     fs_index = 1:length(ranks); % do not change decoding for next step when all data is used
 end
 
@@ -194,6 +200,11 @@ msg_id = []; % TODO: introduce persistent variable that prevents that warnings a
 if ~strcmpi(cfg.feature_selection.method,'none') && ~strcmpi(cfg.feature_selection.method,'filter') && ~strcmpi(cfg.feature_selection.method,'embedded')
     [msg,msg_id] = warning('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
         'Unknown feature selection type.']);
+end
+
+if ~isfield(cfg.feature_selection,'n_vox')
+    error(['Missing field ''nvox'' in cfg.feature_selection. You need to specify the range ',...
+                'in which to search. Type ''help feature_selection'' for details.'])
 end
 
 if ~isfield(cfg.feature_selection,'n_vox')
@@ -227,11 +238,6 @@ elseif length(n_vox)>=1 % if range of voxels is entered
     n_vox = n_vox(n_vox>0);
 end
     
-if any(n_vox > n_features)
-    [msg,msg_id] = warning('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
-        'Number of specified features to be selected is larger than number of existing features.']);
-end
-
 if strcmpi(cfg.feature_selection.method,'filter')
     nested_n_vox = n_vox; % for filtering, give nested_n_vox as output because output is requested % TODO: try giving [] as output
 
@@ -240,7 +246,7 @@ elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for 
     if isfield(cfg.feature_selection,'nested_n_vox')
         nested_n_vox = cfg.feature_selection.nested_n_vox;
     else
-        [msg,msg_id] = error('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
+        error('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
             'nested_n_vox was not specified for feature selection method ''embedded''.']);
     end
     
@@ -279,6 +285,7 @@ elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for 
     end
     
 end
+
 
 % below reduces number of times warning messages are displayed to a minimum
 if ~isempty(msg_id)

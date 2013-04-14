@@ -1,4 +1,4 @@
-% function cfg = decoding_parameter_selection(cfg,vectors_train,i_step)
+% function cfg = decoding_parameter_selection(cfg,vectors_train,i_train)
 %
 % This function selects and changes parameters that are used for
 % training the model (for example the cost variable C in SVM) and is an
@@ -26,6 +26,10 @@
 %       grid: (for method = 'grid'):
 %            'peak':       Parameters are selected based on the highest
 %                          overall response
+%
+% vectors_train: Training data
+% i_train: Index of training data
+
 
 % (c) Martin Hebart, 12/02/08
 
@@ -36,7 +40,7 @@
 %       cfg.parameter_selection.parameters = {'c','e'};
 %       cfg.parameter_selection.parameter_range = {10^(-5:5),10^(-2:7)};
 
-function cfg = decoding_parameter_selection(cfg,vectors_train,i_step)
+function cfg = decoding_parameter_selection(cfg,vectors_train,i_train)
 
 if isfield(cfg.parameter_selection,'method') && strcmpi(cfg.parameter_selection.method,'none')
     return
@@ -78,7 +82,7 @@ all_combinations = allperms(all_combinations,parameter_range);
 
 % Then loop across all possible combinations in a nested CV and report
 % maximum as output
-[selected_parameters cfg.parameter_selection.design.msg] = run_nest(cfg,vectors_train,i_step,all_combinations,default_params);
+[selected_parameters cfg.parameter_selection.design.msg] = run_nest(cfg,vectors_train,i_train,all_combinations,default_params);
 
 cfg.decoding.train.(cfg.decoding.method).model_parameters = sprintf(default_params,selected_parameters);
 
@@ -145,37 +149,21 @@ all_combinations = allperms(all_combinations,parameter_range);
 
 
 %% Nested cross validation to determine optimal parameter combination
-function [selected_parameters msg] = run_nest(cfg,data,i_step,all_combinations,default_params)
-
-ps_cfg = cfg.parameter_selection;
+function [selected_parameters msg] = run_nest(cfg,data,i_train,all_combinations,default_params)
 
 % Create design for nested CV
 try
-    
-    error
-    % ALTERNATIVELY, PASS i_train
-    
-%     if isfield(cfg.files,'step') && isfield(cfg.files,'label')
-%         ps_ind = (cfg.files.step~=i_step);
-%         ps_cfg.files.step = cfg.files.step(ps_ind);
-%         ps_cfg.files.label = cfg.files.label(ps_ind);
-%         % check explicitly if a parameter has been provided
-%         if isfield(ps_cfg,'design') && isfield(ps_cfg.design,'function')
-%             fhandle = str2func(ps_cfg.design.function);
-%             ps_cfg.design = feval(fhandle,ps_cfg);
-%         % else check if design function had been used in main function and try same design
-%         elseif isfield(cfg.design,'info')
-%             strend = strfind(cfg.design.info.ver,' '); % extract function name from field
-%             fname = cfg.design.info.ver(1:strend(1)-1);
-%             fhandle = str2func(fname);
-%             ps_cfg.design = feval(fhandle,ps_cfg);
-%             warning('PARAMETER_SELECTION:DESTYP1','Design type was not provided explicitly. Using same as in main function: ''%s'' for nested cross-validation',fname)
-%         % otherwise try out leave-one-out CV
-%         else
-%             ps_cfg.design = make_design_cv(ps_cfg);
-%             warning('PARAMETER_SELECTION:DESTYP1','Design type was not provided explicitly. Using leave-one-run out CV for nested cross-validation')
-%         end
-%     end
+    if isfield(cfg.parameter_selection,'design') && isfield(cfg.parameter_selection.design,'function')
+        % do nothing
+    else
+        cfg.parameter_selection.design.function = cfg.design.function;
+    end
+    cfg.parameter_selection.files.mask = cfg.files.mask;
+    cfg.parameter_selection.files.step = cfg.files.step(i_train);
+    cfg.parameter_selection.files.label = cfg.files.label(i_train);
+    cfg.parameter_selection.files.name = cfg.files.name(i_train);
+    fhandle = str2func(cfg.parameter_selection.design.function.name);
+    cfg.parameter_selection.design = feval(fhandle,cfg.parameter_selection);
 catch %#ok<CTCH>
     error('Could not create design for nested cross-validation. Need correct information in field ''cfg.parameter_selection.design.function!''')
 end
@@ -187,30 +175,30 @@ else
 end
 
 % because training data are balanced, currently the default for scaling is 'all' or 'none'
-if ~isfield(ps_cfg,'scale')
+if ~isfield(cfg.parameter_selection,'scale')
     if isfield(cfg.parameter_selection,'scale')
-        ps_cfg.scale = cfg.parameter_selection.scale; % manually determined scaling
+        cfg.parameter_selection.scale = cfg.parameter_selection.scale; % manually determined scaling
     else
-        ps_cfg.scale = cfg.scale; % use same scaling as in decoding.m
+        cfg.parameter_selection.scale = cfg.scale; % use same scaling as in decoding.m
     end
-    if strcmp(ps_cfg.scale,'all_used') || strcmp(ps_cfg.scale,'across')
-        ps_cfg.scale = 'all';
+    if strcmp(cfg.parameter_selection.scale,'all_used') || strcmp(cfg.parameter_selection.scale,'across')
+        cfg.parameter_selection.scale = 'all';
     end
 end
 
-n_steps = size(ps_cfg.design.train,2);
+n_steps = size(cfg.parameter_selection.design.train,2);
 
 decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
 
 for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
-    itrain = find(ps_cfg.design.train(:, i_step) > 0);
-    itest = find(ps_cfg.design.test(:, i_step) > 0);
+    itrain = find(cfg.parameter_selection.design.train(:, i_step) > 0);
+    itest = find(cfg.parameter_selection.design.test(:, i_step) > 0);
     
     vectors_train = data(itrain, :);
     vectors_test = data(itest, :);
-    labels_train = ps_cfg.design.label(itrain, i_step);
-    labels_test = ps_cfg.design.label(itest, i_step);
+    labels_train = cfg.parameter_selection.design.label(itrain, i_step);
+    labels_test = cfg.parameter_selection.design.label(itest, i_step);
     
     % Perform nested CV for each step
     for iteration = 1:size(all_combinations,2)
@@ -218,34 +206,35 @@ for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
         % select model_parameters for current iteration
         curr_params = sprintf(default_params,all_combinations(:,iteration));
         
-        ps_cfg.decoding.train.(ps_cfg.decoding.method).model_parameters = curr_params;
+        cfg.parameter_selection.decoding.train.(cfg.parameter_selection.decoding.method).model_parameters = curr_params;
            
         % Train model
-        fhandle = str2func([ps_cfg.decoding.software '_train']); % this format allows variable input
+        fhandle = str2func([cfg.parameter_selection.decoding.software '_train']); % this format allows variable input
         % e.g. when software is libsvm, call function with name libsvm_train.m
-        model = feval(fhandle,labels_train,vectors_train,ps_cfg);
+        model(i_step,iteration) = feval(fhandle,labels_train,vectors_train,cfg.parameter_selection);
         
         % Test estimated model
-        fhandle = str2func([ps_cfg.decoding.software '_test']); % this format allows variable input
+        fhandle = str2func([cfg.parameter_selection.decoding.software '_test']); % this format allows variable input
         % e.g. when software is libsvm, call function with name libsvm_test.m
-        decoding_out(i_step,iteration) = feval(fhandle,labels_test,vectors_test,ps_cfg,model);
+        decoding_out(i_step,iteration) = feval(fhandle,labels_test,vectors_test,cfg.parameter_selection,model);
         
     end
     
 end
 
-results(1) = struct; % init
+results.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % init
+
 % transform decoding_out to result format that is requested
 for iteration = 1:size(all_combinations,2)
-    if numel(ps_cfg.results.output)>1,
+    if numel(cfg.parameter_selection.results.output)>1,
         error(['More than one output selected in nested CV for parameter selection.\n',...
             'Change field ''cfg.parameter_selection.results.output'' to one entry. only.'])
     end
-   results = decoding_generate_output(ps_cfg,results,decoding_out(:,iteration),iteration); 
+   results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration)); 
 end
 
 % Use parameters where output is highest
-all_results = vertcat(results.output);
+all_results = vertcat(results.(cfg.parameter_selection.results.output{1}).output);
 
 s_ind = find(all_results == max(all_results));
 

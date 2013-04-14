@@ -31,6 +31,7 @@ fname = mfilename('fullpath');
 fpath = fileparts(fname);
 addpath(genpath(fpath));
 defaults.toolbox_path = fpath;
+defaults.report = []; % init field
 
 % path to libSVM (set if version delivered with this package is not working)
 % addpath('/analysis/share/software/matlab_libraries/libsvm-3.11')

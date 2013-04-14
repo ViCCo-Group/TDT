@@ -48,15 +48,9 @@ corr_between(2,1) = correl(train{2},test{1});
 
 else % if only one voxel is present, a correlation is not possible
    
-warning('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxel (may happen at borders of mask). Using nearest absolute neighbor instead of correlation!')
-% Instead choose predicted labels based on distance, normalized across all
-% and with very small absolute values to reduce the size of the effect, but 
-% still yield interpretable results in terms of predicted_labels.
-maxval = max([train{1}(:); test{1}(:); train{2}(:); test{2}(:)].^2);
-corr_within(1,1) = 0.001 * (train{1}-test{1}).^2/maxval;
-corr_within(2,1) = 0.001 * (train{2}-test{2}).^2/maxval;
-corr_between(1,1) = 0.001 * (train{1}-test{2}).^2/maxval;
-corr_between(2,1) = 0.001 * (train{1}-test{2}).^2/maxval;
+warning('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxel (may happen at borders of mask). Setting value to NaN!')
+corr_within = NaN(2,1);
+corr_between(2,1) = NaN(2,1);
     
 end
 

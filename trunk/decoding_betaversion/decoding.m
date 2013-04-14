@@ -171,7 +171,9 @@ cfg.feature_selection = decoding_defaults(cfg.feature_selection);
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 
 global verbose % MH: don't worry, Kai, this is the only case where global is better than passing!! ;)
+global reports % and this is the second only case...
 verbose = cfg.verbose;
+reports = []; % init
 
 % Display version
 ver = [mfilename ', Martin Hebart & Kai Goergen, v2012/03/12 2.01 beta'];
@@ -336,7 +338,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if ~skip_training
-           cfg = decoding_parameter_selection(cfg,vectors_train,i_step); 
+           cfg = decoding_parameter_selection(cfg,vectors_train,i_train); 
         end
         
         %%%%%%%%%%%%%%%%%%%%%

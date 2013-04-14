@@ -151,4 +151,5 @@ set(gca, 'ytick', [])
 set(gca, 'XTick', 1:length(unique_labels)+1)
 set(gca, 'XTickLabel', [sprintf('%i|', unique_labels) 'unused'])
 
-
+%% make sure it shows up
+drawnow;

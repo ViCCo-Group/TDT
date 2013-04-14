@@ -21,6 +21,7 @@ cfg = decoding_defaults;
  % the standard decoding method is searchlight, but we should still enter 
  % it to be on the safe side
 cfg.analysis = 'searchlight';
+% cfg.analysis = 'wholebrain';
 
 % define what you want to get as outputs
 cfg.results.output = {'accuracy_minus_chance', 'binomial_probability'}
@@ -121,6 +122,7 @@ cfg.design = make_design_cv(cfg);
 
 %% Print your design to look at it
 print_design(cfg);
+plot_design(cfg);
 
 %% Fourth, set additional parameters manually
 
@@ -138,6 +140,13 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 % standard parameters for libsvm
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % (linear SV classification, cost = 1)
+
+%% Decide whether you want to plot the searchlight while it goes
+
+cfg.plot_searchlight = 100; % 1: every step, 2: every second step, 100: every hundredth step...
+
+%% only select a number of voxels to decode
+% cfg.searchlight.subset = [5, 100, 1000, 1001]';
 
 %% Fifth, run the decoding analysis
 

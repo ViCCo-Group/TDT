@@ -1,4 +1,4 @@
-function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,model)
+function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model)
 
 n_outputs = length(cfg.results.output);
 
@@ -48,10 +48,10 @@ for i_output = 1:n_outputs
     % Create a struct array
     if isstruct(output) && i_decoding == 1
         results.(outname) = rmfield(results.(outname), 'output');
-        results.(outname).output(i_decoding) = output;
+        results.(outname).output(curr_decoding) = output;
     end
 
-    results.(outname).output(i_decoding) = output;
+    results.(outname).output(curr_decoding) = output;
 
     if cfg.results.setwise
         for i_set = 1:n_sets
@@ -70,10 +70,10 @@ for i_output = 1:n_outputs
             if isstruct(output) && i_decoding == 1 && i_set == 1
                 % reinit set
                 results.(outname) = rmfield(results.(outname), 'set');
-                results.(outname).set(i_set).output(i_decoding) = output;
+                results.(outname).set(i_set).output(curr_decoding) = output;
             end
 
-            results.(outname).set(i_set).output(i_decoding) = output;
+            results.(outname).set(i_set).output(curr_decoding) = output;
             results.(outname).set(i_set).set_id = current_set;
         end
     end

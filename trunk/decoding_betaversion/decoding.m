@@ -43,6 +43,15 @@
 %               function that should be used (e.g. 'make_design_cv'). Check
 %               the folder 'design' for all options.
 %
+% PROGRESS DISPLAY:
+%       cfg.plot_searchlight: if positive, plots searchlight in 3d. 
+%           Slows down decoding ENORMOUSLY, if every step is plotted, but 
+%           looks nice and might be helpful for bug-tracking.
+%           Any number n means: 
+%               1: plot every step, 
+%               2: every second step, 100: every hundredth step...
+%           Default: 0 (no plotting)
+%
 % OUTPUT:
 %   results: 1 x n structure array, containing the decoding results of each
 %       of the n requested outputs (see. cfg.results.output)
@@ -146,6 +155,10 @@
 % TODO: better: check that current software can deliver the requested
 %   output
 
+% HISTORY
+% 2013-04-14 Kai
+%   Separated i_decoding into i_decoding and curr_decoding. Detailed
+%   explanation what is what below.
 
 function [results, cfg, passed_data] = decoding(cfg, passed_data)
 
@@ -202,7 +215,7 @@ if strcmpi(cfg.scale.estimation,'all')
     data = decoding_scale_data(cfg,data);
 end
 
-% Get number of voxels for searchlight and number of ROIs for ROI (and 1 for wholebrain)
+% Get number of decodings for searchlight and number of ROIs for ROI (and 1 for wholebrain)
 [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz);
 
 % Initialize results vectors
@@ -220,14 +233,27 @@ for i_output = 1:n_outputs
     % Save number of conditions (e.g. to get the chancelevel later)
     results.n_cond = n_cond;
         
+    if strcmp(cfg.analysis, 'searchlight')
+        % use number of voxels to allocate space independent of number of
+        % decodings (because cfg.searchlight.subset allows to choose fewer
+        % voxels, but we want in the end an image that has the same
+        % dimension as the original image
+        n_dim = length(mask_index);  % n_voxel = length(mask_index)
+    else
+        % otherwise, get as many output dimensions as decodings (no subset
+        % selection possible at the moment)
+        n_dim = n_decodings;
+    end
+        
     % Preallocation
-    results.(outname).output = zeros(n_decodings,1);
+    results.(outname).output = zeros(n_dim,1);
     
     if cfg.results.setwise
         for i_set = 1:n_sets
-            results.(outname).set(i_set).output = zeros(n_decodings,1);
+            results.(outname).set(i_set).output = zeros(n_dim,1);
         end
     end
+    clear n_dim
 end
 
 
@@ -250,19 +276,35 @@ end
 % Report files
 report_files(cfg,n_steps,inputfilenames_fid);
 
-k_decodings = length(decoding_subindex); % for display_progress
-startval = decoding_subindex(1);
-endval = decoding_subindex(end);
+% CHANGE: Separated i_decoding into i_decoding and curr_decoding
+%   i_decoding contained the current number of the decoding that was todo.
+%   This was typically 1:n_vox. The problem is that this mixed up a counter
+%   index which runs reliably from 1:number of decodings with the list of
+%   voxels/masks that should be used.
+%   Now, i_decoding is the real step-number, while curr_decoding contains
+%   the number of the decoding (voxel, ROI, ...) that should be done.
+% 2013-04-14 Kai
 
 % Start
-for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
-
+for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
+    
+    curr_decoding = decoding_subindex(i_decoding);
+    
     % Display status info (i.e. how far is the analysis?)
-    if verbose, [msg_length] = display_progress(cfg,i_decoding,k_decodings,startval,endval,start_time,msg_length); end
+    if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
     
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
-    indexindex = get_ind(cfg,mask_index,i_decoding,sz,sl_template);
+    indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template);
 
+    if isfield(cfg, 'plot_searchlight') && cfg.plot_searchlight > 0 && (mod(i_decoding, cfg.plot_searchlight) == 1 || i_decoding == n_decodings)
+        try
+            % plot searchlight with brain projection
+            plot_searchlight(mask_index(indexindex), sz, data(1, :), mask_index);
+        catch
+            warning('decoding:plot_searchlight_failed', 'plot_searchlight failed');
+        end
+    end
+    
     % init variables that are used to check whether the previous training
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
@@ -320,9 +362,11 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
                 if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
                     if i_step == 1
                     results.feature_selection(i_decoding) = fs_results;
+                    results.feature_selection(i_decoding).curr_decoding = curr_decoding;
                     end
                 else
                     results.feature_selection(i_decoding).n_vox_selected(i_step) = fs_results.n_vox_selected;
+                    results.feature_selection(i_decoding).curr_decoding = curr_decoding;
                 end
             end
             vectors_train = vectors_train(:,fs_index);
@@ -342,7 +386,7 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
         
         % Do scaling on training set if requested
         if strcmpi(cfg.scale.estimation,'across') && ~skip_training
-            if i_decoding == decoding_subindex(1) && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
+            if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 
@@ -385,7 +429,7 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
-    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,model);
+    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model);
     
 end % End decoding iterations (e.g. voxel)
 

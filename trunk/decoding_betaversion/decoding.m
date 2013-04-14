@@ -208,7 +208,7 @@ end
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
 n_sets = length(unique(cfg.design.set));
-n_cond = sum(unique(cfg.design.label) ~= 0); % TODO: MINOR BUG: If 0 is used as label (which is ok) it won't count as class. Also, this does not make any sense for e.g. regression...
+n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
 results = {};
 
 % Prepare searchlight template (if needed, sl_template will be empty for other methods)
@@ -262,10 +262,10 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
     
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,i_decoding,sz,sl_template);
-    
+
     % init variables that are used to check whether the previous training
     % set equals the current decoding (used below to skip these trainings)
-    previous_itrain = []; % init
+    previous_i_train = []; % init
     previous_trainlabels = []; % init
     
     % TODO: Get a better order of the decodings steps (i.e. reorder the
@@ -276,19 +276,19 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
     for i_step = 1:n_steps
         
         % Get indices for training
-        itrain = find(cfg.design.train(:, i_step) > 0);
+        i_train = find(cfg.design.train(:, i_step) > 0);
         % Get indices for testing
-        itest = find(cfg.design.test(:, i_step) > 0);
+        i_test = find(cfg.design.test(:, i_step) > 0);
 
         % Get data for training & testing at current position
-        vectors_train = data(itrain, indexindex);
-        vectors_test = data(itest, indexindex);
-        labels_train = cfg.design.label(itrain, i_step);
-        labels_test = cfg.design.label(itest, i_step);
+        vectors_train = data(i_train, indexindex);
+        vectors_test = data(i_test, indexindex);
+        labels_train = cfg.design.label(i_train, i_step);
+        labels_test = cfg.design.label(i_test, i_step);
 
         % Skip feature selection and training if training set & training 
         % labels are identical to previous iteration (saves time)
-        skip_training = isequal(previous_itrain, itrain) & isequal(previous_trainlabels, labels_train);
+        skip_training = isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
@@ -314,6 +314,7 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
                 fs_data.labels_train = labels_train;
                 fs_data.labels_test = labels_test;
                 fs_data.i_step = i_step;
+                fs_data.i_train = i_train;
                 fs_data.external.position_index = mask_index(indexindex); % absolute position of currently selected voxels in decoding (for external masks)
                 [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data);
                 if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
@@ -357,7 +358,7 @@ for i_decoding = decoding_subindex % e.g. voxels for searchlight (decoding_subin
         
         % store current training indices & training labels to check if they
         % are equal in the next decoding step
-        previous_itrain = cfg.design.train(:,i_step); % update for next step
+        previous_i_train = cfg.design.train(:,i_step); % update for next step
         previous_trainlabels = labels_train;
         
         %    TEST DATA    %
@@ -622,9 +623,9 @@ filestart = fnames(1,1:n_match);
 for i_step = 1:n_steps
 
     % Get indices for training
-    itrain = find(cfg.design.train(:, i_step) > 0);
+    i_train = find(cfg.design.train(:, i_step) > 0);
     % Get indices for testing
-    itest = find(cfg.design.test(:, i_step) > 0);
+    i_test = find(cfg.design.test(:, i_step) > 0);
     
     if isfield(cfg, 'sn')
         text = sprintf('Subject %i, Decoding Nr %i', cfg.sn, i_step);
@@ -643,16 +644,16 @@ for i_step = 1:n_steps
         cont = '';
     end
     
-    for curr_itrain = itrain'
-        text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_itrain, i_step), cont, cfg.files.name{curr_itrain}(n_match+1:end));
+    for curr_i_train = i_train'
+        text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, cfg.files.name{curr_i_train}(n_match+1:end));
         dispv(2, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
     fprintf(inputfilenames_fid, '\n');
     
     
-    for curr_itest = itest'
-        text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_itest, i_step), cont, cfg.files.name{curr_itest}(n_match+1:end));
+    for curr_i_test = i_test'
+        text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, cfg.files.name{curr_i_test}(n_match+1:end));
         dispv(2, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end

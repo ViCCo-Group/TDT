@@ -151,27 +151,31 @@ ps_cfg = cfg.parameter_selection;
 
 % Create design for nested CV
 try
-    if isfield(cfg.files,'step') && isfield(cfg.files,'label')
-        ps_ind = (cfg.files.step~=i_step);
-        ps_cfg.files.step = cfg.files.step(ps_ind);
-        ps_cfg.files.label = cfg.files.label(ps_ind);
-        % check explicitly if a parameter has been provided
-        if isfield(ps_cfg,'design') && isfield(ps_cfg.design,'function')
-            fhandle = str2func(ps_cfg.design.function);
-            ps_cfg.design = feval(fhandle,ps_cfg);
-        % else check if design function had been used in main function and try same design
-        elseif isfield(cfg.design,'info')
-            strend = strfind(cfg.design.info.ver,' '); % extract function name from field
-            fname = cfg.design.info.ver(1:strend(1)-1);
-            fhandle = str2func(fname);
-            ps_cfg.design = feval(fhandle,ps_cfg);
-            warning('PARAMETER_SELECTION:DESTYP1','Design type was not provided explicitly. Using same as in main function: ''%s'' for nested cross-validation',fname)
-        % otherwise try out leave-one-out CV
-        else
-            ps_cfg.design = make_design_cv(ps_cfg);
-            warning('PARAMETER_SELECTION:DESTYP1','Design type was not provided explicitly. Using leave-one-run out CV for nested cross-validation')
-        end
-    end
+    
+    error
+    % ALTERNATIVELY, PASS i_train
+    
+%     if isfield(cfg.files,'step') && isfield(cfg.files,'label')
+%         ps_ind = (cfg.files.step~=i_step);
+%         ps_cfg.files.step = cfg.files.step(ps_ind);
+%         ps_cfg.files.label = cfg.files.label(ps_ind);
+%         % check explicitly if a parameter has been provided
+%         if isfield(ps_cfg,'design') && isfield(ps_cfg.design,'function')
+%             fhandle = str2func(ps_cfg.design.function);
+%             ps_cfg.design = feval(fhandle,ps_cfg);
+%         % else check if design function had been used in main function and try same design
+%         elseif isfield(cfg.design,'info')
+%             strend = strfind(cfg.design.info.ver,' '); % extract function name from field
+%             fname = cfg.design.info.ver(1:strend(1)-1);
+%             fhandle = str2func(fname);
+%             ps_cfg.design = feval(fhandle,ps_cfg);
+%             warning('PARAMETER_SELECTION:DESTYP1','Design type was not provided explicitly. Using same as in main function: ''%s'' for nested cross-validation',fname)
+%         % otherwise try out leave-one-out CV
+%         else
+%             ps_cfg.design = make_design_cv(ps_cfg);
+%             warning('PARAMETER_SELECTION:DESTYP1','Design type was not provided explicitly. Using leave-one-run out CV for nested cross-validation')
+%         end
+%     end
 catch %#ok<CTCH>
     error('Could not create design for nested cross-validation. Need correct information in field ''cfg.parameter_selection.design.function!''')
 end

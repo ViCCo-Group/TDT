@@ -30,6 +30,7 @@
 %       images not used
 %   design.test: same as in design.train, but this time for all test images
 %   design.set: 1xn vector, describing the set number of each CV step.
+%   design.function: Information about function used to create design
 %
 %
 
@@ -49,7 +50,8 @@ function design = make_design_boot_cv(cfg,n_boot,n_test)
 
 %% generate design matrix
 
-design.info.ver = [mfilename ' Martin H., v20110613'];
+design.function.name = mfilename;
+design.function.ver = 'v20100613';
 
 if ~isfield(cfg.files,'set')
     cfg.files.set = ones(size(cfg.files.label));

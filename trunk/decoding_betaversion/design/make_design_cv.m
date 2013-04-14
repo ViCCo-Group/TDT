@@ -23,7 +23,8 @@
 %       a 1 for each image used for training in this CV step and 0 for all
 %       images not used
 %   design.test: same as in design.train, but this time for all test images
-%   design.set: 1xn vector, describing the set number of each CV step.
+%   design.set: 1xn vector, describing the set number of each CV step
+%   design.function: Information about function used to create design
 %
 %
 % EXAMPLE:
@@ -130,7 +131,8 @@ function design = make_design_cv(cfg)
 
 %% generate design matrix (CV)
 
-design.info.ver = [mfilename ' Kai, v20130124'];
+design.function.name = mfilename;
+design.function.ver = 'v20100613';
 
 if isfield(cfg.files, 'xclass') && ~isempty(cfg.files.xclass)
     error(sprintf(['xclass for standard cross-validation design\n' ...

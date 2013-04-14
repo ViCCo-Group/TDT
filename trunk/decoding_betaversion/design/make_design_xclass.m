@@ -11,7 +11,7 @@
 %   cfg.files.label: a vector, one label number for each file in
 %       cfg.files.name
 %   cfg.files.set: a vector, one set number for each file in
-%       cfg.files.name.
+%       cfg.files.name
 %   cfg.files.xclass: a vector, one number for each file in
 %       cfg.files.name. This variable is used to distinguish training
 %       and test data. Cross classification is performed from the lower to
@@ -29,7 +29,8 @@
 %       a 1 for each image used for training in this decoding step and 0 for all
 %       images not used
 %   design.test: same as in design.train, but this time for all test images
-%   design.set: 1xn vector, describing the set number.
+%   design.set: 1xn vector, describing the set number
+%   design.function: Information about function used to create design
 %
 %
 % EXAMPLE:
@@ -173,7 +174,8 @@ function design = make_design_xclass(cfg)
 
 %% generate design matrix
 
-design.info.ver = [mfilename ' Martin H., v20110905'];
+design.function.name = mfilename;
+design.function.ver = 'v20110905';
 
 if ~isfield(cfg.files,'set') || isempty(cfg.files.set)
     cfg.files.set = ones(size(cfg.files.label));

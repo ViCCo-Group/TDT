@@ -8,14 +8,12 @@ function warningv(msg_id,msg)
 global reports %#ok
 
 callers = dbstack;
-callers_name = char(callers.name);
-callers_name(:,end+1) = ' '; % for making search for 'decoding' unique
-
-stop_ind = strmatch('decoding ',callers_name);
+callers_name = {callers(2:end).name}; % remove warningv from list
+stop_ind = find(strcmp('decoding',callers_name)); % stop when top function 'decoding.m' has been reached
 
 str = 'reports'; % define level at which message should be deactivated
-for i = stop_ind:-1:2
-    str = [str '.' deblank(callers_name(i,:))];
+for i = stop_ind:-1:1
+    str = [str '.' callers_name{i}];
 end
 
 ind = findstr(msg_id,':');
@@ -26,7 +24,7 @@ else
 end
 str = [str '.' msg_id_short];
 
-% The use of eval is not very pretty, anyone has a better idea?
+% TODO: The use of eval is not very elegant, but it is fast.
 
 try % try adding one to the field
     eval([str '=' str '+1;'])

@@ -45,15 +45,14 @@ defaults.software = 'SPM8'; % what software to use to access brain images
 
 % display options
 defaults.verbose = 1; % Verbosity (0 to 2)
-defaults.plot_searchlight = 0; % a value of n means that the mask (e.g. a searchlight, ROI, ...) 
-                               % is plotted every n-th step (e.g. 1: every step) 
-                               % name is a bit misleading: not only
-                               % searchlights are plotted, but ROIs, masks
-                               % etc as well (works for every type of voxel
-                               % selection)
-                               % DRAWING IS SLOW, thus small values are
-                               % FUN to watch, but will SLOW down the 
-                               % program runs dramatically
+defaults.plot_selected_voxels = 0; % a value of n means that the currently 
+                               % selected voxels (e.g. a searchlight, ROI, 
+                               % ...) are plotted every n-th step 
+                               % (e.g. 1: every step). Remark:
+                               % DRAWING IS SLOW, thus although it is
+                               % certainly FUN and EDUCATING to watch every
+                               % step, this will SLOW DOWN decoding
+                               % dramatically
 
 % specification of scaling
 defaults.scale.method = 'none';

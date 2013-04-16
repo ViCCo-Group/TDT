@@ -1,22 +1,21 @@
-% function plot_searchlight(position_index,sz,brain_data,mask_index,boarder_images)
+% function plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images)
 %
 % This function plots a given voxelselection (e.g. searchlight, ROI), and
 % can in addition show a 2d projection of an image.
 %
 % Example usages:
-%   Plot searchlight only
-%       plot_searchlight(position_index,sz)
-%
-%   Plot searchlight + background
-%       plot_searchlight(position_index,sz,brain_data,mask_index)
-%
-%   Additionally select how the 2d boarder image should look like
-%       plot_searchlight(...,boarder_images)
+%   plot_selected_voxels(position_index,sz)
+%       Plot currently selected voxels only (no background image)
+%   plot_selected_voxels(position_index,sz,brain_data,mask_index)
+%       Plot searchlight + background
+%   plot_selected_voxels(...,boarder_images)    
+%       Additionally select how the 2d boarder image should look like
+%       
 %
 % PARAMETER
 %   position_index: vector 1xn with indices of voxels in sz space
 %   sz: 1x3 vector: dimensions of original images
-%  OPTIONAL to add background image
+% OPTIONAL (to add background image)
 %   brain_data: 1xBD vector with values of an input image 
 %       (e.g. the first brain image), serves as background
 %   mask_index: 1xBD vector specifying the position of each value in 
@@ -34,7 +33,7 @@
 %       but of course plot searchlight
 %   -- somewhere on the way there: save projections
 
-function plot_searchlight(position_index,sz,brain_data,mask_index,boarder_images)
+function plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images)
 
 % check that the correct arguments are provided
 if exist('brain_data', 'var')
@@ -173,5 +172,6 @@ if exist('brain_data', 'var')
     colormap('gray')
     % shading flat
 end
+
 %% draw image
 drawnow

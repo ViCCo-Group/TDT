@@ -50,7 +50,7 @@
 %               the folder 'design' for all options.
 %
 % PROGRESS DISPLAY:
-%       cfg.plot_searchlight: if positive, plots searchlight in 3d.
+%       cfg.plot_selected_voxels: if positive, plots searchlight in 3d.
 %           Slows down decoding ENORMOUSLY, if every step is plotted, but
 %           looks nice and might be helpful for bug-tracking.
 %           Any number n means:
@@ -307,12 +307,22 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template);
 
-    if isfield(cfg, 'plot_searchlight') && cfg.plot_searchlight > 0 && (cfg.plot_searchlight == 1 || mod(i_decoding, cfg.plot_searchlight) == 1 || i_decoding == n_decodings)
+    if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
         try
             % plot searchlight with brain projection
-            plot_searchlight(mask_index(indexindex), sz, data(1, :), mask_index);
+            plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index);
+            if i_decoding == 1 && cfg.plot_selected_voxels < 50 && n_decodings > 5  % 50 is an arbitrary value
+                % warn that is might be slow
+                currfig = gcf;
+                figure('Position',[0,0,500,50]);
+                warning_str = {'REMARK: Plotting selected voxels often slows down performance a lot!'; 'Use e.g. cfg.plot_selected_voxels = 50 to only plot every 50th step'};
+                text(0,0,warning_str, 'BackgroundColor', [1,1,1]);
+                drawnow;
+                figure(currfig);
+                clear currfig
+            end
         catch
-            warning('decoding:plot_searchlight_failed', 'plot_searchlight failed');
+            warning('decoding:plot_selected_voxels_failed', 'plot_selected_voxels failed');
         end
     end
 

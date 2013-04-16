@@ -145,7 +145,7 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 %% Decide whether you want to plot the searchlight while it goes
 
-cfg.plot_searchlight = 1; % 1: every step, 2: every second step, 100: every hundredth step...
+cfg.plot_selected_voxels = 1; % 1: every step, 2: every second step, 100: every hundredth step...
 
 %% only select a number of voxels to decode
 % cfg.searchlight.subset = [5, 100, 1000, 1001]';

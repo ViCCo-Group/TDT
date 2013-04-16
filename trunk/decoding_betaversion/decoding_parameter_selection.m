@@ -174,7 +174,6 @@ else
     msg = cfg.parameter_selection.msg;
 end
 
-% because training data are balanced, currently the default for scaling is 'all' or 'none'
 if ~isfield(cfg.parameter_selection,'scale')
     if isfield(cfg.parameter_selection,'scale')
         cfg.parameter_selection.scale = cfg.parameter_selection.scale; % manually determined scaling

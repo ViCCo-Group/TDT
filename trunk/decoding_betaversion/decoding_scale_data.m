@@ -5,11 +5,12 @@
 % The function currently supports only row scaling, i.e. scaling
 % across samples. To preserve independence of training and test data, one
 % approach is to perform scaling on training data and later apply
-% these parameters to test data.
+% these parameters to test data (estimation = 'across').
 %
-% If data are balanced, however, there is no reason to assume that scaling
-% carries category-specific information, so scaling can be performed across
-% all data samples (recommended).
+% However, in general there is no reason to assume that a simple scaling of 
+% data can carry any category-specific information from training to test 
+% set, so scaling can be performed using all data samples, which is more 
+% stable (recommended; estimation = 'all').
 %
 %
 % Input variables:
@@ -18,8 +19,7 @@
 %    cfg.scale.estimation: 'all', 'across' or 'none'. When all is selected,
 %                          all data is scaled, and when across is selected, 
 %                          data is scaled for training separately than for 
-%                          testing (only necessary when data is not 
-%                          balanced and slower).
+%                          testing (slower).
 %    [cfg.scale.cutoff]  : optional input for outlier reduction, 1x2 vector
 %                         ([lower bound upper bound])
 %    data                : contains samples to be scaled

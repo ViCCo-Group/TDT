@@ -143,7 +143,7 @@ cfg.design = make_design_cv(cfg);
 % automatically in the main function.
 
 % if you want to see your design matrix, use
-print_design(cfg);
+display_design(cfg);
 
 %% Fourth, set additional parameters manually
 

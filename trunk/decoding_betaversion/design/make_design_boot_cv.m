@@ -9,6 +9,12 @@
 % chance classification may occur (ask Martin H. for details). In addition,
 % it naturally limits the number of necessary bootstrap samples.
 %
+% REMARK: THIS FUNCTION HAS SO FAR BEEN USED ONLY WITH BALANCED TRAINING
+% DATA. IF YOUR TRAINING SAMPLES ARE UNBALANCED (i.e. more training samples
+% in one class than in the other) make sure the function will still work
+% for you. (It would be nice if you can send us your solution, so we can
+% make them generally available).
+%
 % IN
 %   cfg.files.step: a vector, one step (e.g. run) number for each file in
 %       cfg.files.name

@@ -65,17 +65,15 @@ cfg = decoding_defaults(cfg);
 cfg.analysis = 'wholebrain';
 cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see the model
 
-%% Nothing needs to be changed below for a standard leave-one-run out cross
-% validation analysis.
-
+%% Nothing needs to be changed below for a standard leave-one-run out cross validation analysis.
 % Create a leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
-print_design(cfg);
+display_design(cfg);
 
 %% Decoding Parameters
 
-% default: -s 0 -t 0 -c 1 -b 0
-cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1000 -b 0';
+% default: -s 0 -t 0 -c 1 -b 0 -q
+% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1000 -b 0 -q';
 
 %% Run decoding
 [results, cfg] = decoding(cfg, pass_data);

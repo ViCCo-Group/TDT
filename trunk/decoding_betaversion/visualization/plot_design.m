@@ -1,13 +1,13 @@
 % function plot_design(cfg)
 %
-% This function plots your current design (analog to print_design.m).
+% This function plots your current design (analog to display_design.m).
 %
 % It works, but the output is somewhat ugly.
 %
 % If you like and/or know how to design nice figures in matlab, feel free
 % to improve the design.
 %
-% See also: print_design.m
+% See also: display_design.m
 
 % Kai, 13-01-24
 

@@ -530,10 +530,6 @@ if strcmpi(cfg.decoding.software,'libsvm')
     end
 end
 
-% TODO: introduce check that cfg.scale.estimation = 'all' only for balanced
-% data (otherwise, results may be biased in favor of one hypothesis,
-% reducing decoding accuracies)
-
 if ~strcmpi(cfg.feature_selection.method,'none')
     warning('Feature selection has not been fully debugged. Running in test mode!') %#ok<WNTAG>
 end

@@ -121,8 +121,10 @@ cfg.design = make_design_cv(cfg);
 % automatically in the main function.
 
 %% Print your design to look at it
-print_design(cfg);
+display_design(cfg);
 plot_design(cfg);
+
+pause
 
 %% Fourth, set additional parameters manually
 
@@ -133,7 +135,7 @@ plot_design(cfg);
 % Searchlight-specific parameters
 % cfg.searchlight.unit = 'mm';
 cfg.searchlight.radius = 3; % this will yield a searchlight radius 3 voxels
-cfg.searchlight.spherical = 1;
+cfg.searchlight.spherical = 0;
 
 % Other parameters of interest:
 cfg.verbose = 2; % you want all information to be printed on screen
@@ -143,7 +145,7 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 %% Decide whether you want to plot the searchlight while it goes
 
-cfg.plot_searchlight = 100; % 1: every step, 2: every second step, 100: every hundredth step...
+cfg.plot_searchlight = 1; % 1: every step, 2: every second step, 100: every hundredth step...
 
 %% only select a number of voxels to decode
 % cfg.searchlight.subset = [5, 100, 1000, 1001]';

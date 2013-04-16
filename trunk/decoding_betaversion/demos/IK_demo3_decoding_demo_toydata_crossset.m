@@ -123,7 +123,7 @@ cfg.design.test = [design1_1.test design1_2.test]; % design1_3.test design1_4.te
 cfg.design.label = [design1_1.label design1_2.label]; % design1_3.label design1_4.label];
 cfg.design.set = ones(1, size(cfg.design.train, 2));
 
-print_design(cfg)
+display_design(cfg);
 
 %% Prepare data for passing
 passed_data.data = data;

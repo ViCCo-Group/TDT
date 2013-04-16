@@ -80,11 +80,14 @@ defaults.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -
 defaults.decoding.train.regression.model_parameters = '-s 4 -t 0 -c 1 -n 0.5 -b 0 -q'; % nu-SVR (adapt cost to control speed)
 defaults.decoding.test.classification.model_parameters = '-q';
 defaults.decoding.test.regression.model_parameters = '-q';
-
-% warning('No unit for searchlight provided. Assuming voxels...') #ok<WNTAG>
-% TODO: move this warning somewhere else (best in function where we can
-% check if it was overwritten, or better provide an output with verbose = 1
-% that mm is assumed together with the number of voxels in the searchlight
+% imbalanced data
+%     If you have imbalanced training data, and 
+%       IF YOU THOUGHT ABOUT HOW TO DEAL WITH IT!
+%     set in your script
+%       cfg.design.imbalance_data ='ok'
+%     DO NOT SET THIS AS DEFAULT, because otherwise you might get 
+%     unexpected problems later when you have unbalanced training data and
+%     did not think how to deal with it
 
 % Results specific defaults
 defaults.results.output = {'accuracy_minus_chance'};

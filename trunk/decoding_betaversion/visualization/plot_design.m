@@ -21,11 +21,10 @@ background_color = [.5, .5, .5];
 %% define position of subplots
 % we use a 4x4 grid and specify the number of all positions that should be
 % used
-pos.train = [1, 2, 5, 6, 9, 10];
-pos.test = [3, 4, 7, 8, 11, 12];
-% Text is positioned, not aligend to a grid, using 
-% subplot('Position', )
-pos.text = [14, 15, 16];
+pos.train = [5, 6, 9, 10];
+pos.test = [7, 8, 11, 12];
+% Text is positioned using a 4x4 grid
+pos.text = [1:4];
 % to create a bit more space for text and legend, we add extra space by
 % using a 8x4 grid
 pos.legend = [29];
@@ -88,7 +87,7 @@ subplot(4, 4, pos.text);
 
 outtext = {'TDT - Decoding details'};
 if ~isempty(filestart)
-    outtext{end+1} = ['Common input: ' filestart];
+    outtext{end+1} = ['Filestart: ' filestart];
 end
 
 if isfield(cfg.results, 'dir')
@@ -99,7 +98,7 @@ end
 
 axis off
 
-text(.05,.5,outtext, 'Interpreter', 'none', 'BackgroundColor',[.7 .9 .7]);
+text(0,.5,outtext, 'Interpreter', 'none', 'BackgroundColor',[.7 .9 .7]);
 
 
 
@@ -115,9 +114,16 @@ end
 subplot(4, 4, pos.test)
 image(show_test)
 title('Test Data')
+
 set(gca, 'YTick', 1:size(cfg.files.name, 1))
-set(gca,'YTickLabel', cfg.files.name)
 xlabel('Test Data - Step number')
+
+% add file description on the left if available
+if isfield(cfg.files, 'descr')
+    set(gca,'yaxislocation','right')
+    set(gca, 'YTick', 1:size(cfg.files.name, 1))
+    set(gca,'YTickLabel', cfg.files.descr)
+end
 
 %% if a description is available, also add this on the right
 

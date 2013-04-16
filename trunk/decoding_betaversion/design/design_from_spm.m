@@ -9,16 +9,20 @@
 %   to reduce the filesize when data is passed on to someone else).
 %
 % OUTPUT:
-% regressor_names: a 2-by-n cell matrix where the first row refers to the
-% names of the regressors and the second row represents the experimental
-% run of those regressors. If more than one basis function exists in the
-% design matrix (e.g. as is the case for FIR designs), each regressor name 
-% will be extended by a string ' bin 1' to ' bin m' where m refers to the 
-% number of basis functions.
+% regressor_names: a 3-by-n cell matrix.
+% regressor_names(1, :) -  shortened names of the regressors
+%   If more than one basis function exists in the design matrix (e.g. as is 
+%   the case for FIR designs), each regressor name will be extended by a 
+%   string ' bin 1' to ' bin m' where m refers to the number of basis 
+%   functions.
+% regressor_names(2, :) - experimental run/session of each regressors
+% regressor_names(3, :) - full name of the SPM regressor
 %
-% by Martin Hebart & Kai Görgen, 2012/03/01 
+% by Martin Hebart & Kai Görgen, 2012/03/01, Update 13/04/16 Kai
 
 % History:
+% 2013/04/16 Kai
+%   Passing original SPM regressor name as third row
 % 2012/03/09, Kai
 %   Also *_SPM.mat files will be used (if no SPM.mat is found)
 % 2012/03/01, Martin: v1
@@ -126,5 +130,8 @@ if length(unique_bf) > 1
     end
 end
 
+% add full SPM regressor name as third row
+regressor_names(3,:) = regressors;
 
+% save to get regressors quicker
 save(regressor_file,'regressor_names')

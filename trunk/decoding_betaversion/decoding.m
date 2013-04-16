@@ -1,23 +1,23 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
-% 
-% Decoding Toolbox, Version: 2.0 beta, by Martin Hebart & Kai Goergen
 %
-% This is the main function of the decoding toolbox which links to all 
+% Decoding Toolbox, Version: 2.1 beta, by Martin Hebart & Kai Goergen
+%
+% This is the main function of the decoding toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
-% of running several different brain image decoding analyses (searchlight 
-% decoding, region of interest (ROI) decoding, and wholebrain decoding). 
-% Several commonly used methods are implemented, including classification, 
+% of running several different brain image decoding analyses (searchlight
+% decoding, region of interest (ROI) decoding, and wholebrain decoding).
+% Several commonly used methods are implemented, including classification,
 % regression, and correlation.
-% The toolbox has several subfunctions to which new methods can easily be 
+% The toolbox has several subfunctions to which new methods can easily be
 % appended for individual adjustments (see tutorial for details).
 %
 % To get started, type "help decoding_example" and run that function
-% to perform a standard decoding analysis (searchlight, ROI, or wholebrain) 
+% to perform a standard decoding analysis (searchlight, ROI, or wholebrain)
 % on your specified data.
 %
 % REMARK: We are currently working on implementing FEATURE SELECTION.
 % This is currently in an experimental stage, but does not work at the
-% moment. However, some lines already contain code that is required for 
+% moment. However, some lines already contain code that is required for
 % that. So don't be confused by that, nor do expect that you can use
 % feature selection at the moment.
 %
@@ -25,30 +25,36 @@
 % REQUIRED INPUT:
 %   cfg: Structure containing all necessary configuration information
 %       Required fields:
+%           files: Information about the input files.
+%               cfg.files must contain
+%           files.name: Full path to each input file
+%           files.descr: (optional) description of each file (e.g. the SPM
+%               regressor name)
+%
 %           design: Design matrix with entries label, train, test, and set
-%               (see folder 'design' for example functions on how to 
+%               (see folder 'design' for example functions on how to
 %               generate a design and the necessary structure).
-%           design.train: n_files x n_steps matrix, specifying the files 
+%           design.train: n_files x n_steps matrix, specifying the files
 %               used as training data for each decoding step (e.g. run)
-%           design.test: n_files x n_steps matrix, specifying the files 
+%           design.test: n_files x n_steps matrix, specifying the files
 %               used as test data for each decoding step (e.g. run)
-%           design.label: n_files x n_steps matrix, specifying the labels 
+%           design.label: n_files x n_steps matrix, specifying the labels
 %               of each file for each decoding step (e.g. run)
-%           design.set: 1 x n vector, describing the set number of each 
+%           design.set: 1 x n vector, describing the set number of each
 %               step. The set number can also be used to save results of each
 %               decoding_step independently (see cfg.results.setwise).
-%       Alternatively, you can create the design in this function by 
+%       Alternatively, you can create the design in this function by
 %       providing the following field:
 %           design.function: string named after the design creation
 %               function that should be used (e.g. 'make_design_cv'). Check
 %               the folder 'design' for all options.
 %
 % PROGRESS DISPLAY:
-%       cfg.plot_searchlight: if positive, plots searchlight in 3d. 
-%           Slows down decoding ENORMOUSLY, if every step is plotted, but 
+%       cfg.plot_searchlight: if positive, plots searchlight in 3d.
+%           Slows down decoding ENORMOUSLY, if every step is plotted, but
 %           looks nice and might be helpful for bug-tracking.
-%           Any number n means: 
-%               1: plot every step, 
+%           Any number n means:
+%               1: plot every step,
 %               2: every second step, 100: every hundredth step...
 %           Default: 0 (no plotting)
 %
@@ -61,33 +67,33 @@
 %           mask_index: contains the brain mask indices of all masks in
 %               case they are needed again.
 %   cfg: returns the configuration file that was used in the decoding.
-%   passed_data: all brain imaging data is necessary to pass to decoding.m 
+%   passed_data: all brain imaging data is necessary to pass to decoding.m
 %        to perform another analyses using the same data.
-%   
+%
 %
 % All other input is provided in decoding_defaults unless changed.
 % The most important of these input fields are:
 %   cfg.analysis: Determines the type of analysis that is performed
 %       ('searchlight', 'ROI', or 'wholebrain')
-%   cfg.decoding.method: method of decoding ('classification', 'regression', 
+%   cfg.decoding.method: method of decoding ('classification', 'regression',
 %       or other [default = 'classification']
 %   cfg.decoding.software: Software used for decoding [default = 'libsvm']
-%   cfg.decoding.train.classification.model_parameters: Model parameters 
+%   cfg.decoding.train.classification.model_parameters: Model parameters
 %       that the external software needs for training [set for libsvm classification]
 %   cfg.decoding.test.classification.model_parameters: Model parameter that the external
 %       software needs for testing [default = '']
 %   cfg.results.write: Should results be written to hard disk [default = 1]
-%   cfg.results.output: 1xn cell array specifying which output should be 
-%       generated, with possible fields specified in function 
+%   cfg.results.output: 1xn cell array specifying which output should be
+%       generated, with possible fields specified in function
 %       decoding_transform_results.m  [default = {'accuracy'}]
 %   cfg.results.dir: Output directory [default = fullfile(pwd,'decoding_results')]
 %   cfg.software: Software used to access images and files [default = 'SPM8']
 %
-% If searchlight analysis is selected, often the following parameters want 
+% If searchlight analysis is selected, often the following parameters want
 % to be set manually:
 %   cfg.searchlight.unit: searchlight unit ('voxels' or 'mm') [default = 'voxels']
 %   cfg.searchlight.radius: searchlight radius [default = 4]
-%   cfg.searchlight.spherical: should the searchlight be spherical in real 
+%   cfg.searchlight.spherical: should the searchlight be spherical in real
 %       space or in voxel space (for real space, spherical = 1) [default = 0]
 %
 % Other optional input includes:
@@ -95,12 +101,12 @@
 %       See function 'decoding_scale_data' for details
 %   cfg.parameter_selection: Optimize parameters for decoding in nested CV
 %       See function 'decoding_parameter_selection' for details
-%   cfg.feature_selection: Select most important features (voxels) for 
+%   cfg.feature_selection: Select most important features (voxels) for
 %       decoding. See function 'decoding_feature_selection' for details
 %   cfg.searchlight.subset: if you want to execute only a subset of
 %       searchlights, you can either enter an Nx1 vector where each value of
-%       n corresponds to the index within the searchlight mask is executed 
-%       (not the voxel index of the whole volume!), or you can enter an 
+%       n corresponds to the index within the searchlight mask is executed
+%       (not the voxel index of the whole volume!), or you can enter an
 %       Nx3 matrix corresponding to the XYZ coordinates of the volume
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
 %   cfg.results.setwise: Should results of each set be returned separately [default = 0]
@@ -117,20 +123,20 @@
 %       achieve one results.
 %   n_decodings: Number of decoding analyses that are performed, e.g.
 %       number of ROIs or number of searchlight voxels.
-%   n_sets: Number of decoding sets which are performed. Several decodings 
-%       with different outputs may be performed interleaved (e.g. when 
+%   n_sets: Number of decoding sets which are performed. Several decodings
+%       with different outputs may be performed interleaved (e.g. when
 %       doing cross-classification with different test data in each set).
 %       These could of course be called in different analyses, but it saves
 %       time to do them all together.
 %
 %
-% PASSING DATA (optional): 
+% PASSING DATA (optional):
 % If you pass passed_data, then these will be
 % taken instead of reading both from files. Some checks are done to
-% assure that the data fits to the filenames. 
-% 
+% assure that the data fits to the filenames.
+%
 %   passed_data: struct with all data that is necessary to do the decodings
-%                as provided by decoding_load_data. 
+%                as provided by decoding_load_data.
 %       Required fields:
 %       .data: nSamples x nVoxels matrix of data that is used for decoding.
 %              This is not all data from the data files, but only the data
@@ -156,13 +162,16 @@
 %   output
 
 % HISTORY
+% 2013-04-16 Kai
+%   Added cfg.files in help description
+%
 % 2013-04-14 Kai
 %   Separated i_decoding into i_decoding and curr_decoding. Detailed
 %   explanation what is what below.
 
 function [results, cfg, passed_data] = decoding(cfg, passed_data)
 
-%% Prepare decoding analysis 
+%% Prepare decoding analysis
 
 cfg = decoding_defaults(cfg); % set defaults
 cfg.parameter_selection = decoding_defaults(cfg.parameter_selection);
@@ -176,7 +185,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = [mfilename ', Martin Hebart & Kai Goergen, v2012/03/12 2.01 beta'];
+ver = [mfilename ', Martin Hebart & Kai Goergen, v2013/04/16 2.1 beta'];
 cfg.info.ver = ver;
 dispv(1,ver)
 
@@ -203,7 +212,7 @@ else
     % check that passed_data fits to cfg, otherwise load data from files
     [passed_data, cfg] = decoding_load_data(cfg, passed_data);
 end
-    
+
 % unpack all fields from passed_data to shorten names in this function
 data = passed_data.data;
 mask_index = passed_data.mask_index;
@@ -231,10 +240,10 @@ results = {};
 
 for i_output = 1:n_outputs
     outname = cfg.results.output{i_output};
-    
+
     % Save number of conditions (e.g. to get the chancelevel later)
     results.n_cond = n_cond;
-        
+
     if strcmp(cfg.analysis, 'searchlight')
         % use number of voxels to allocate space independent of number of
         % decodings (because cfg.searchlight.subset allows to choose fewer
@@ -246,10 +255,10 @@ for i_output = 1:n_outputs
         % selection possible at the moment)
         n_dim = n_decodings;
     end
-        
+
     % Preallocation
     results.(outname).output = zeros(n_dim,1);
-    
+
     if cfg.results.setwise
         for i_set = 1:n_sets
             results.(outname).set(i_set).output = zeros(n_dim,1);
@@ -289,16 +298,16 @@ report_files(cfg,n_steps,inputfilenames_fid);
 
 % Start
 for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
-    
+
     curr_decoding = decoding_subindex(i_decoding);
-    
+
     % Display status info (i.e. how far is the analysis?)
     if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
-    
+
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template);
 
-    if isfield(cfg, 'plot_searchlight') && cfg.plot_searchlight > 0 && (mod(i_decoding, cfg.plot_searchlight) == 1 || i_decoding == n_decodings)
+    if isfield(cfg, 'plot_searchlight') && cfg.plot_searchlight > 0 && (cfg.plot_searchlight == 1 || mod(i_decoding, cfg.plot_searchlight) == 1 || i_decoding == n_decodings)
         try
             % plot searchlight with brain projection
             plot_searchlight(mask_index(indexindex), sz, data(1, :), mask_index);
@@ -306,19 +315,19 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             warning('decoding:plot_searchlight_failed', 'plot_searchlight failed');
         end
     end
-    
+
     % init variables that are used to check whether the previous training
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
     previous_trainlabels = []; % init
-    
+
     % TODO: Get a better order of the decodings steps (i.e. reorder the
-    % decoding step index i_step so that the same training is used in 
+    % decoding step index i_step so that the same training is used in
     % successive steps)
-    
+
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
-        
+
         % Get indices for training
         i_train = find(cfg.design.train(:, i_step) > 0);
         % Get indices for testing
@@ -330,7 +339,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         labels_train = cfg.design.label(i_train, i_step);
         labels_test = cfg.design.label(i_test, i_step);
 
-        % Skip feature selection and training if training set & training 
+        % Skip feature selection and training if training set & training
         % labels are identical to previous iteration (saves time)
         skip_training = isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
 
@@ -338,15 +347,15 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if ~skip_training
-           cfg = decoding_parameter_selection(cfg,vectors_train,i_train); 
+            cfg = decoding_parameter_selection(cfg,vectors_train,i_step);
         end
-        
+
         %%%%%%%%%%%%%%%%%%%%%
         % Feature selection %
         %%%%%%%%%%%%%%%%%%%%%
-        
+
         % TODO: feature selection should give vector of selected voxels as
-        % output, then vectors_test can be adjusted later on 
+        % output, then vectors_test can be adjusted later on
         % TODO: This is in an experimental stage and won't work at the
         % moment
         if ~strcmpi(cfg.feature_selection.method,'none')
@@ -363,8 +372,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
                 [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data);
                 if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
                     if i_step == 1
-                    results.feature_selection(i_decoding) = fs_results;
-                    results.feature_selection(i_decoding).curr_decoding = curr_decoding;
+                        results.feature_selection(i_decoding) = fs_results;
+                        results.feature_selection(i_decoding).curr_decoding = curr_decoding;
                     end
                 else
                     results.feature_selection(i_decoding).n_vox_selected(i_step) = fs_results.n_vox_selected;
@@ -374,18 +383,18 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             vectors_train = vectors_train(:,fs_index);
             vectors_test = vectors_test(:,fs_index);
         end
-        
-       
+
+
         %%%%%%%%%%%%%%%%%%%%
         % PERFORM DECODING %
         %%%%%%%%%%%%%%%%%%%%
-        
+
         %   TRAIN DATA    %
         %%%%%%%%%%%%%%%%%%%
-        
+
         % Do scaling on all used data if requested
         % TODO: include variable set here and rename to scaling within set
-        
+
         % Do scaling on training set if requested
         if strcmpi(cfg.scale.estimation,'across') && ~skip_training
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
@@ -401,29 +410,29 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         else
             model(i_step) = model(i_step-1); %#ok
         end
-        
+
         % store current training indices & training labels to check if they
         % are equal in the next decoding step
         previous_i_train = cfg.design.train(:,i_step); % update for next step
         previous_trainlabels = labels_train;
-        
+
         %    TEST DATA    %
         %%%%%%%%%%%%%%%%%%%
-        
+
         % TODO: introduce column scaling (mean removal, zscore, etc.)
-        
+
         % Do scaling on test data if requested
         if strcmpi(cfg.scale.estimation,'across')
             [vectors_test] = decoding_scale_data(cfg,vectors_test,scaleparams);
         end
-        
+
         % Test Estimated Model
         fhandle = str2func([cfg.decoding.software '_test']); % this format allows variable input
         % e.g. when software is libsvm, then:
         % model(i_step) = libsvm_test(labels_train,vectors_train,cfg,model(i_step));
         decoding_out(i_step) = feval(fhandle,labels_test,vectors_test,cfg,model(i_step)); %#ok
 
-        % TODO: decoding_out should be made extendable across runs 
+        % TODO: decoding_out should be made extendable across runs
         % (sometimes you want to do things across runs)
         % maybe introduce another function and use all models?
 
@@ -432,7 +441,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
     results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model);
-    
+
 end % End decoding iterations (e.g. voxel)
 
 % done
@@ -464,10 +473,10 @@ save(cfg_fpath, 'cfg');
 
 % Create copy of txt files and cfg for each decoding output (e.g. 'accuracy', 'AUC', ...)
 if numel(cfg.results.output)>1
-   for i_out = 2:numel(cfg.results.output)
-      tmp = copyfile(inputfilenames_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_filedetails.txt']); %#ok<NASGU>
-      tmp = copyfile(cfg_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_cfg.mat']); %#ok<NASGU>
-   end
+    for i_out = 2:numel(cfg.results.output)
+        tmp = copyfile(inputfilenames_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_filedetails.txt']); %#ok<NASGU>
+        tmp = copyfile(cfg_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_cfg.mat']); %#ok<NASGU>
+    end
 end
 
 
@@ -509,7 +518,7 @@ if any(missing) % if only some or no fields for a design exist
         error('Design is missing or incomplete. Either create design in advance or pass method to create design (see ''help decoding'')');
     end
 end
-    
+
 % try the most simple decoding possible (only if libsvm is used)
 if strcmpi(cfg.decoding.software,'libsvm')
     [working, libsvm_path] = check_libsvm(cfg);
@@ -584,9 +593,12 @@ else
     dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
 end
 
+% Check if training data is balanced (test data does not matter)
+check_imbalance(cfg);
+
 if ischar(cfg.files.name)
     cfg.files.name = num2cell(cfg.files.name,2);
-    warning('File names provided as string, not as cell matrix. Converting to cell...') %#ok 
+    warning('File names provided as string, not as cell matrix. Converting to cell...') %#ok
 end
 
 if length(cfg.files.name) ~= length(unique(cfg.files.name))
@@ -604,7 +616,7 @@ if length(unique(cfg.design.set)) == 1
 end
 
 if cfg.results.write
-    
+
     dir_output = cfg.results.dir; % results directory
     if ~exist(dir_output, 'dir'), mkdir(dir_output); end
 
@@ -617,12 +629,12 @@ if cfg.results.write
     end
 
     for i_output = 1:n_outputs
-        
+
         % TODO: should we also introduce this check for each set if sets
         % are written?
-        
+
         % Check if it is ok to overwrite existing files
-        
+
         for ext = {'.img','.hdr'}
             output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{1}];
             if exist(output_fname,'file')
@@ -633,7 +645,7 @@ if cfg.results.write
                     warning('Resultfile %s already existed. Overwriting...',output_fname) %#ok
                 end
             end
-            
+
             % Check if it is possible to write
             temp = fopen(output_fname, 'w');
             fclose(temp);
@@ -642,9 +654,32 @@ if cfg.results.write
     end
 end
 
+
+%% CHECK subfunctions
+
+% Check for imbalanced training data
+function check_imbalance(cfg)
+dispv(1, 'Checking for imbalances in cfg.design.train')
+for decoding_step = 1:size(cfg.design.train, 2)
+    curr_labels = cfg.design.label(:, decoding_step);
+    curr_training_labels = curr_labels(cfg.design.train(:, decoding_step) == 1);
+    unique_labels = unique(curr_training_labels);
+    for label_ind = 1:length(unique_labels)
+        n_each_label(label_ind) = sum(curr_training_labels == unique_labels(label_ind));
+    end
+    if any(diff(n_each_label) ~= 0)
+        message_str = sprintf('Imbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
+        if isfield(cfg.design, 'imbalanced_data') && strcmp(cfg.design.imbalanced_data, 'ok')
+            warning('decoding:check_imbalanced_data_ok', [message_str, ' You decided this is ok, because cfg.design.imbalanced_data = ''ok''']);
+        else
+            error('decoding:check_imbalanced_data_ok', [message_str, ' If this is ok, set cfg.design.imbalanced_data = ''ok'''])
+        end
+    end
+end
+
 %% REPORT USED FILES
 
-% This function prints file names for a certain decoding to the screen and 
+% This function prints file names for a certain decoding to the screen and
 % writes them to a given file if requested
 
 function report_files(cfg,n_steps,inputfilenames_fid)
@@ -665,14 +700,14 @@ for i_str = 1:n_str
     end
 end
 filestart = fnames(1,1:n_match);
-    
+
 for i_step = 1:n_steps
 
     % Get indices for training
     i_train = find(cfg.design.train(:, i_step) > 0);
     % Get indices for testing
     i_test = find(cfg.design.test(:, i_step) > 0);
-    
+
     if isfield(cfg, 'sn')
         text = sprintf('Subject %i, Decoding Nr %i', cfg.sn, i_step);
     else
@@ -680,7 +715,7 @@ for i_step = 1:n_steps
     end
     dispv(2, '%s', text)
     fprintf(inputfilenames_fid, '%s\n', text);
-   
+
     if n_match > 0
         cont = '...';
         text = sprintf('  File Start: %s%s\n', filestart, cont);
@@ -689,20 +724,20 @@ for i_step = 1:n_steps
     else
         cont = '';
     end
-    
+
     for curr_i_train = i_train'
         text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, cfg.files.name{curr_i_train}(n_match+1:end));
         dispv(2, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
     fprintf(inputfilenames_fid, '\n');
-    
-    
+
+
     for curr_i_test = i_test'
         text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, cfg.files.name{curr_i_test}(n_match+1:end));
         dispv(2, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
     fprintf(inputfilenames_fid, '\n');
-    
+
 end

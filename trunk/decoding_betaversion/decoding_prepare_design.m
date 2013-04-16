@@ -10,8 +10,14 @@
 %   labelnames: 1xn cell array, containing all label names used in the SPM
 %       design matrix. These are the regressor names that are entered in the
 %       first-level analysis and which should serve as basis for the decoding.
-%   regressor_names: A file location where all regressor names are stored.
-%       This file is created by the function design_from_spm.
+%   regressor_names: 2xn or 3xn cell array, containing information about
+%       input files. 
+%       regressor_names is created by the function design_from_spm.
+%       It contains for each file in cfg.files (same order):
+%           regressor_names(1,:) - Class name from SPM, and bin_ number, if
+%               a FIR model was used.
+%           regressor_names(2,:) - Run/Session number of regressor.
+%           regressor_names(3,:) [OPTIONAL] - Full name of SPM regressor
 %   beta_dir: Directory where images are stored that are used for decoding
 %       (e.g. beta_0001.img)
 %   xclass (optional): Useful for simple cross classification. Assigns 
@@ -27,12 +33,28 @@
 %       The vector xclass is just used to keep the cross-classification
 %       samples separate.
 %
-% by Martin Hebart 11/06/12
+% OUTPUT:
+%   Full usable cfg, including all missing entries of cfg from cfg.defaults
+%   and especially information about the input files:
+%         cfg.files.name: name of each file
+%         cfg.files.step: run/session number of each file
+%         cfg.files.label: label for each file
+%         cfg.files.set: set number for each file
+%         cfg.files.xclass: cross-class information for each file (only
+%           necessary for cross-class decoding)
+%         cfg.files.descr: short text description of the file, normally the 
+%           regressor names from SPM (more or less)
+%
+%
+% by Martin Hebart 11/06/12, Update Kai 13/04/16
 
-% MH: added cross classification and help file: 11/09/05
 % TODO: add wildcards, but make sure a warning is printed when wildcards
 % are used across bins (which should rarely be done, otherwise it may
 % happen that several bins are accidentally grouped)
+
+% Update Kai, 13/04/16
+%   Added files.descr, normally full SPM regressor name
+% MH: added cross classification and help file: 11/09/05
 
 
 function cfg = decoding_prepare_design(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
@@ -44,6 +66,7 @@ cfg.files.step = [];
 cfg.files.label = [];
 cfg.files.set = [];
 cfg.files.xclass = [];
+cfg.files.descr = {}; % contains the regressor names from SPM (more or less)
 
 if length(labelnames) ~= length(labels)
     error('Label names have to be of equal size than label numbers!')
@@ -72,6 +95,17 @@ for i_input = 1:n_inputs
     cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
     if exist('xclass','var')
         cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
+    end
+    % also add the regressor name of each of those
+    if size(regressor_names, 1) == 3 % full name has been submitted, use this
+        for curr_index = find(label_index)
+            cfg.files.descr{end+1} = regressor_names{3,curr_index}; % maybe nicer, but not real SPM name: [regressor_names{1,curr_index} '_' int2str(regressor_names{2,curr_index})];
+        end
+    else
+        % create a description that is similar to the original SPM name
+        for curr_index = find(label_index)
+            cfg.files.descr{end+1} = [regressor_names{1,curr_index} '_' int2str(regressor_names{2,curr_index})];
+        end
     end
 end
 

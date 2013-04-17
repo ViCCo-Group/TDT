@@ -357,7 +357,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if ~skip_training
-            cfg = decoding_parameter_selection(cfg,vectors_train,i_step);
+            cfg = decoding_parameter_selection(cfg,vectors_train,i_train);
         end
 
         %%%%%%%%%%%%%%%%%%%%%

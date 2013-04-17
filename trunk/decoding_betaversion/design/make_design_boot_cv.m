@@ -9,11 +9,11 @@
 % chance classification may occur (ask Martin H. for details). In addition,
 % it naturally limits the number of necessary bootstrap samples.
 %
-% REMARK: THIS FUNCTION HAS SO FAR BEEN USED ONLY WITH BALANCED TRAINING
-% DATA. IF YOUR TRAINING SAMPLES ARE UNBALANCED (i.e. more training samples
-% in one class than in the other) make sure the function will still work
-% for you. (It would be nice if you can send us your solution, so we can
-% make them generally available).
+% REMARK: THIS FUNCTION HAS SO FAR BEEN USED ONLY WITH UNBALANCED DATA,
+% BUT BALANCED *TRAINING* DATA. IF YOUR TRAINING SAMPLES ARE UNBALANCED 
+% (i.e. more training samples in one class than in the other) make sure 
+% the function will still work for you. (It would be nice if you can send 
+% us your solution, so we can make it generally available).
 %
 % IN
 %   cfg.files.step: a vector, one step (e.g. run) number for each file in
@@ -167,8 +167,7 @@ for i_step = 1:n_steps
 end
 
 
-if ~isfield(cfg,'design') || ~isfield(cfg.design,'msg') || ~isfield(cfg.design.msg,mfilename)
-fprintf('Design for CV decoding for %i files x %i steps created\n', n_files, n_steps)
+msg = 'Design for CV decoding for %i files x %i steps created\n';
+if check_verbosity(msg,1)
+    dispv(1, msg, n_files, counter)
 end
-
-design.msg.(mfilename) = 1; % set message so that output is generated only once in a decoding

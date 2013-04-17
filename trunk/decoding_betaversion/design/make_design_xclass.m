@@ -250,8 +250,7 @@ for i_twoway = 1:n_twoway
     
 end
 
-if ~isfield(cfg,'design') || ~isfield(cfg.design,'msg') || ~isfield(cfg.design.msg,mfilename)
-fprintf('Design for cross classification decoding for %i files x %i steps created\n', n_files, counter)
+msg = 'Design for cross classification decoding for %i files x %i steps created\n';
+if check_verbosity(msg,1)
+    dispv(1, msg, n_files, counter)
 end
-
-design.msg.(mfilename) = 1; % set message so that output is generated only once

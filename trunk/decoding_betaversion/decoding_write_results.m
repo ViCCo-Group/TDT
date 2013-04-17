@@ -52,13 +52,13 @@ if strcmpi(cfg.analysis,'searchlight')
             if exist(fname,'file')
                 if cfg.results.overwrite
                     % simply overwrite the file
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname)
+                    warningv('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname)
                 else
                     % dont overwrite file, copy it
                     [old_results_path, old_results_file, dummy_ending] = fileparts(fname);
                     old_fname = fullfile(old_results_path, old_results_file);
                     backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
+                    warningv('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
                     
                     fext = '.mat';
                     source = [old_fname, fext];
@@ -136,7 +136,7 @@ if strcmpi(cfg.analysis,'searchlight')
             
             % Save set results (should each set be saved separately?)
             if cfg.results.setwise
-                n_sets = 1:length(results.(outputname).set);
+                n_sets = length(results.(outputname).set);
                 for i_set = 1:n_sets
                     fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
                     resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
@@ -170,7 +170,7 @@ elseif strcmpi(cfg.analysis,'ROI') || strcmpi(cfg.analysis,'wholebrain')
 
         % Save set results (should each set be saved separately?)
         if cfg.results.setwise
-            n_sets = 1:length(results.(outputname).set);
+            n_sets = length(results.(outputname).set);
             for i_set = 1:n_sets
                 fname = sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
                 resultsmat_fname = fullfile(cfg.results.dir,fname);

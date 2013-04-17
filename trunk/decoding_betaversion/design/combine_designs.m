@@ -90,10 +90,10 @@
 
 function ocfg = combine_designs( cfg1, cfg2 )
 
-warning('Ignores all the values in cfg2 except for cfg2.files and cfg2.design');
+warningv('COMBINE_DESIGNS:IgnoreCfg2','Ignores all the values in cfg2 except for cfg2.files and cfg2.design');
 
 if ~length(cfg1.files.name)==length(cfg2.files.name)
-    warning('File counts are not the same, some files will only appear in one set. WARNING: THIS HAS NEVER BEEN TESTED!!!!');
+    warningv('COMBINE_DESIGNS:FileCountsDifferent','File counts are not the same, some files will only appear in one set. WARNING: THIS HAS NEVER BEEN TESTED!!!!');
 end
 
 ocfg = cfg1;
@@ -132,7 +132,7 @@ for si = 1:length(cfg2.design.set) % si == set index
     end
     
     if any(used_idx_cfg2==0)
-        warning('At least one file exists in cfg2 but not ocfg. Concatenating to end...');
+        warningv('COMBINE_DESIGNS:AutoConcat','At least one file exists in cfg2 but not ocfg. Concatenating to end...');
     
         % the next set of code copies any missing files into ocfg from
         % cfg2. This only happens once per run.

@@ -50,7 +50,7 @@ if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
-    output = 100 * mean(predicted_labels == true_labels);
+    output = 100 * sum(predicted_labels == true_labels)/size(predicted_labels,1); % calculate mean (faster than Matlab function)
     
     if strcmpi(method, 'accuracy_minus_chance')
         output = output - chancelevel; % subtract chancelevel from all output entries

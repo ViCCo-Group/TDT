@@ -42,7 +42,8 @@
 
 function cfg = decoding_parameter_selection(cfg,vectors_train,i_train)
 
-if isfield(cfg.parameter_selection,'method') && strcmpi(cfg.parameter_selection.method,'none')
+
+if strcmpi(cfg.parameter_selection.method,'none')
     return
 end
 

@@ -33,6 +33,9 @@
 
 % (c) Martin Hebart, 12/02/08
 
+% TODO: externalize the "replacement of parameters" part which can be done
+% once on the defaults
+
 % TODO: add to help file that possibility to add parameters such as the design for nested CV exists.
 
 % TODO: add example call:

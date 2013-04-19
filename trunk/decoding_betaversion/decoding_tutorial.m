@@ -60,6 +60,20 @@ labelname2 = [$NAME OF LABEL2 AS STRING$];
 % matrix).
 cfg.files.mask = [$ADD PATH AS STRING$];
 
+% decide whether you want to see the searchlight/ROI/... going along
+cfg.plot_selected_voxels = 1;
+% REMARK: PLOTTING IS VERY SLOW!
+% It indeed takes nearly all the time, if you want to draw every single
+% step. 
+%
+% Alternatively, use e.g.
+%   cfg.plot_selected_voxels = 50;
+% to draw every 50th step (or in general, n to draw every nth step).
+%
+% Or switch online plotting of completely:
+%   cfg.plot_selected_voxels = 0;
+
+
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat (and adds 'bin 1' to 'bin m', if a FIR design 
 % was used)
@@ -69,14 +83,14 @@ regressor_names = design_from_spm(beta_dir);
 % run numbers of each label. The labels will be -1 and 1.
 % Important: You have to make sure to get the label names correct and that
 % they have been uniquely assigned, so please check them in regressor_names
-cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 %
 % Other examples:
 % For a cross classification, it would look something like this:
-% cfg = decoding_prepare_design(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
+% cfg = decoding_describe_data(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
 %
 % Or for SVR with a linear relationship like this:
-% cfg = decoding_prepare_design(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
+% cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
 
 % === Manual Creation ===
 % If you have used "Automatic Creation", you can skip this step.
@@ -91,6 +105,9 @@ cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names
 %       any two numbers as class labels)
 
 %% Third, create your design for the decoding analysis
+
+% REMARK AHEAD: Checkout combine_designs.m if you like to combine multiple
+%   designs in one cfg.
 
 % In a design, there are several matrices, one for training, one for test,
 % and one for the labels that are used (there is also a set vector which we
@@ -143,6 +160,16 @@ cfg.design = make_design_cv(cfg);
 % inspection. Dependencies between training and test set will be checked
 % automatically in the main function.
 
+%% Look at your design
+
+% The following calls allow you to look at your design. The design will
+% also be shown when you perform the decoding.
+
+% Display the design in textform
+display_design(cfg);
+% Display the design as a plot
+plot_design(cfg);
+
 %% Fourth, set additional parameters manually
 
 % This is an optional step. For example, you want to set the searchlight 
@@ -160,10 +187,52 @@ cfg.searchlight.spherical = 0;
 % output, 2: high output).
 cfg.verbose = 1;
 
+% Define which measures/transformations you like to get as ouput
+% You have the option to get different measures of the decoding. For
+% example, you can get the accuracy for each voxel, the accuracy minus
+% chance, sensitivity and specifitiy values, AUC, and quite some more.
+% For a full list, see "help decoding_transform_results", the transres_*
+% functions in transform_results, or checkout how you can add your own
+% measure/transformation in README.txt (or copy one of the transres_*
+% functions).
+
+% cfg.results.output = {'accuracy_minus_chance', 'binomial_probability'};
+% Remark: Be aware that CV results are indeed not binomially distributed,
+% and thus that the binomial_probability is only a crude (and statistically
+% invalid) approximation of real cross-validated decoding accuarcy
+% probabilities. It here serves as an example and might give a first
+% impression of the results of a single subject (e.g. for motor decoding).
+
 % parameters for libsvm (linear SV classification, cost = 1, no screen output)
-cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
+% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
+
+%% Prefinal: Decide whether you want to plot the searchlight while it goes
+
+% It's really fascinating and informative to look at how a searchlight 
+% (or your ROIs/etc.) look like. However, 3d plotting is very slow.
+% Thus, you have different options to look at your searchlight:
+%   0: Don't draw it at all (default)
+%   1: Draw the searchlight/ROI/... every step
+%   2: Every second step
+%    ...
+% 100: Every 100th step
+% You got it. 
+% Just try different values and observe the running time you get.
+
+cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
 
 %% Fifth, run the decoding analysis
 
 % Fingers crossed it will not generate any error messages ;)
 results = decoding(cfg);
+
+%% Some more hints for potentially useful features
+
+% All of these need to be specified BEFORE calling decoding(cfg), of
+% course.
+
+% cfg.searchlight.subset = [5, 100, 1000, 1001]'; 
+%   only decode some voxels (good e.g. if you like to get the models at 
+% these positions). Takes either single values or 3d coordinates.
+% (call "help decoding" and search for "subset" for more infos)
+

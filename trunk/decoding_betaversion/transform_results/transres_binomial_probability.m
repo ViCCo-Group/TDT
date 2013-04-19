@@ -1,8 +1,12 @@
 % function output = transres_binomial_probability(decoding_out, chancelevel, cfg, model)
 % 
 % Calculate the probability that each value in decoding_out came along when
-% p = chancelevel/100 would be true. This can be used to calculate
-% UNCORRECTED p-values on single-subject level.
+% p = chancelevel/100 would be true. This can be used to calculate an
+% approximate UNCORRECTED p-values on single-subject level.
+%
+% WARNING:
+% Be aware that Cross-validated accuracies are indeed NOT binomially 
+% distributed, and thus that this test is NOT correct for single subjects.
 %
 % It is also an example how own functions can be written for 
 % decoding_transform_results.

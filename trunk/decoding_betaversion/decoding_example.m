@@ -79,7 +79,7 @@ regressor_names = design_from_spm(beta_dir);
 
 % extract regressors with labelname1 and labelname2, including run number
 % make sure that labels 1 and 2 are uniquely assigned
-cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 
 % assign these values to the standard matrix and create the matrix
 cfg.design = make_design_cv(cfg);

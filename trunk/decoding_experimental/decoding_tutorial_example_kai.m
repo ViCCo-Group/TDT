@@ -31,11 +31,13 @@ cfg.results.overwrite = 1;
 % warning('RUNNING IN TEST MODE')
 % keyboard
 
-cfg.searchlight.wrap_control = 1; % to check that wrapping works
+% cfg.searchlight.wrap_control = 1; % to check that wrapping works
 
 % Specify where the results should be saved
-cfg.results.dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results'];
-
+if isfield(cfg, 'testmode') &&  cfg.testmode == 0
+    cfg.results.dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results'];
+end
+    
 % If you now look at the cfg structure, you will see a lot of entries that have
 % been set automatically. You can change each of these manually. They are
 % all explained in the functions decoding and decoding_defaults.
@@ -71,7 +73,7 @@ regressor_names = design_from_spm(beta_dir);
 
 % Now with the names of the labels, we can extract the filenames and the 
 % run numbers of each label. The labels will be -1 and 1.
-cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 
 % === Manual Creation ===
 % Otherwise, you have to load all images and labels you want to use separately, e.g.
@@ -124,7 +126,10 @@ cfg.design = make_design_cv(cfg);
 display_design(cfg);
 plot_design(cfg);
 
-pause
+% cfg.plot_design = 0; % does not plot your design
+% cfg.plot_design = 1; % plots your design using the default file formats
+% cfg.plot_design = {'-dpng', '-dmeta'}; % plots your design using the
+                                         % specified formats (see print.m)
 
 %% Fourth, set additional parameters manually
 
@@ -145,7 +150,7 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 %% Decide whether you want to plot the searchlight while it goes
 
-cfg.plot_selected_voxels = 1; % 1: every step, 2: every second step, 100: every hundredth step...
+cfg.plot_selected_voxels = 500; % 1: every step, 2: every second step, 100: every hundredth step...
 
 %% only select a number of voxels to decode
 % cfg.searchlight.subset = [5, 100, 1000, 1001]';

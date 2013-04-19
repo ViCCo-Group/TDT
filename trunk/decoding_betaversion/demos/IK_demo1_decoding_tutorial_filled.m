@@ -71,14 +71,14 @@ regressor_names = design_from_spm(beta_dir);
 % run numbers of each label. The labels will be -1 and 1.
 % Important: You have to make sure to get the label names correct and that
 % they have been uniquely assigned, so please check them in regressor_names
-cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 %
 % Other examples:
 % For a cross classification, it would look something like this:
-% cfg = decoding_prepare_design(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
+% cfg = decoding_describe_data(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
 %
 % Or for SVR with a linear relationship like this:
-% cfg = decoding_prepare_design(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
+% cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
 
 % === Manual Creation ===
 % Alternatively, you can also manually prepare the files field.

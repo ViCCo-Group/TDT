@@ -1,8 +1,11 @@
 % function plot_design(cfg)
 %
 % This function plots your current design (analog to display_design.m).
+% In contrast to display_design, plot_design(cfg.design) does not work at
+% the moment.
 %
-% It works, but the output is somewhat ugly.
+% The output is somewhat ugly, but highly informative, because you can see
+% your decoding design at a glance.
 %
 % If you like and/or know how to design nice figures in matlab, feel free
 % to improve the design.
@@ -82,27 +85,7 @@ set(gca,'YTick', 1:size(fnames,1))
 set(gca,'YTickLabel', fnames)
 xlabel('Training Data - Step number')
 
-%% add remaining text
-subplot(4, 4, pos.text);
-
-outtext = {'TDT - Decoding details'};
-if ~isempty(filestart)
-    outtext{end+1} = ['Filestart: ' filestart];
-end
-
-if isfield(cfg.results, 'dir')
-    outtext{end+1} = ['Results: ' cfg.results.dir];
-else
-    outtext{end+1} = ['Results: not written to file'];
-end
-
-axis off
-
-text(0,.5,outtext, 'Interpreter', 'none', 'BackgroundColor',[.7 .9 .7]);
-
-
-
-%% same for test
+%% same for testset
 clear show_test
 for rgb = 1:3
     currcol = cfg.design.train;
@@ -156,6 +139,48 @@ title({'Unique label values'; '(NOT necessary linearly scaled)'})
 set(gca, 'ytick', [])
 set(gca, 'XTick', 1:length(unique_labels)+1)
 set(gca, 'XTickLabel', [sprintf('%i|', unique_labels) 'unused'])
+
+%% add remaining text
+subplot(4, 4, pos.text);
+
+text_maxlength = 100; % number of characters
+
+% common file start
+outtext = {'TDT - Decoding details'};
+if ~isempty(filestart)
+    outtext_mrow = ['Filestart: ' filestart];
+    while ~isempty(outtext_mrow)
+        outtext{end+1} = outtext_mrow(1:min(text_maxlength, end));
+        outtext_mrow(1:min(text_maxlength, end)) = [];
+    end
+end
+
+% result dir
+if isfield(cfg.results, 'dir')
+    outtext_mrow = ['Results: ' cfg.results.dir];
+    while ~isempty(outtext_mrow)
+        outtext{end+1} = outtext_mrow(1:min(text_maxlength, end));
+        outtext_mrow(1:min(text_maxlength, end)) = [];
+    end
+else
+    outtext{end+1} = ['Results: not written to file'];
+end
+
+% start & endtime, if available
+if isfield(cfg, 'progress') && isfield(cfg.progress, 'starttime')
+    outtext{end+1} = ['Start: ' cfg.progress.starttime];
+    if isfield(cfg, 'progress') && isfield(cfg.progress, 'endtime')
+        outtext{end} = [outtext{end} ', End: ' cfg.progress.endtime];
+    else
+        outtext{end} = [outtext{end} ', End: No endtime'];
+    end
+else
+    outtext{end+1} = ['Start/Endtime not available'];
+end
+
+axis off
+
+text(0,.5,outtext, 'Interpreter', 'none', 'BackgroundColor',[.7 .9 .7]);
 
 %% make sure it shows up
 drawnow;

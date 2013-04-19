@@ -1,8 +1,12 @@
 % function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
 %
 % This function caculates a lot of different result measures defined by
-% "method":
+% METHOD.
 %
+% It also calls external transres_XX functions that implement other
+% methods, e.g. "trans_model_parameters" if method = 'model_parameter'.
+%
+% METHODS IMPLEMENTED HERE:
 % accuracy: decoding accuracy
 % accuracy_minus_chance: decoding accuracy - chance level (useful for SPM 2nd
 %   level)
@@ -14,7 +18,7 @@
 % corr: Correlation
 % zcorr: z-transformed correlation
 %
-% In addition, the function also allows adding new result transformation functions by 
+% The function also allows adding new result transformation functions by 
 % calling
 %
 %   output = transres_METHOD(decoding_out,chancelevel);
@@ -42,7 +46,8 @@
 %       principle output contains whatever the decoding method puts out
 %       (e.g. if you write your own method).
 
-% TODO: Remove chancelevel here as explicit input.
+% TODO: Remove chancelevel here as explicit input, should be returned by 
+% each method (also for each decoding step separately).
 
 function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
 

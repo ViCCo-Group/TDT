@@ -57,6 +57,9 @@
 %               1: plot every step,
 %               2: every second step, 100: every hundredth step...
 %           Default: 0 (no plotting)
+% DISPLAY:
+%   cfg.plot_design = 1 (default); will plot your design. 
+%       See decoding_defaults for possible values. 
 %
 % OUTPUT:
 %   results: 1 x n structure array, containing the decoding results of each
@@ -169,6 +172,7 @@
 %   Separated i_decoding into i_decoding and curr_decoding. Detailed
 %   explanation what is what below.
 
+%% Main start
 function [results, cfg, passed_data] = decoding(cfg, passed_data)
 
 %% Prepare decoding analysis
@@ -176,6 +180,8 @@ function [results, cfg, passed_data] = decoding(cfg, passed_data)
 cfg = decoding_defaults(cfg); % set defaults
 cfg.parameter_selection = decoding_defaults(cfg.parameter_selection);
 cfg.feature_selection = decoding_defaults(cfg.feature_selection);
+
+cfg.progress.starttime = datestr(now);
 
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 
@@ -185,11 +191,23 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = [mfilename ', Martin Hebart & Kai Goergen, v2013/04/16 2.1 beta'];
+ver = [mfilename ', Martin Hebart & Kai Goergen, v2013/04/19 2.1 beta'];
 cfg.info.ver = ver;
 dispv(1,ver)
 
-% Basic checks
+%% try show design to user and save to result dir
+% plot design if required
+try
+    if cfg.plot_design
+        plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg);
+    end
+catch
+    warning('decoding:plot_design_failed', 'Failed to plot design')
+end
+% show design as text
+try display_design(cfg); catch, warning('decoding:print_design_failed', 'Failed to print design'), end
+
+%% Basic checks
 [cfg, n_files, n_steps] = basic_checks(cfg,nargout);
 
 %% open file to write all filenames that we load
@@ -330,6 +348,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
     previous_trainlabels = []; % init
+    % clear model variable from the previous decoding
+    clear model 
 
     % TODO: Get a better order of the decodings steps (i.e. reorder the
     % decoding step index i_step so that the same training is used in
@@ -337,7 +357,11 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
-
+        % clear variable model if this is the first current step
+        if i_step == 1
+            clear model % clear model variable from the previous decoding
+        end
+        
         % Get indices for training
         i_train = find(cfg.design.train(:, i_step) > 0);
         % Get indices for testing
@@ -351,7 +375,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Skip feature selection and training if training set & training
         % labels are identical to previous iteration (saves time)
-        skip_training = isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
+        % NEVER skip on first decoding step
+        skip_training = i_step~=1 & isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
@@ -411,7 +436,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 
-        % Estimate Model
         if ~skip_training
             fhandle = str2func([cfg.decoding.software '_train']); % this format allows variable input
             % e.g. when software is libsvm, then:
@@ -439,7 +463,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Test Estimated Model
         fhandle = str2func([cfg.decoding.software '_test']); % this format allows variable input
         % e.g. when software is libsvm, then:
-        % model(i_step) = libsvm_test(labels_train,vectors_train,cfg,model(i_step));
+        % decoding_out(i_step) = libsvm_test(labels_train,vectors_train,cfg,model(i_step));
         decoding_out(i_step) = feval(fhandle,labels_test,vectors_test,cfg,model(i_step)); %#ok
 
         % TODO: decoding_out should be made extendable across runs
@@ -489,6 +513,17 @@ if numel(cfg.results.output)>1
     end
 end
 
+cfg.progress.endtime = datestr(now);
+
+%% plot & save design again at the end (to show that job is finished
+% Endtime shows user that job is over
+try
+    if cfg.plot_design
+        plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg);
+    end
+catch
+    warning('decoding:plot_design_failed', 'Failed to plot design')
+end
 
 %% Subfunctions
 

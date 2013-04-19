@@ -71,7 +71,7 @@ regressor_names = design_from_spm(beta_dir);
 
 % Now with the names of the labels, we can extract the filenames and the 
 % run numbers of each label. The labels will be -1 and 1.
-cfg = decoding_prepare_design(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 
 % === Manual Creation ===
 % Otherwise, you have to load all images and labels you want to use separately, e.g.

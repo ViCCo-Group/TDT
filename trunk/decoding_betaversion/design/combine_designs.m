@@ -21,8 +21,8 @@
 % 
 % Now build up your two (or more) configs that you want to combine.
 %
-% cfg1 = decoding_prepare_design(cfg,{ll ln},[-1 1],regressor_names,beta_dir);
-% cfg2 = decoding_prepare_design(cfg,{lr ln},[-1 1],regressor_names,beta_dir);
+% cfg1 = decoding_describe_data(cfg,{ll ln},[-1 1],regressor_names,beta_dir);
+% cfg2 = decoding_describe_data(cfg,{lr ln},[-1 1],regressor_names,beta_dir);
 % 
 % cfg1.design = make_design_cv(cfg1);
 % cfg2.design = make_design_cv(cfg2);

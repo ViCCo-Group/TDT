@@ -40,11 +40,25 @@ defaults.report = []; % init field
 
 % General values
 defaults.testmode = 0; % Test mode off
-defaults.analysis = 'searchlight'; % standard analysis
+defaults.analysis = 'searchlight'; % standard analysis, alternative values: 
+                                   % 'ROI', 'wholebrain'
 defaults.software = 'SPM8'; % what software to use to access brain images
 
 % display options
 defaults.verbose = 1; % Verbosity (0 to 2)
+defaults.plot_design = 1; % decide whether you want to save the design as 
+                          % image. We highly recommend to do so, because
+                          % then you can immediately see how your design
+                          % looks (this prevents a lot of errors).
+                          % Possible values:
+                          %     0: no plotting (not recommended)
+                          %     1: plot using the default files formats
+                          % {'-dpng', '-depsc2'}; % list all formats
+                          %         that you want to save the figure as
+                          %         (see "doc print" for possible file
+                          %             formats, and don't forget the
+                          %             leadining '-' before the format)
+
 defaults.plot_selected_voxels = 0; % a value of n means that the currently 
                                % selected voxels (e.g. a searchlight, ROI, 
                                % ...) are plotted every n-th step 
@@ -97,7 +111,6 @@ defaults.results.filestart = 'res';
 defaults.results.dir = fullfile(fpath,'decoding_results');
 
 %% Add values to cfg that have not yet been set
-
 cfg = assign_fields(defaults,cfg);
 
 

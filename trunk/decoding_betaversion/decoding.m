@@ -357,10 +357,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
-        % clear variable model if this is the first current step
-        if i_step == 1
-            clear model % clear model variable from the previous decoding
-        end
         
         % Get indices for training
         i_train = find(cfg.design.train(:, i_step) > 0);

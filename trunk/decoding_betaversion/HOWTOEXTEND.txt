@@ -18,7 +18,8 @@ non-linear classifiers (although we would recommend sticking to linear).
 We also added what we called a "correlation classifier" which is the 
 classical pattern correlation algorithm used by Haxby (2001) in which the 
 higher of two pattern correlation coefficients determines the predicted 
-label of that sample.
+label of that sample, and another svm method that automatically does 
+implicit parameter selection (Newton SVM).
 
 Adding further classification or regression algorithms is very simple. All 
 you need to do is adjust one or two lines in two existing functions and 
@@ -100,8 +101,20 @@ would like to add (e.g. "_brainvoyager").
 The necessary input and output is  explained in the functions in 
 "access_images", and for an example check out the functions of "spm8".
 
+==========================================================
+4. How to use other design matrices than the standard ones
+==========================================================
+
+In preparation
+
 =============================================
-4. How to use other feature selection methods
+5. How to use other feature selection methods
 =============================================
+
+In preparation
+
+===============================================
+6. How to use other parameter selection methods
+===============================================
 
 In preparation

@@ -13,6 +13,10 @@ function warningv(msg_id,msg)
 
 global reports %#ok
 
+if ~exist('msg','var')
+    error('warningv needs two inputs: messageID and message!')
+end
+
 callers = dbstack;
 callers_name = {callers(2:end).name}; % remove warningv from list
 stop_ind = find(strcmp('decoding',callers_name)); % stop when top function 'decoding.m' has been reached
@@ -40,7 +44,7 @@ try % try adding one to the field
     eval(['if ' field_id ' == 2, fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg.\n''), end'])
 catch %#ok if not possible, create field and plot warning message
     eval([field_id '= 1;']);
-    warning(msg_id,msg)
+    warning(msg_id,'%s',msg) % this format prevents a problem when pathnames are passed
 end
 
 

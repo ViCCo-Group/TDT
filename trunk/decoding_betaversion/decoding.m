@@ -16,10 +16,7 @@
 % on your specified data.
 %
 % REMARK: We are currently working on implementing FEATURE SELECTION.
-% This is currently in an experimental stage, but does not work at the
-% moment. However, some lines already contain code that is required for
-% that. So don't be confused by that, nor do expect that you can use
-% feature selection at the moment.
+% This is currently in an experimental stage.
 %
 %
 % REQUIRED INPUT:
@@ -51,7 +48,8 @@
 %
 % PROGRESS DISPLAY:
 %       cfg.plot_selected_voxels: if positive, plots searchlight in 3d.
-%           Slows down decoding ENORMOUSLY, if every step is plotted, but
+%           For many ROIs (as is the case for searchlight analyses), this
+%           slows down decoding ENORMOUSLY if every step is plotted, but
 %           looks nice and might be helpful for bug-tracking.
 %           Any number n means:
 %               1: plot every step,
@@ -111,6 +109,10 @@
 %       n corresponds to the index within the searchlight mask is executed
 %       (not the voxel index of the whole volume!), or you can enter an
 %       Nx3 matrix corresponding to the XYZ coordinates of the volume
+%   cfg.decoding.kernel.use: Use a precomputed kernel (saves in libsvm a 
+%       lot of time when used - default: 0;
+%       works with e.g. cfg.decoding.method = 'classfication_kernel')
+%   cfg.decoding.kernel.function: Kernel function passed (default linear: @(X,Y) X*Y')
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
 %   cfg.results.setwise: Should results of each set be returned separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
@@ -202,10 +204,10 @@ try
         plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg);
     end
 catch
-    warning('decoding:plot_design_failed', 'Failed to plot design')
+    warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
 end
 % show design as text
-try display_design(cfg); catch, warning('decoding:print_design_failed', 'Failed to print design'), end
+try display_design(cfg); catch, warningv('DECODING:PrintDesignFailed', 'Failed to print design'), end
 
 %% Basic checks
 [cfg, n_files, n_steps] = basic_checks(cfg,nargout);
@@ -298,7 +300,7 @@ msg_length = [];
 
 % Warn if test mode
 if cfg.testmode
-    warning('DECODING:testmode','TEST MODE: Only one decoding step is calculated!');
+    warningv('DECODING:testmode','TEST MODE: Only one decoding step is calculated!');
     n_decodings = 1;
 end
 
@@ -313,6 +315,7 @@ report_files(cfg,n_steps,inputfilenames_fid);
 %   Now, i_decoding is the real step-number, while curr_decoding contains
 %   the number of the decoding (voxel, ROI, ...) that should be done.
 % 2013-04-14 Kai
+
 
 % Start
 for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
@@ -329,18 +332,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         try
             % plot searchlight with brain projection
             plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index);
-            if i_decoding == 1 && cfg.plot_selected_voxels < 50 && n_decodings > 5  % 50 is an arbitrary value
-                % warn that is might be slow
-                currfig = gcf;
-                figure('Position',[0,0,500,50]);
-                warning_str = {'REMARK: Plotting selected voxels often slows down performance a lot!'; 'Use e.g. cfg.plot_selected_voxels = 50 to only plot every 50th step'};
-                text(0,0,warning_str, 'BackgroundColor', [1,1,1]);
-                drawnow;
-                figure(currfig);
-                clear currfig
-            end
         catch
-            warning('decoding:plot_selected_voxels_failed', 'plot_selected_voxels failed');
+            warningv('DECODING:PlotSelectedVoxelsFailed', 'plot_selected_voxels failed');
         end
     end
 
@@ -348,8 +341,9 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
     previous_trainlabels = []; % init
-    % clear model variable from the previous decoding
-    clear model 
+    % clear model variable and kernel variable from the previous decoding
+    clear model
+    kernel = [];
 
     % TODO: Get a better order of the decodings steps (i.e. reorder the
     % decoding step index i_step so that the same training is used in
@@ -377,7 +371,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if ~skip_training
+        if ~strcmpi(cfg.parameter_selection.method,'none') && ~skip_training
             cfg = decoding_parameter_selection(cfg,vectors_train,i_train);
         end
 
@@ -387,12 +381,12 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % TODO: feature selection should give vector of selected voxels as
         % output, then vectors_test can be adjusted later on
-        % TODO: This is in an experimental stage and won't work at the
-        % moment
+        % TODO: This is in an experimental stage at the moment
         if ~strcmpi(cfg.feature_selection.method,'none')
             if ~skip_training
                 % pack
                 % TODO: for 'useall', make vectors_train = data(:,indexindex). Makes it a lot easier to code later.
+                % alternative: don't pass data, but recalculate vectors_train, i_train, etc. from i_step
                 fs_data.vectors_train = vectors_train;
                 fs_data.vectors_test = vectors_test;
                 fs_data.labels_train = labels_train;
@@ -427,16 +421,19 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % TODO: include variable set here and rename to scaling within set
 
         % Do scaling on training set if requested
-        if strcmpi(cfg.scale.estimation,'across') && ~skip_training
+        if ~skip_training && strcmpi(cfg.scale.estimation,'across')
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 
         if ~skip_training
-            fhandle = str2func([cfg.decoding.software '_train']); % this format allows variable input
+            if cfg.decoding.kernel.use && i_step == 1
+                kernel = decoding_setup_kernel(data(:,indexindex),cfg);
+            end
             % e.g. when software is libsvm, then:
-            % model(i_step) = libsvm_train(labels_train,vectors_train,cfg);
-            model(i_step) = feval(fhandle,labels_train,vectors_train,cfg); %#ok
+%             model(i_step) = libsvm_train(vectors_train,labels_train,i_train,cfg,kernel);
+%             model(i_step) = feval(cfg.decoding.fhandle_train,labels_train,vectors_train,cfg); %#ok
+            model(i_step) = feval(cfg.decoding.fhandle_train,labels_train,vectors_train,i_train,cfg,kernel);
         else
             model(i_step) = model(i_step-1); %#ok
         end
@@ -457,10 +454,10 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         end
 
         % Test Estimated Model
-        fhandle = str2func([cfg.decoding.software '_test']); % this format allows variable input
         % e.g. when software is libsvm, then:
         % decoding_out(i_step) = libsvm_test(labels_train,vectors_train,cfg,model(i_step));
-        decoding_out(i_step) = feval(fhandle,labels_test,vectors_test,cfg,model(i_step)); %#ok
+%         decoding_out(i_step) = feval(cfg.decoding.fhandle_test,labels_test,vectors_test,cfg,model(i_step)); %#ok
+        decoding_out(i_step) = feval(cfg.decoding.fhandle_test,labels_test,vectors_test,i_train,i_test,cfg,model(i_step),kernel); %#ok
 
         % TODO: decoding_out should be made extendable across runs
         % (sometimes you want to do things across runs)
@@ -517,8 +514,8 @@ try
     if cfg.plot_design
         plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg);
     end
-catch
-    warning('decoding:plot_design_failed', 'Failed to plot design')
+catch %#ok<*CTCH>
+    warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
 end
 
 %% Subfunctions
@@ -551,13 +548,50 @@ end
 if any(missing) % if only some or no fields for a design exist
     if isfield(cfg.design,'function') % create design with passed method
         if ~all(missing) % throw warning if some fields exist, but others not
-            warning('Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function) %#ok<WNTAG>
+            warningv('BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function)
         end
         fhandle = str2func(cfg.design);
         cfg.design = feval(fhandle,cfg);
     else % throw error if no method has been passed and design incomplete
         error('Design is missing or incomplete. Either create design in advance or pass method to create design (see ''help decoding'')');
     end
+end
+
+% Set function handle for classifier here (saves time to do only once)
+if ~isfield(cfg.decoding,'fhandle_train') && ~isfield(cfg.decoding,'fhandle_test')
+        cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
+        cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
+else
+    % Run quick test that method is the same for both:
+    if ~strcmpi(cfg.decoding.fhandle_train,[cfg.decoding.software '_train']) || ...
+       ~strcmpi(cfg.decoding.fhandle_test,[cfg.decoding.software '_test'])
+       error('Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!') 
+    end
+end
+
+% Set function handle for classifier in parameter_selection
+if ~strcmpi(cfg.parameter_selection.method,'none') && (~isfield(cfg.parameter_selection.decoding,'fhandle_train') || ~isfield(cfg.parameter_selection.decoding,'fhandle_test'))
+    cfg.parameter_selection.decoding.fhandle_train = str2func([cfg.parameter_selection.decoding.software '_train']); % this format allows variable input
+    cfg.parameter_selection.decoding.fhandle_test = str2func([cfg.parameter_selection.decoding.software '_test']); % this format allows variable input
+end
+
+% Set function handle for classifier in feature_selection
+if ~strcmpi(cfg.feature_selection.method,'none') && (~isfield(cfg.feature_selection.decoding,'fhandle_train') || ~isfield(cfg.feature_selection.decoding,'fhandle_test'))
+    cfg.feature_selection.decoding.fhandle_train = str2func([cfg.feature_selection.decoding.software '_train']); % this format allows variable input
+    cfg.feature_selection.decoding.fhandle_test = str2func([cfg.feature_selection.decoding.software '_test']); % this format allows variable input
+end
+
+% Check for consistent setting of parameters for kernel method
+cond(1) = cfg.decoding.kernel.use;
+cond(2) = logical(strfind(cfg.decoding.method,'_kernel'));
+if xor(cond(1),cond(2))
+    warning_str = sprintf([...
+        'Either cfg.decoding.kernel.use = 1 and no kernel method is selected in cfg.decoding.method\n',...
+        'or cfg.decoding.method contains a kernel method, but cfg.decoding.kernel.use = 1.\n',...
+        'Adjusting both parameters to be consistent with the kernel method!']);
+    warningv('BASIC_CHECKS:InconsistentKernelParameters',warning_str)
+    if ~cond(1), cfg.decoding.kernel.use = 1; end
+    if ~cond(2), cfg.decoding.method = [cfg.decoding.method '_kernel']; end
 end
 
 % try the most simple decoding possible (only if libsvm is used)
@@ -572,7 +606,7 @@ if strcmpi(cfg.decoding.software,'libsvm')
 end
 
 if ~strcmpi(cfg.feature_selection.method,'none')
-    warning('Feature selection has not been fully debugged. Running in test mode!') %#ok<WNTAG>
+    warningv('BASIC_CHECKS:FeatureSelectionIsTestmode','Feature selection has not been fully debugged. Running in test mode!')
 end
 
 [n_files, n_steps] = size(cfg.design.train);
@@ -593,7 +627,7 @@ if ~isequal(size(cfg.design.train), size(cfg.design.test))
 end
 
 if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
-    warning(['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none''']) %#ok
+    warningv('BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
 end
 
 if ischar(cfg.results.output)
@@ -635,11 +669,11 @@ check_imbalance(cfg);
 
 if ischar(cfg.files.name)
     cfg.files.name = num2cell(cfg.files.name,2);
-    warning('File names provided as string, not as cell matrix. Converting to cell...') %#ok
+    warningv('BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
 end
 
 if length(cfg.files.name) ~= length(unique(cfg.files.name))
-    warning('Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!') %#ok
+    warningv('BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!')
 else
     dispv(2,'  Check for double names in cfg.files.name: No double entries found.')
 end
@@ -679,7 +713,7 @@ if cfg.results.write
                     error(['Resultfile %s already exists. Change filename or ',...
                         'set cfg.results.overwrite = 1'],output_fname)
                 else
-                    warning('Resultfile %s already existed. Overwriting...',output_fname) %#ok
+                    warningv('BASIC_CHECKS:OverwritingExistingResultsfile',sprintf('Resultfile %s already existed. Overwriting...',output_fname))
                 end
             end
 
@@ -694,22 +728,23 @@ end
 
 %% CHECK subfunctions
 
-% Check for imbalanced training data
+% Check for unbalanced training data
 function check_imbalance(cfg)
 dispv(1, 'Checking for imbalances in cfg.design.train')
 for decoding_step = 1:size(cfg.design.train, 2)
     curr_labels = cfg.design.label(:, decoding_step);
     curr_training_labels = curr_labels(cfg.design.train(:, decoding_step) == 1);
     unique_labels = unique(curr_training_labels);
+    n_each_label = zeros(length(unique_labels),1);
     for label_ind = 1:length(unique_labels)
         n_each_label(label_ind) = sum(curr_training_labels == unique_labels(label_ind));
     end
     if any(diff(n_each_label) ~= 0)
-        message_str = sprintf('Imbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
-        if isfield(cfg.design, 'imbalanced_data') && strcmp(cfg.design.imbalanced_data, 'ok')
-            warning('decoding:check_imbalanced_data_ok', [message_str, ' You decided this is ok, because cfg.design.imbalanced_data = ''ok''']);
+        message_str = sprintf('Unbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
+        if isfield(cfg.design, 'unbalanced_data') && strcmp(cfg.design.unbalanced_data, 'ok')
+            warningv('DECODING:CheckUnbalancedDataOk', [message_str, ' You decided this is ok, because cfg.design.unbalanced_data = ''ok''']);
         else
-            error('decoding:check_imbalanced_data_ok', [message_str, ' If this is ok, set cfg.design.imbalanced_data = ''ok'''])
+            error('DECODING:CheckUnbalancedDataOk', [message_str, ' If this is ok, set cfg.design.unbalanced_data = ''ok'''])
         end
     end
 end

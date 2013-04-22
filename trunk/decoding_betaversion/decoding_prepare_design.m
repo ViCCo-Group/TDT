@@ -11,6 +11,6 @@
 
 function cfg = decoding_prepare_design(varargin)
 
-warning('decoding_prepare_design:deprecated', 'decoding_prepare_design() is deprecated because the name is not correct.\nIt still works, but please use decoding_describe_data() instead.')
+warning('DECODING_PREPARE_DESIGN:deprecated', 'decoding_prepare_design() is deprecated because the name was misleading.\nIt still works, but please use decoding_describe_data() instead.')
 
 cfg = decoding_describe_data(varargin{:});

@@ -57,7 +57,7 @@ defaults.plot_design = 1; % decide whether you want to save the design as
                           %         that you want to save the figure as
                           %         (see "doc print" for possible file
                           %             formats, and don't forget the
-                          %             leadining '-' before the format)
+                          %             leading '-' before the format)
 
 defaults.plot_selected_voxels = 0; % a value of n means that the currently 
                                % selected voxels (e.g. a searchlight, ROI, 
@@ -88,16 +88,27 @@ defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur
 % Decoding specific values
 defaults.decoding.method = 'classification'; % classification as standard
 defaults.decoding.software = 'libsvm'; % libsvm as a standard
+defaults.decoding.kernel.use = 0; % pass kernel or not (currently default is 0 although 1 is faster, but more error-prone from side of user!)
+defaults.decoding.kernel.function = @(X,Y) X*Y'; % for kernel method linear kernel as default
+
+
 % parameters (in defaults for libsvm)
 defaults.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % linear classification
+defaults.decoding.train.classification_kernel.model_parameters = '-s 0 -t 4 -c 1 -b 0 -q'; % linear classification
 defaults.decoding.train.regression.model_parameters = '-s 4 -t 0 -c 1 -n 0.5 -b 0 -q'; % nu-SVR (adapt cost to control speed)
 defaults.decoding.test.classification.model_parameters = '-q';
+defaults.decoding.test.classification_kernel.model_parameters = '-q'; % linear classification
 defaults.decoding.test.regression.model_parameters = '-q';
-% imbalanced data
-%     If you have imbalanced training data, and 
+
+% for Newton SVM
+% defaults.decoding.train.classification.model_parameters = -1; % should Nu be calculated the easy or the hard way (easy = -1, hard = 0)
+
+
+% unbalanced data
+%     If you have unbalanced training data, and 
 %       IF YOU THOUGHT ABOUT HOW TO DEAL WITH IT!
 %     set in your script
-%       cfg.design.imbalance_data ='ok'
+%       cfg.design.unbalanced_data ='ok'
 %     DO NOT SET THIS AS DEFAULT, because otherwise you might get 
 %     unexpected problems later when you have unbalanced training data and
 %     did not think how to deal with it

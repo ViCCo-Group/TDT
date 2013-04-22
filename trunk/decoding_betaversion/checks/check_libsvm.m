@@ -40,33 +40,37 @@ function [working, libsvmdir] = check_libsvm(cfg, display_path)
     
     % test whether libSVM parameters are working
     % try a super simple decoding
-    model = svmtrain([1; -1], [1; -1], cfg.decoding.train.(method).model_parameters);
+    
+    if ~cfg.decoding.kernel.use
+        model = svmtrain([1; -1], [1; -1], cfg.decoding.train.(method).model_parameters);
+    else % when using kernel
+        model = svmtrain([1; -1], [1 1 -1; 2 -1 1], cfg.decoding.train.(method).model_parameters);
+    end
 
     if isempty(model)
         if nargout == 0
             display(['Your current libSVM options are: ' cfg.decoding.train.(method).model_parameters])
-            display(['Using these options, libSVM was not able to train a super-simple model.'])
+            display(['Using these options, libSVM was not able to train an extremely simple model.'])
             error('There seems to be an error in your libSVM options. Please check')
         else
             display(['Your current libSVM options are: ' cfg.decoding.train.(method).model_parameters])
-            display(['Using these options, libSVM was not able to train a super-simple model.'])
+            display(['Using these options, libSVM was not able to train an extremely simple model.'])
             working = 0;
             return
         end
     end
     
     % check whether libsvm_train works, too
-    fhandle = str2func([cfg.decoding.software '_train']); % this format allows variable input
-    model = feval(fhandle,[-1;1],[-1;1],cfg);
+    model = feval(cfg.decoding.fhandle_train,[-1;1],[-1;1],[1; 2],cfg,[1 -1; -1 1]);
     
     if isempty(model)
         if nargout == 0
             display(['Your current libSVM options are: ' cfg.decoding.train.(method).model_parameters])
-            display(['Using these options, libSVM was not able to train a super-simple model.'])
-            error('There seems to be an error in your libSVM options. Please check')
+            display(['Using these options, libSVM was not able to train a very simple model.'])
+            error('There seems to be an error in your libSVM options. Please check!')
         else
             display(['Your current libSVM options are: ' cfg.decoding.train.(method).model_parameters])
-            display(['Using these options, libSVM was not able to train a super-simple model.'])
+            display(['Using these options, libSVM was not able to train a very simple model.'])
             working = 0;
             return
         end

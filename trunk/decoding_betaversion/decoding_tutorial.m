@@ -92,15 +92,15 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % Or for SVR with a linear relationship like this:
 % cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
 
-% === Manual Creation ===
-% If you have used "Automatic Creation", you can skip this step.
+% === Manual Preparation ===
+% If you have used "Automatic Preparation", you can skip this step.
 % Alternatively to the automatic extraction of relevant information for 
 % your decoding, you can also manually prepare the "files" field.
 % For this, you have to load all images and labels you want to use 
 % separately, e.g. with spm_select. This is not part of this example, but 
 % if you do it later, you should end up with the following fields:
 %   cfg.files.name: a 1xn cell array of file names
-%   cfg.files.step: a 1xn vector of run numbers
+%   cfg.files.step: a 1xn vector of data that you want to chunk together (e.g. run)
 %   cfg.files.label: a 1xn vector of labels (for decoding, you can choose 
 %       any two numbers as class labels)
 
@@ -206,7 +206,7 @@ cfg.verbose = 1;
 % parameters for libsvm (linear SV classification, cost = 1, no screen output)
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
 
-%% Prefinal: Decide whether you want to plot the searchlight while it goes
+%% Not necessary, but nice: Decide what you want to plot
 
 % It's really fascinating and informative to look at how a searchlight 
 % (or your ROIs/etc.) look like. However, 3d plotting is very slow.
@@ -220,6 +220,8 @@ cfg.verbose = 1;
 % Just try different values and observe the running time you get.
 
 cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
+
+cfg.plot_design = 1; % this is by default set to 1, but if you repeat the same design again and again, it can get annoying...
 
 %% Fifth, run the decoding analysis
 

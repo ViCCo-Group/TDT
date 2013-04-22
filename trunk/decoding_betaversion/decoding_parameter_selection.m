@@ -46,20 +46,20 @@
 function cfg = decoding_parameter_selection(cfg,vectors_train,i_train)
 
 
-if strcmpi(cfg.parameter_selection.method,'none')
-    return
-end
-
 % TODO: some parameters may be passed differently, e.g. not as a string.
 % For now allow only string input (e.g. 'c', 's', etc.)
+
+% TODO: pass kernel (no need to recompute: saves a lot of time!)
 
 parameters = cfg.parameter_selection.parameters;
 parameter_range = cfg.parameter_selection.parameter_range;
 
 % basic checks
-[parameters parameter_range] = basic_checks(cfg,parameters,parameter_range);
+[cfg,parameters,parameter_range] = basic_checks(cfg,parameters,parameter_range);
 
-default_params = cfg.decoding.train.(cfg.decoding.method).model_parameters;
+%  Get the parameters from the method in the main function
+cfg.parameter_selection.decoding.train.(cfg.decoding.method).model_parameters = cfg.decoding.train.(cfg.decoding.method).model_parameters;
+default_params = cfg.parameter_selection.decoding.train.(cfg.decoding.method).model_parameters;
 
 % This code is a bit difficult to read, but essentially it replaces all
 % default numbers by placeholders that sprintf can read
@@ -99,7 +99,7 @@ cfg.decoding.train.(cfg.decoding.method).model_parameters = sprintf(default_para
 %%%%%%%%%%%%%%%%%%
 
 %% Basic checks
-function [parameters parameter_range] = basic_checks(cfg,parameters,parameter_range)
+function [cfg,parameters,parameter_range] = basic_checks(cfg,parameters,parameter_range)
 
 if ~strcmpi(cfg.parameter_selection.method,'grid') && ~strcmpi(cfg.parameter_selection.method,'grid search')
    error('Unknown method ''%s'' for field ''cfg.parameter_selection.method',cfg.parameter_selection.method)
@@ -121,6 +121,29 @@ if ~iscell(parameter_range)
     end
     parameter_range = num2cell(parameter_range,1);
 end
+
+% Possible mismatch between different levels of the function
+if cfg.decoding.kernel.use
+    % Conditions that need to be fulfilled
+    ok(1) = cfg.parameter_selection.decoding.kernel.use;
+    ok(2) = strcmpi(func2str(cfg.parameter_selection.decoding.kernel.function),func2str(cfg.decoding.kernel.function));
+    ok(3) = strcmpi(cfg.parameter_selection.decoding.method,cfg.decoding.method);
+    if ~all(ok)
+    warning_str = sprintf([...
+         'Kernels are used in the main function, but not for parameter selection.\n',...
+         'Same method needs to be used at both levels!\n',...
+         'Setting cfg.parameter_selection.decoding.kernel.use = 1;\n',...
+         'cfg.parameter_selection.decoding.kernel.function = cfg.decoding.kernel.function;\n',...
+         'cfg.parameter_selection.decoding.method = cfg.decoding.method.']);
+    warningv('BASIC_CHECKS:NoKernelUsed',warning_str)
+    cfg.parameter_selection.decoding.kernel.use = 1;
+    cfg.parameter_selection.decoding.kernel.function = cfg.decoding.kernel.function;
+    cfg.parameter_selection.decoding.method = cfg.decoding.method;
+    end
+end
+
+
+
 
 %% Create all combinations in nested function
 function all_combinations = allperms(all_combinations,parameter_range)
@@ -193,6 +216,8 @@ n_steps = size(cfg.parameter_selection.design.train,2);
 
 decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
 
+kernel = cell(1,size(all_combinations,2)); % init
+
 for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
     itrain = find(cfg.parameter_selection.design.train(:, i_step) > 0);
@@ -210,16 +235,18 @@ for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
         curr_params = sprintf(default_params,all_combinations(:,iteration));
         
         cfg.parameter_selection.decoding.train.(cfg.parameter_selection.decoding.method).model_parameters = curr_params;
-           
+        
+        if cfg.parameter_selection.decoding.kernel.use && i_step == 1
+             kernel{iteration} = decoding_setup_kernel(data,cfg.parameter_selection);
+        end
+        
         % Train model
-        fhandle = str2func([cfg.parameter_selection.decoding.software '_train']); % this format allows variable input
         % e.g. when software is libsvm, call function with name libsvm_train.m
-        model(i_step,iteration) = feval(fhandle,labels_train,vectors_train,cfg.parameter_selection);
+        model(i_step,iteration) = feval(cfg.parameter_selection.decoding.fhandle_train,labels_train,vectors_train,itrain,cfg.parameter_selection,kernel{iteration}); %#ok<AGROW>
         
         % Test estimated model
-        fhandle = str2func([cfg.parameter_selection.decoding.software '_test']); % this format allows variable input
         % e.g. when software is libsvm, call function with name libsvm_test.m
-        decoding_out(i_step,iteration) = feval(fhandle,labels_test,vectors_test,cfg.parameter_selection,model);
+        decoding_out(i_step,iteration) = feval(cfg.parameter_selection.decoding.fhandle_test,labels_test,vectors_test,itrain,itest,cfg.parameter_selection,model(i_step,iteration),kernel{iteration});
         
     end
     

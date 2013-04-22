@@ -40,19 +40,19 @@ function save_fig(filename, cfg)
     set(gcf, 'color', 'white');
 
     try
-        dispv(1, ['Saving figure as ' filename '.fig'])
+        dispv(1, '%s', ['Saving figure as ' filename '.fig'])
         saveas(gcf, filename, 'fig')
-    catch
-        warning('Saving as .fig failed')
+    catch %#ok<CTCH>
+        warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
     end
         
     for f_ind = 1:length(formats)
         curr_format = formats{f_ind};
         try
-            dispv(1, ['Saving figure as ' filename '.* as ' curr_format])
+            dispv(1, '%s', ['Saving figure as ' filename '.* as ' curr_format])
             print(curr_format, filename)
         catch
-            warning(['Saving as ' curr_format ' failed'])
+            warningv('SAVE_FIG:SavingFigureFormattedFailed',['Saving as ' curr_format ' failed'])
         end
     end
     dispv(1, 'Saving figure done')    

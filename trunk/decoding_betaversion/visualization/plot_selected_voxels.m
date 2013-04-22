@@ -26,7 +26,10 @@
 % Martin Hebart, Kai Görgen, 2013/04/14      
 
 % Possible IMPROVEMENTS:
-% Speed-Up - Ideas: 
+% Adjust size of each axis to get "real" shape of ROI, not distorted along
+% the smaller/longer axis
+%
+% Speed-Up - Ideas for searchlights: 
 %   - only update the SL, i.e. remove voxels that are not there any longer, 
 %       and add voxels that are new
 %   - do not draw projections over and over, but only once
@@ -174,4 +177,4 @@ if exist('brain_data', 'var')
 end
 
 %% draw image
-drawnow
+drawnow;

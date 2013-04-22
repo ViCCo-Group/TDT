@@ -22,6 +22,15 @@
 
 function decoding_write_results(cfg,results,mask_index)
 
+global reports %#ok<NUSED>
+
+% Save warning messages
+if ~isempty(reports) % if any warnings were present
+    fdir = cfg.results.dir;
+    fname = fullfile(fdir,sprintf('%s_warnings.mat',cfg.results.filestart));
+    save(fname,'reports');
+    dispv(1,'Saving warnings that occurred during the execution.')
+end
 
 n_outputs = length(cfg.results.output);
 

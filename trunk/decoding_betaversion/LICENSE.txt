@@ -8,7 +8,7 @@ The Decoding Toolbox is licensed under the GNU General Public Licence as publish
 
 If you use this software in a publication, please acknowledge its use by adding the following (or similar) lines to your manuscript:
 
-"Multivariate classification analyses were performed using the Decoding toolbox (Martin Hebart & Kai Görgen, 2011, martin.hebart@bccn-berlin.de or kai.goergen@bccn-berlin.de)."
+"Multivariate classification analyses were performed using The Decoding Toolbox (Martin Hebart & Kai Görgen, 2011, martin.hebart@bccn-berlin.de or kai.goergen@bccn-berlin.de)."
 
 If you want to use parts of its code in publicly available software, please add the following information to the code:
 
@@ -19,7 +19,7 @@ The authors take no responsibility for any misuse of this software or any progra
 The toolbox contains the following third-party software:
 
 libsvm 3.1
-
+Newton SVM
 
 
 
@@ -48,3 +48,16 @@ Redistribution and use in source and binary forms, with or without modification,
 
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ''AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------
+Newton SVM
+----------
+
+The sourcecode for NSVM Newton Support Vector Machine has been downloaded from http://research.cs.wisc.edu/dmi/svm/nsvm
+
+Authors:
+Glenn Fung
+Olvi L. Mangasarian
+
+Copyright:
+The software is free for academic use. For commercial use, please contact Olvi Mangasarian (olvi@cs.wisc.edu).

@@ -42,6 +42,15 @@ end
 % been set automatically. You can change each of these manually. They are
 % all explained in the functions decoding and decoding_defaults.
 
+%% Specify which decoding method we would like to use
+
+% cfg.decoding.kernel.use = 1;
+% cfg.decoding.method = 'classification_kernel';
+
+% cfg.decoding.kernel.use = 0;
+% cfg.decoding.method = 'classification';
+
+
 %% Second, get the file names, labels and run number of each brain image file to use for decoding.
 
 % For example, you might have 6 runs and two categories. That should give 
@@ -150,7 +159,7 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 %% Decide whether you want to plot the searchlight while it goes
 
-cfg.plot_selected_voxels = 500; % 1: every step, 2: every second step, 100: every hundredth step...
+% cfg.plot_selected_voxels = 500; % 1: every step, 2: every second step, 100: every hundredth step...
 
 %% only select a number of voxels to decode
 % cfg.searchlight.subset = [5, 100, 1000, 1001]';

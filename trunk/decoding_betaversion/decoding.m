@@ -111,7 +111,7 @@
 %       Nx3 matrix corresponding to the XYZ coordinates of the volume
 %   cfg.decoding.kernel.use: Use a precomputed kernel (saves in libsvm a 
 %       lot of time when used - default: 0;
-%       works with e.g. cfg.decoding.method = 'classfication_kernel')
+%       works with e.g. cfg.decoding.method = 'classification_kernel')
 %   cfg.decoding.kernel.function: Kernel function passed (default linear: @(X,Y) X*Y')
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
 %   cfg.results.setwise: Should results of each set be returned separately [default = 0]
@@ -583,7 +583,7 @@ end
 
 % Check for consistent setting of parameters for kernel method
 cond(1) = cfg.decoding.kernel.use;
-cond(2) = logical(strfind(cfg.decoding.method,'_kernel'));
+cond(2) = isempty(strfind(cfg.decoding.method,'_kernel'));
 if xor(cond(1),cond(2))
     warning_str = sprintf([...
         'Either cfg.decoding.kernel.use = 1 and no kernel method is selected in cfg.decoding.method\n',...

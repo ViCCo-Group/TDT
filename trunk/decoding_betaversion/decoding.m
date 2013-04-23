@@ -109,10 +109,8 @@
 %       n corresponds to the index within the searchlight mask is executed
 %       (not the voxel index of the whole volume!), or you can enter an
 %       Nx3 matrix corresponding to the XYZ coordinates of the volume
-%   cfg.decoding.kernel.use: Use a precomputed kernel (saves in libsvm a 
-%       lot of time when used - default: 0;
-%       works with e.g. cfg.decoding.method = 'classification_kernel')
-%   cfg.decoding.kernel.function: Kernel function passed (default linear: @(X,Y) X*Y')
+%   cfg.decoding.kernel.function: Kernel function passed, (default linear: @(X,Y) X*Y')
+%       Will only be used, if cfg.design.method ends on "_kernel"
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
 %   cfg.results.setwise: Should results of each set be returned separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
@@ -167,6 +165,10 @@
 %   output
 
 % HISTORY
+% 2013-04-23 Kai
+%   Rewrote Kernel related stuff
+% 2013-04-22 Martin
+%   Added possibility to use kernels
 % 2013-04-16 Kai
 %   Added cfg.files in help description
 %
@@ -307,14 +309,19 @@ end
 % Report files
 report_files(cfg,n_steps,inputfilenames_fid);
 
-% CHANGE: Separated i_decoding into i_decoding and curr_decoding
-%   i_decoding contained the current number of the decoding that was todo.
-%   This was typically 1:n_vox. The problem is that this mixed up a counter
-%   index which runs reliably from 1:number of decodings with the list of
-%   voxels/masks that should be used.
-%   Now, i_decoding is the real step-number, while curr_decoding contains
-%   the number of the decoding (voxel, ROI, ...) that should be done.
-% 2013-04-14 Kai
+% General remark how final accuracy values are calculated before we start
+dispv(1, sprintf(['\n', ...
+    'General remark: The final accuracy (and most other measures) for each voxel is calculated by wighting all test examples equally.\n', ...
+    'This means that if e.g. in one decoding step contains 2 test examples, and another contains 5, the average of all 7 will be taken.\n', ...
+    'If you want to weigh all decoding steps equally, please use cfg.results.setwise=1 and cfg.design.set = 1:length(cfg.design.set) and average over the resulting output images']))
+
+% Check if kernel method is used
+use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
+if use_kernel
+    dispv(1, sprintf('Using a "_kernel" decoding method. \nThis means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nparameters to be selected'))
+else
+    dispv(2, 'Using normal method')    
+end
 
 
 % Start
@@ -342,9 +349,9 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     previous_i_train = []; % init
     previous_trainlabels = []; % init
     % clear model variable and kernel variable from the previous decoding
-    clear model
+    clear model;
     kernel = [];
-
+    
     % TODO: Get a better order of the decodings steps (i.e. reorder the
     % decoding step index i_step so that the same training is used in
     % successive steps)
@@ -358,8 +365,10 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         i_test = find(cfg.design.test(:, i_step) > 0);
 
         % Get data for training & testing at current position
-        vectors_train = data(i_train, indexindex);
-        vectors_test = data(i_test, indexindex);
+        if ~use_kernel
+            vectors_train = data(i_train, indexindex);
+            vectors_test = data(i_test, indexindex);
+        end
         labels_train = cfg.design.label(i_train, i_step);
         labels_test = cfg.design.label(i_test, i_step);
 
@@ -383,6 +392,9 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % output, then vectors_test can be adjusted later on
         % TODO: This is in an experimental stage at the moment
         if ~strcmpi(cfg.feature_selection.method,'none')
+            if use_kernel
+                error('Using feature selection does not make sense when using a "_kernel" decoding method (i.e. one where the kernel is only calculated once per voxel/ROI), because the kernel needs to be computed in decoding step again. Either use a normal decoding method or dont use feature selection.')
+            end
             if ~skip_training
                 % pack
                 % TODO: for 'useall', make vectors_train = data(:,indexindex). Makes it a lot easier to code later.
@@ -422,20 +434,38 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Do scaling on training set if requested
         if ~skip_training && strcmpi(cfg.scale.estimation,'across')
+            if use_kernel
+                error('Scaling on training set only (cfg.scale.estimation = ''across'') does not make sense when using a "_kernel" decoding methods (i.e. one where the kernel is only calculated once per voxel/ROI), because the kernel needs to be computed in every step again. Either use a normal decoding method or use another scaling method')
+            end
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [vectors_train,scaleparams] = decoding_scale_data(cfg,vectors_train);
         end
 
         if ~skip_training
-            if cfg.decoding.kernel.use && i_step == 1
-                kernel = decoding_setup_kernel(data(:,indexindex),cfg);
+            if use_kernel 
+                
+                % in the first step of each voxel, calculate the kernel
+                if i_step == 1
+                    % if all decoding steps use the same data, calculating the
+                    % kernel only once and then passing the training and test
+                    % part of the kernel is probably faster than calculating
+                    % a kernel in every step. As default, a linear kernel used
+                    % (@(X,Y) X*Y' ; see decoding_defaults);
+                    kernel = cfg.decoding.kernel.function(data(:,indexindex),data(:,indexindex));
+                end
+                
+                % in each step, set the kernel-submatrix containing the
+                % training entries as training data
+                data_train = kernel(i_train, i_train);
+            else
+                % no kernel used, set the training vectors as training data
+                data_train = vectors_train;
             end
             % e.g. when software is libsvm, then:
-%             model(i_step) = libsvm_train(vectors_train,labels_train,i_train,cfg,kernel);
-%             model(i_step) = feval(cfg.decoding.fhandle_train,labels_train,vectors_train,cfg); %#ok
-            model(i_step) = feval(cfg.decoding.fhandle_train,labels_train,vectors_train,i_train,cfg,kernel);
+%             model(i_step) = libsvm_train(labels_train,data_train,cfg);
+            model(i_step) = cfg.decoding.fhandle_train(labels_train,data_train,cfg);
         else
-            model(i_step) = model(i_step-1); %#ok
+            model(i_step) = model(i_step-1);
         end
 
         % store current training indices & training labels to check if they
@@ -450,14 +480,22 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Do scaling on test data if requested
         if strcmpi(cfg.scale.estimation,'across')
+            if use_kernel, error('Cant use scaling method ''across'' for "_kernel" methods. It does not make sense, because a kernel must be calculated in this case in every step anyway (this is what the normal methods do)'), end
             [vectors_test] = decoding_scale_data(cfg,vectors_test,scaleparams);
         end
 
         % Test Estimated Model
+        if use_kernel
+            % get submatrix with kernel entries between test and train 
+            % examples from the kernel -- this is the way that a kernel is
+            % used. No leak between training data and the test data.
+            data_test = kernel(i_test,i_train);
+        else
+            data_test = vectors_test;
+        end
         % e.g. when software is libsvm, then:
-        % decoding_out(i_step) = libsvm_test(labels_train,vectors_train,cfg,model(i_step));
-%         decoding_out(i_step) = feval(cfg.decoding.fhandle_test,labels_test,vectors_test,cfg,model(i_step)); %#ok
-        decoding_out(i_step) = feval(cfg.decoding.fhandle_test,labels_test,vectors_test,i_train,i_test,cfg,model(i_step),kernel); %#ok
+        % decoding_out(i_step) = libsvm_test(labels_test,data_test,cfg,model(i_step));
+        decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model(i_step));
 
         % TODO: decoding_out should be made extendable across runs
         % (sometimes you want to do things across runs)
@@ -563,8 +601,8 @@ if ~isfield(cfg.decoding,'fhandle_train') && ~isfield(cfg.decoding,'fhandle_test
         cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
 else
     % Run quick test that method is the same for both:
-    if ~strcmpi(cfg.decoding.fhandle_train,[cfg.decoding.software '_train']) || ...
-       ~strcmpi(cfg.decoding.fhandle_test,[cfg.decoding.software '_test'])
+    if ~strcmpi(func2str(cfg.decoding.fhandle_train),[cfg.decoding.software '_train']) || ...
+       ~strcmpi(func2str(cfg.decoding.fhandle_test),[cfg.decoding.software '_test'])
        error('Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!') 
     end
 end
@@ -579,19 +617,6 @@ end
 if ~strcmpi(cfg.feature_selection.method,'none') && (~isfield(cfg.feature_selection.decoding,'fhandle_train') || ~isfield(cfg.feature_selection.decoding,'fhandle_test'))
     cfg.feature_selection.decoding.fhandle_train = str2func([cfg.feature_selection.decoding.software '_train']); % this format allows variable input
     cfg.feature_selection.decoding.fhandle_test = str2func([cfg.feature_selection.decoding.software '_test']); % this format allows variable input
-end
-
-% Check for consistent setting of parameters for kernel method
-cond(1) = cfg.decoding.kernel.use;
-cond(2) = ~isempty(strfind(cfg.decoding.method,'_kernel'));
-if xor(cond(1),cond(2))
-    warning_str = sprintf([...
-        'Either cfg.decoding.kernel.use = 1 and no kernel method is selected in cfg.decoding.method\n',...
-        'or cfg.decoding.method contains a kernel method, but cfg.decoding.kernel.use = 1.\n',...
-        'Adjusting both parameters to be consistent with the kernel method!']);
-    warningv('BASIC_CHECKS:InconsistentKernelParameters',warning_str)
-    if ~cond(1), cfg.decoding.kernel.use = 1; end
-    if ~cond(2), cfg.decoding.method = [cfg.decoding.method '_kernel']; end
 end
 
 % try the most simple decoding possible (only if libsvm is used)

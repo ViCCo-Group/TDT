@@ -4,6 +4,8 @@
 % Every decoding analysis needs a cfg structure as input. This structure 
 % contains all information necessary to perform a decoding analysis.
 
+clear all
+
 %% First, set the defaults and define the analysis you want to perform
 
 % add path to this toolbox
@@ -43,12 +45,10 @@ end
 % all explained in the functions decoding and decoding_defaults.
 
 %% Specify which decoding method we would like to use
+cfg.decoding.method = 'classification_kernel'; % use kernel method
 
-% cfg.decoding.kernel.use = 1;
-% cfg.decoding.method = 'classification_kernel';
-
-% cfg.decoding.kernel.use = 0;
-% cfg.decoding.method = 'classification';
+% cfg.decoding.method = 'classification'; % default, also ok if not
+                                        % specified
 
 
 %% Second, get the file names, labels and run number of each brain image file to use for decoding.
@@ -162,7 +162,7 @@ cfg.verbose = 2; % you want all information to be printed on screen
 % cfg.plot_selected_voxels = 500; % 1: every step, 2: every second step, 100: every hundredth step...
 
 %% only select a number of voxels to decode
-% cfg.searchlight.subset = [5, 100, 1000, 1001]';
+% cfg.searchlight.subset = [5:100]' %, 1000, 1001]';
 
 %% Fifth, run the decoding analysis
 

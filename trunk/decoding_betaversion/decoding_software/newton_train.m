@@ -1,9 +1,9 @@
-function model = newton_train(labels_train,vectors_train,i_train,cfg,kernel) %#ok
+function model = newton_train(labels_train,data_train,cfg)
 
 switch lower(cfg.decoding.method)
 
     case 'classification'
-        model = nsvm_train(labels_train,vectors_train,-1);
+        model = nsvm_train(labels_train,data_train,-1);
         if isempty(model), error('nsvm_train returned an empty model - please check that nsvm_train is working properly'), end
         
     case 'classification_kernel'

@@ -41,7 +41,10 @@ function [working, libsvmdir] = check_libsvm(cfg, display_path)
     % test whether libSVM parameters are working
     % try a super simple decoding
     
-    if ~cfg.decoding.kernel.use
+    % check whether libsvm_train works, too
+    use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
+    
+    if ~use_kernel
         model = svmtrain([1; -1], [1; -1], cfg.decoding.train.(method).model_parameters);
     else % when using kernel
         model = svmtrain([1; -1], [1 1 -1; 2 -1 1], cfg.decoding.train.(method).model_parameters);
@@ -60,9 +63,15 @@ function [working, libsvmdir] = check_libsvm(cfg, display_path)
         end
     end
     
-    % check whether libsvm_train works, too
-    model = feval(cfg.decoding.fhandle_train,[-1;1],[-1;1],[1; 2],cfg,[1 -1; -1 1]);
-    
+    % test if call via function handles calling wrapper functions works
+    if use_kernel
+        % use kernel, give fake kernel matrix as input
+        model = cfg.decoding.fhandle_train([-1;1],[1,-1;-1,1],cfg);
+    else
+        % no kernel, give fake vectors as input
+        model = cfg.decoding.fhandle_train([-1;1],[-1;1],cfg);
+    end
+        
     if isempty(model)
         if nargout == 0
             display(['Your current libSVM options are: ' cfg.decoding.train.(method).model_parameters])

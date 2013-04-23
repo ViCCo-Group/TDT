@@ -1,10 +1,10 @@
-function model = correlation_classifier_train(labels_train,vectors_train,i_train,cfg,kernel) %#ok
+function model = correlation_classifier_train(labels_train,data_train,cfg)
 
 switch lower(cfg.decoding.method)
     
     case 'classification'
         % essentially, this is the model
-        model.vectors_train = vectors_train;
+        model.vectors_train = data_train;
         model.labels_train = labels_train;
         
     case 'classification_kernel'

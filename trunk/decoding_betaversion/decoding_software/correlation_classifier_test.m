@@ -1,9 +1,9 @@
-function decoding_out = correlation_classifier_test(labels_test,vectors_test,i_train,i_test,cfg,model,kernel) %#ok
+function decoding_out = correlation_classifier_test(labels_test,data_test,cfg,model)
 
 switch lower(cfg.decoding.method)
     
     case 'classification'
-        [predicted_labels decision_values] =  correlation_classifier(labels_test,vectors_test,model);
+        [predicted_labels decision_values] =  correlation_classifier(labels_test,data_test,model);
         
     case 'classification_kernel'
         error('correlation_classifier_test doesn''t work with passed kernels at the moment - please use libsvm or another method instead.')

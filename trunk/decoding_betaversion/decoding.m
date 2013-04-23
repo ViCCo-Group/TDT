@@ -583,7 +583,7 @@ end
 
 % Check for consistent setting of parameters for kernel method
 cond(1) = cfg.decoding.kernel.use;
-cond(2) = isempty(strfind(cfg.decoding.method,'_kernel'));
+cond(2) = ~isempty(strfind(cfg.decoding.method,'_kernel'));
 if xor(cond(1),cond(2))
     warning_str = sprintf([...
         'Either cfg.decoding.kernel.use = 1 and no kernel method is selected in cfg.decoding.method\n',...

@@ -8,15 +8,16 @@
 %
 % METHODS IMPLEMENTED HERE:
 % accuracy: decoding accuracy
-% accuracy_minus_chance: decoding accuracy - chance level (useful for SPM 2nd
-%   level)
-% sensitivity, specificity
-% dprime
-% loglikelihood
+% accuracy_minus_chance: decoding accuracy minus chance level (useful for 
+%   SPM 2nd level)
+% sensitivity: accuracy of first label
+% specificity: accuracy of second label
+% dprime: z(hit rate) - z(false alarm rate)
+% loglikelihood: measure of bias to one label: -1/2*(zHIT_rate^2 - zFA_rate^2)
 % AUC: Area under the ROC (Receiver Operator Characteristics) Curve
-% AUC_minus_chance: like AUC, but - chance level(useful for SPM 2nd level)
+% AUC_minus_chance: like AUC, but minus chance level(useful for SPM 2nd level)
 % corr: Correlation
-% zcorr: z-transformed correlation
+% zcorr: Fisher-z-transformed correlation (necessary for averaging correlations)
 %
 % The function also allows adding new result transformation functions by 
 % calling
@@ -61,7 +62,7 @@ if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
         output = output - chancelevel; % subtract chancelevel from all output entries
     end
     
-elseif strcmpi(method, 'sensitivity') % where the first label is correct
+elseif strcmpi(method, 'sensitivity') || strcmpi(method, 'sensitivity_minus_chance') % where the first label is correct
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
@@ -71,9 +72,12 @@ elseif strcmpi(method, 'sensitivity') % where the first label is correct
     end
     labelfilt = true_labels == labels(1); % use first label (only works with two labels)
     output = 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
-    output = output - chancelevel; % subtract chancelevel from all output entries
     
-elseif strcmpi(method, 'specificity') % where the other label is correct
+    if strcmpi(method, 'sensitivity_minus_chance')
+        output = output - chancelevel; % subtract chancelevel from all output entries
+    end
+    
+elseif strcmpi(method, 'specificity') || strcmpi(method, 'specificity_minus_chance') % where the other label is correct
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
@@ -83,7 +87,9 @@ elseif strcmpi(method, 'specificity') % where the other label is correct
     end
     labelfilt = true_labels == labels(end); % use last label (only works with two labels)
     output = 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
-    output = output - chancelevel; % subtract chancelevel from all output entries
+    if strcmpi(method, 'specificity_minus_chance')
+        output = output - chancelevel; % subtract chancelevel from all output entries
+    end
     
 elseif strcmpi(method, 'dprime')
     predicted_labels =  vertcat(decoding_out.predicted_labels);

@@ -1,21 +1,24 @@
-% function plot_design(cfg)
+% function plot_design(cfg,visible_on)
 %
 % This function plots your current design (analog to display_design.m).
-% In contrast to display_design, plot_design(cfg.design) does not work at
-% the moment.
 %
-% The output is somewhat ugly, but highly informative, because you can see
-% your decoding design at a glance.
+% The output is informative, because you can see your decoding design at a glance.
 %
-% If you like and/or know how to design nice figures in matlab, feel free
+% If you like and/or know how to design nice figures in Matlab, feel free
 % to improve the design.
 %
 % See also: display_design.m
 
 % Kai, 13-01-24
 
+% TODO: In contrast to display_design, plot_design(cfg.design) does not work at
+% the moment.
 
-function plot_design(cfg)
+function figure_handle = plot_design(cfg,visible_on)
+
+if ~exist('visible_on','var')
+    visible_on = 1;
+end
 
 %% define colours
 max_color = [.7, .5, .2]; % RGB values for the max color -- min color is black at the moment
@@ -38,7 +41,15 @@ min_label = min(cfg.design.label(:));
 max_label = max(cfg.design.label(:));
 
 %% create figure
-figure('name', 'Decoding Design')
+
+if visible_on
+    figure_handle = figure('name', 'Decoding Design','visible','on');
+else
+    figure_handle = figure('name', 'Decoding Design','visible','off');
+end
+
+% TODO: problem with visible off: when opening .fig, figure remains
+% invisible
 
 %% show train design (incl. labels)
 clear show_train
@@ -78,7 +89,7 @@ if length(filestart) > 15
     filerest = [repmat('...', size(fnames, 1), 1), fnames(:, n_match+1:end)]; % get not common part + initial '...'
     fnames = filerest;
 else
-	% keep fnames as they are (not cutted)
+	% keep fnames as they are (not cut)
 end
 
 set(gca,'YTick', 1:size(fnames,1))

@@ -11,6 +11,7 @@ if strcmpi(cfg.analysis,'searchlight')
         n_decodings = length(mask_index); % number of voxels
         decoding_subindex = 1:n_decodings;
     else
+        dispv(1,'Using only a subset of searchlights!')
         % check if all subset voxels make sense and convert to standard form here 
         
         subset_sz = size(cfg.searchlight.subset);

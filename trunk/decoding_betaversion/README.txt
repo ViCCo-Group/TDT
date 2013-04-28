@@ -79,6 +79,18 @@ statistics (e.g. a one-sample t-test in Matlab). For simplicity, we set
 chance to 0 as a default and set all other values around 0 (i.e. for 2 
 classes and chance level of 50%, values range from -50 to 50).
 
+Important remark: For calculating the mean output value across cross-
+validation steps (e.g. runs), we chose to average across all individual
+samples across cross-validation steps, rather than first averaging across 
+all samples within a cross-validation step and then again averaging across 
+all steps. If you would like to weight all decoding steps equally, set 
+   cfg.results.setwise= 1;
+   and
+   cfg.design.set = 1:length(cfg.design.set);
+which provides you with a separate output for each cross-validation step.
+Then, average over the resulting output images. Alternatively, write your
+own routine (see HOWTOEXTEND.txt) 
+
 ================
 Compiling libsvm
 ================
@@ -87,6 +99,8 @@ Some people experience problems with the mex-files of libsvm. If your
 problem is that a module was not found, try downloading missing dll that 
 your mex file depends on here:
 http://www.mathworks.de/support/solutions/en/data/1-2RQL4L/index.html
+or install a version of Visual C++ that is compatible with your version of 
+Matlab.
 
 Alternatively, you may want to use your own compilation or a later version 
 of libsvm, so you can follow these 6 steps. 

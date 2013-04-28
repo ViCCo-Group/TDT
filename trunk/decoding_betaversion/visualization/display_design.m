@@ -115,5 +115,5 @@ end
 
 % print if not returned
 if nargout < 1
-    disp(table)
+    dispv(2,table)
 end

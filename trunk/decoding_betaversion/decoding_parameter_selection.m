@@ -1,4 +1,4 @@
-% function cfg = decoding_parameter_selection(cfg,vectors_train,i_train)
+% function cfg = decoding_parameter_selection(cfg,data_train,i_train_external)
 %
 % This function selects and changes parameters that are used for
 % training the model (for example the cost variable C in SVM) and is an
@@ -27,11 +27,14 @@
 %            'peak':       Parameters are selected based on the highest
 %                          overall response
 %
-% vectors_train: Training data
-% i_train: Index of training data
+% data_train: Training data (either vectors of actual data or entries of kernel matrix)
+% i_train_external: Index of training data (from function decoding.m)
 
 
 % (c) Martin Hebart, 12/02/08
+
+% TODO: replace i_train with i_train_ext, itrain with i_train and itest
+% with i_test
 
 % TODO: externalize the "replacement of parameters" part which can be done
 % once on the defaults
@@ -43,7 +46,7 @@
 %       cfg.parameter_selection.parameters = {'c','e'};
 %       cfg.parameter_selection.parameter_range = {10^(-5:5),10^(-2:7)};
 
-function cfg = decoding_parameter_selection(cfg,vectors_train,i_train)
+function cfg = decoding_parameter_selection(cfg,data_train,i_train_external)
 
 
 % TODO: some parameters may be passed differently, e.g. not as a string.
@@ -86,7 +89,7 @@ all_combinations = allperms(all_combinations,parameter_range);
 
 % Then loop across all possible combinations in a nested CV and report
 % maximum as output
-[selected_parameters cfg.parameter_selection.design.msg] = run_nest(cfg,vectors_train,i_train,all_combinations,default_params);
+selected_parameters = run_nest(cfg,data_train,i_train_external,all_combinations,default_params);
 
 cfg.decoding.train.(cfg.decoding.method).model_parameters = sprintf(default_params,selected_parameters);
 
@@ -100,6 +103,10 @@ cfg.decoding.train.(cfg.decoding.method).model_parameters = sprintf(default_para
 
 %% Basic checks
 function [cfg,parameters,parameter_range] = basic_checks(cfg,parameters,parameter_range)
+
+% TODO: move these checks to external function and run check only once in main decoding.m
+% TODO: check which values of cfg and cfg.parameter_selection must match
+% and make them match if they don't
 
 if ~strcmpi(cfg.parameter_selection.method,'grid') && ~strcmpi(cfg.parameter_selection.method,'grid search')
    error('Unknown method ''%s'' for field ''cfg.parameter_selection.method',cfg.parameter_selection.method)
@@ -123,26 +130,11 @@ if ~iscell(parameter_range)
 end
 
 % Possible mismatch between different levels of the function
-if cfg.decoding.kernel.use
-    % Conditions that need to be fulfilled
-    ok(1) = cfg.parameter_selection.decoding.kernel.use;
-    ok(2) = strcmpi(func2str(cfg.parameter_selection.decoding.kernel.function),func2str(cfg.decoding.kernel.function));
-    ok(3) = strcmpi(cfg.parameter_selection.decoding.method,cfg.decoding.method);
-    if ~all(ok)
-    warning_str = sprintf([...
-         'Kernels are used in the main function, but not for parameter selection.\n',...
-         'Same method needs to be used at both levels!\n',...
-         'Setting cfg.parameter_selection.decoding.kernel.use = 1;\n',...
-         'cfg.parameter_selection.decoding.kernel.function = cfg.decoding.kernel.function;\n',...
-         'cfg.parameter_selection.decoding.method = cfg.decoding.method.']);
-    warningv('BASIC_CHECKS:NoKernelUsed',warning_str)
-    cfg.parameter_selection.decoding.kernel.use = 1;
+if cfg.decoding.use_kernel
     cfg.parameter_selection.decoding.kernel.function = cfg.decoding.kernel.function;
-    cfg.parameter_selection.decoding.method = cfg.decoding.method;
-    end
 end
 
-
+cfg.parameter_selection.decoding.method = cfg.decoding.method;
 
 
 %% Create all combinations in nested function
@@ -176,7 +168,7 @@ all_combinations = allperms(all_combinations,parameter_range);
 
 
 %% Nested cross validation to determine optimal parameter combination
-function [selected_parameters msg] = run_nest(cfg,data,i_train,all_combinations,default_params)
+function selected_parameters = run_nest(cfg,data,i_train_external,all_combinations,default_params)
 
 % Create design for nested CV
 try
@@ -186,19 +178,13 @@ try
         cfg.parameter_selection.design.function = cfg.design.function;
     end
     cfg.parameter_selection.files.mask = cfg.files.mask;
-    cfg.parameter_selection.files.step = cfg.files.step(i_train);
-    cfg.parameter_selection.files.label = cfg.files.label(i_train);
-    cfg.parameter_selection.files.name = cfg.files.name(i_train);
+    cfg.parameter_selection.files.step = cfg.files.step(i_train_external);
+    cfg.parameter_selection.files.label = cfg.files.label(i_train_external);
+    cfg.parameter_selection.files.name = cfg.files.name(i_train_external);
     fhandle = str2func(cfg.parameter_selection.design.function.name);
     cfg.parameter_selection.design = feval(fhandle,cfg.parameter_selection);
 catch %#ok<CTCH>
     error('Could not create design for nested cross-validation. Need correct information in field ''cfg.parameter_selection.design.function!''')
-end
-
-if ~isfield(cfg.parameter_selection,'msg')
-    msg = [];
-else
-    msg = cfg.parameter_selection.msg;
 end
 
 if ~isfield(cfg.parameter_selection,'scale')
@@ -216,17 +202,21 @@ n_steps = size(cfg.parameter_selection.design.train,2);
 
 decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
 
-kernel = cell(1,size(all_combinations,2)); % init
-
 for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
-    itrain = find(cfg.parameter_selection.design.train(:, i_step) > 0);
-    itest = find(cfg.parameter_selection.design.test(:, i_step) > 0);
+    i_train = find(cfg.parameter_selection.design.train(:, i_step) > 0);
+    i_test = find(cfg.parameter_selection.design.test(:, i_step) > 0);
     
-    vectors_train = data(itrain, :);
-    vectors_test = data(itest, :);
-    labels_train = cfg.parameter_selection.design.label(itrain, i_step);
-    labels_test = cfg.parameter_selection.design.label(itest, i_step);
+    if cfg.decoding.use_kernel
+        data_train = data(i_train, i_train);
+        data_test = data(i_test, i_train);
+    else
+        data_train = data(i_train, :);
+        data_test = data(i_test, :);
+    end
+    
+    labels_train = cfg.parameter_selection.design.label(i_train, i_step);
+    labels_test = cfg.parameter_selection.design.label(i_test, i_step);
     
     % Perform nested CV for each step
     for iteration = 1:size(all_combinations,2)
@@ -236,17 +226,13 @@ for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
         
         cfg.parameter_selection.decoding.train.(cfg.parameter_selection.decoding.method).model_parameters = curr_params;
         
-        if cfg.parameter_selection.decoding.kernel.use && i_step == 1
-             kernel{iteration} = decoding_setup_kernel(data,cfg.parameter_selection);
-        end
-        
         % Train model
         % e.g. when software is libsvm, call function with name libsvm_train.m
-        model(i_step,iteration) = feval(cfg.parameter_selection.decoding.fhandle_train,labels_train,vectors_train,itrain,cfg.parameter_selection,kernel{iteration}); %#ok<AGROW>
+        model(i_step,iteration) = cfg.parameter_selection.decoding.fhandle_train(labels_train,data_train,cfg.parameter_selection); %#ok<AGROW>
         
         % Test estimated model
         % e.g. when software is libsvm, call function with name libsvm_test.m
-        decoding_out(i_step,iteration) = feval(cfg.parameter_selection.decoding.fhandle_test,labels_test,vectors_test,itrain,itest,cfg.parameter_selection,model(i_step,iteration),kernel{iteration});
+        decoding_out(i_step,iteration) = cfg.parameter_selection.decoding.fhandle_test(labels_test,data_test,cfg.parameter_selection,model(i_step,iteration));
         
     end
     

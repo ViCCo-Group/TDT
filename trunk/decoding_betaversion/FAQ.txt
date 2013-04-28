@@ -1,0 +1,24 @@
+This is a collection of questions that might occur more often. This FAQ section should grow with time.
+
+
+Q1. My searchlight analysis takes several hours, compared to your example which takes only minutes.
+    I checked my script and all parameters seem to make sense. I'm not using parameter selection,
+    feature selection and the such which I know make processing a lot slower. What am I doing wrong?
+
+A1. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
+    of searchlights, the radius of the searchlight and the number of cross-validation steps.
+    Smaller searchlights are usually trained faster, unless the searchlight gets very small and the
+    separating hyperplane is more difficult to find.
+    If you run classification in libsvm, try using cfg.decoding.method = 'classification_kernel' 
+    which can double the speed of classification. If your voxel resolution is 2x2x2 mm or higher 
+    and you want a speed-up, consider resampling your data at a lower resolution, e.g. 3x3x3 mm.
+    In many cases, downsampling does not interfere much with the classification accuracies.
+    You could also consider reducing the size of your mask, e.g. limit yourself to gray-matter
+    voxels, only.
+
+
+Q2. Some of my ROIs take extremely long to calculate while others run much faster. How is that possible? 
+
+A2. Some examples might be more difficult to separate than others. If your ROI is small, this is more
+    likely to be the case. If the time difference is very large, try using scaling and possibly reduce
+    outlier voxels as implemented in the scaling method.

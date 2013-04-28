@@ -88,7 +88,6 @@ defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur
 % Decoding specific values
 defaults.decoding.method = 'classification'; % classification as standard
 defaults.decoding.software = 'libsvm'; % libsvm as a standard
-defaults.decoding.kernel.use = 0; % pass kernel or not (currently default is 0 although 1 is faster, but more error-prone from side of user!)
 defaults.decoding.kernel.function = @(X,Y) X*Y'; % for kernel method linear kernel as default
 
 

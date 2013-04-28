@@ -1,6 +1,6 @@
 % function save_fig(filename, cfg)
 %
-% This function servers to save a figure (the current axis) as
+% This function serves to save a figure (the current axis) as
 % matlab-figure + other formats (if desired).
 %
 % INPUT
@@ -40,7 +40,7 @@ function save_fig(filename, cfg)
     set(gcf, 'color', 'white');
 
     try
-        dispv(1, '%s', ['Saving figure as ' filename '.fig'])
+        dispv(2, '%s', ['Saving figure as ' filename '.fig'])
         saveas(gcf, filename, 'fig')
     catch %#ok<CTCH>
         warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
@@ -49,13 +49,13 @@ function save_fig(filename, cfg)
     for f_ind = 1:length(formats)
         curr_format = formats{f_ind};
         try
-            dispv(1, '%s', ['Saving figure as ' filename '.* as ' curr_format])
+            dispv(2, '%s', ['Saving figure as ' filename '.* as ' curr_format])
             print(curr_format, filename)
-        catch
+        catch %#ok<CTCH>
             warningv('SAVE_FIG:SavingFigureFormattedFailed',['Saving as ' curr_format ' failed'])
         end
     end
-    dispv(1, 'Saving figure done')    
+    dispv(2, 'Saving figure done')    
 
     % set background back
     set(gcf, 'color', oldcolor);  

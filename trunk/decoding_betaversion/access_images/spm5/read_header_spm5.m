@@ -9,5 +9,6 @@ try
 catch %#ok<CTCH>
     disp(lasterr)
     error(['Cannot read header, probably due to incompatibility ',...
-        'between image format and analysis software used.'])
+        'between image format and analysis software used or ',...
+        'because image does not exist.'])
 end

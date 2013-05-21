@@ -3,15 +3,16 @@ This is a collection of questions that might occur more often. This FAQ section 
 
 Q1. My searchlight analysis takes several hours, compared to your example which takes only minutes.
     I checked my script and all parameters seem to make sense. I'm not using parameter selection,
-    feature selection and the such which I know make processing a lot slower. What am I doing wrong?
+    feature selection and the such, which I know make processing a lot slower. What am I doing wrong?
 
 A1. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
     of searchlights, the radius of the searchlight and the number of cross-validation steps.
-    Smaller searchlights are usually trained faster, unless the searchlight gets very small and the
+    Smaller searchlights are usually trained faster, unless the number of voxels in the searchlight
+    are equal or smaller than the number of samples that are entered into the analysis; it that case
     separating hyperplane is more difficult to find.
     If you run classification in libsvm, try using cfg.decoding.method = 'classification_kernel' 
-    which can double the speed of classification. If your voxel resolution is 2x2x2 mm or higher 
-    and you want a speed-up, consider resampling your data at a lower resolution, e.g. 3x3x3 mm.
+    which can double or triple the speed of classification. If your voxel resolution is 2x2x2 mm or 
+    higher and you want a speed-up, consider resampling your data at a lower resolution, e.g. 3x3x3 mm.
     In many cases, downsampling does not interfere much with the classification accuracies.
     You could also consider reducing the size of your mask, e.g. limit yourself to gray-matter
     voxels, only.
@@ -22,3 +23,16 @@ Q2. Some of my ROIs take extremely long to calculate while others run much faste
 A2. Some examples might be more difficult to separate than others. If your ROI is small, this is more
     likely to be the case. If the time difference is very large, try using scaling and possibly reduce
     outlier voxels as implemented in the scaling method.
+
+
+Q3. I want to run classification across subjects, and I know that imbalances in training data are bad,
+    but there separating data into pairs of both categories for cross-validation doesn't make much sense.
+    How should I proceed?
+
+A3. It is in many cases no problem if your data has a slight imbalance, and if you have the same number
+    of subjects in both groups (e.g. 20 patient, 20 control), the imbalance should not be too bad. If 
+    any, it should rather make your results more conservative. Just set cfg.design.unbalanced_data = 'ok'
+    If you are worried that the imbalance reduces your accuracy, consider also calculating AUC which 
+    should be more resistant to misclassification unless the imbalance is very large. An alternative 
+    would be to set up a design in which you randomly select pairs for cross-validation and repeat this
+    process many times (e.g. 100), but this type of analysis is a lot slower.

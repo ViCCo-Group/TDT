@@ -75,6 +75,7 @@ defaults.scale.cutoff = [-inf inf];
 
 % Specification of feature selection
 defaults.feature_selection.method = 'none';
+defaults.feature_selection.useall = 0;
 
 % Specification of parameter selection
 defaults.parameter_selection.method = 'none';

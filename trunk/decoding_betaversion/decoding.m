@@ -417,28 +417,28 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         if ~strcmpi(cfg.feature_selection.method,'none')
             if ~skip_training
                 % pack
-                % TODO: for 'useall', make vectors_train = data(:,indexindex). Makes it a lot easier to code later.
-                % alternative: don't pass data, but recalculate vectors_train, i_train, etc. from i_step
-                fs_data.vectors_train = vectors_train;
-                fs_data.vectors_test = vectors_test;
-                fs_data.labels_train = labels_train;
-                fs_data.labels_test = labels_test;
+                if cfg.feature_selection.useall
+                    fs_data.i_train = find(cfg.design.train(:, i_step) > 0 | cfg.design.test(:, i_step) > 0);
+                else
+                    fs_data.i_train = i_train;
+                end
+                fs_data.vectors_train = data(fs_data.i_train, indexindex);
+                fs_data.labels_train = cfg.design.label(i_train, i_step);
                 fs_data.i_step = i_step;
-                fs_data.i_train_external = i_train;
                 fs_data.external.position_index = mask_index(indexindex); % absolute position of currently selected voxels in decoding (for external masks)
                 [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data);
                 if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
                     if i_step == 1
+                        fs_results.curr_decoding = curr_decoding;
                         results.feature_selection(i_decoding) = fs_results;
-                        results.feature_selection(i_decoding).curr_decoding = curr_decoding;
                     end
                 else
                     results.feature_selection(i_decoding).n_vox_selected(i_step) = fs_results.n_vox_selected;
                     results.feature_selection(i_decoding).curr_decoding = curr_decoding;
                 end
             end
-            vectors_train = vectors_train(:,fs_index);
-            vectors_test = vectors_test(:,fs_index);
+            data_train = data_train(:,fs_index);
+            data_test = data_test(:,fs_index);
         end
 
 
@@ -625,6 +625,15 @@ if ~isempty(strfind(cfg.decoding.method, '_kernel')) && strcmpi(cfg.scale.estima
     error('Decoding method %s cannot be used together with scaling method %s',cfg.decoding.method,cfg.scale.estimation);
 end
 
+% Using feature selection in the main function with a kernel method doesn't make sense
+if ~isempty(strfind(cfg.decoding.method, '_kernel')) && ~strcmpi(cfg.feature_selection.method,'none')
+    newmethod = strrep(cfg.decoding.method,'_kernel','');
+    str = sprintf(['Use of feature selection and decoding method ''%s'' in the main function makes processing slower. ',...
+                   'Method is now reverted to ''%s''.'],cfg.decoding.method,newmethod);
+    warningv('BASIC_CHECKS:KernelAndFeatureSelection',str)
+    cfg.decoding.method = newmethod;
+end
+
 if ~strcmpi(cfg.feature_selection.method,'none')
     warningv('BASIC_CHECKS:FeatureSelectionIsTestmode','Feature selection has not been fully debugged. Running in test mode!')
 end
@@ -646,6 +655,24 @@ if ~isequal(size(cfg.design.train), size(cfg.design.test))
     error('Size mismatch: ~isequal(size(cfg.design.train), size(cfg.design.test))')
 end
 
+problem = 0;
+for i_step = 1:n_steps
+    curr_train = cfg.design.train(:,i_step);
+    curr_label = cfg.design.label(:,i_step);
+    if length(unique(curr_train(logical(curr_label)))) == 1
+        error('Training data in decoding step %i contains only one label, but needs at least two.',i_step)
+    end
+    if length(unique(curr_test(logical(curr_label)))) == 1
+        problem = problem+1;
+    end
+end
+if problem && n_steps == 1
+    warningv('BASIC_CHECKS:TestDataOnlyOneLabel',...
+        ['Test data in %i steps contains only one label and there is only ',...
+         'one decding step. This might be a problem when using correlation, ',...
+         'AUC, sensitivity, specificity and similar measures!'],problem)
+end
+    
 if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
     warningv('BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
 end
@@ -705,6 +732,7 @@ end
 if length(unique(cfg.design.set)) == 1
     cfg.results.setwise = 0;
 end
+
 
 if cfg.results.write
 

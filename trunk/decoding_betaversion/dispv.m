@@ -9,6 +9,10 @@ function dispv(rule,str,varargin)
 %       level: verbosity (0: no output, 1: normal output, 2: high output)
 %       str: string to be printed
 %       further input: optional input for fprintf
+%   OR
+% dispv(rule,str,'display')
+%    internally, display(str) will be used instead of fprintf
+%       This is e.g. helpful, if multiple rows of text should be displayed
 
 global verbose
 
@@ -22,6 +26,25 @@ end
 
 
 if display_string % if verbose was not defined, display everything
-    str = [str '\n'];
-    fprintf(str,varargin{:})
-end    
+    % default
+    use_display = 0; % use fprintf
+    
+    % check if we more than one row
+    if size(str, 1) > 1
+        use_display = 1;
+    end
+    
+    % check if display has been provided as argument
+    try
+        if length(varargin) == 1 && strcmp(varargin{1}, 'display')
+            use_display = 1;
+        end
+    end
+    
+    if use_display == 0
+        fprintf(str,varargin{:});
+        fprintf('\n');
+    else
+        display(str);
+    end
+end

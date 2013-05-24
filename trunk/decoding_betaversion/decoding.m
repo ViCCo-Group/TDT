@@ -658,18 +658,19 @@ end
 problem = 0;
 for i_step = 1:n_steps
     curr_train = cfg.design.train(:,i_step);
+    curr_test = cfg.design.test(:,i_step);
     curr_label = cfg.design.label(:,i_step);
-    if length(unique(curr_train(logical(curr_label)))) == 1
+    if length(unique(curr_label(logical(curr_train)))) == 1
         error('Training data in decoding step %i contains only one label, but needs at least two.',i_step)
     end
-    if length(unique(curr_test(logical(curr_label)))) == 1
+    if length(unique(curr_label(logical(curr_test)))) == 1
         problem = problem+1;
     end
 end
 if problem && n_steps == 1
     warningv('BASIC_CHECKS:TestDataOnlyOneLabel',...
         ['Test data in %i steps contains only one label and there is only ',...
-         'one decding step. This might be a problem when using correlation, ',...
+         'one decoding step. This might be a problem when using correlation, ',...
          'AUC, sensitivity, specificity and similar measures!'],problem)
 end
     

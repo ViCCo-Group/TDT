@@ -7,6 +7,10 @@
 % If you like and/or know how to design nice figures in Matlab, feel free
 % to improve the design.
 %
+% Some possible input:
+%   cfg.fighandles.plot_design (optional): Figure handle to which design
+%       will be plotted to
+%
 % See also: display_design.m
 
 % Kai, 13-01-24
@@ -42,14 +46,18 @@ max_label = max(cfg.design.label(:));
 
 %% create figure
 
-if visible_on
-    figure_handle = figure('name', 'Decoding Design','visible','on');
+if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
+    figure(cfg.fighandles.plot_design)
+    warning('Ignoring visible_on at the moment')
 else
-    figure_handle = figure('name', 'Decoding Design','visible','off');
+    if visible_on
+        figure_handle = figure('name', 'Decoding Design','visible','on');
+    else
+        % TODO: problem with visible off: when opening .fig, figure remains
+        % invisible
+        figure_handle = figure('name', 'Decoding Design','visible','off');
+    end
 end
-
-% TODO: problem with visible off: when opening .fig, figure remains
-% invisible
 
 %% show train design (incl. labels)
 clear show_train

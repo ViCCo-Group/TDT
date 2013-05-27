@@ -53,11 +53,11 @@ defaults.plot_design = 1; % decide whether you want to save the design as
                           % Possible values:
                           %     0: no plotting (not recommended)
                           %     1: plot using the default files formats
-                          % {'-dpng', '-depsc2'}; % list all formats
+                          %     2: will be plotted only at the end
+% default.plot_design_formats = {'-dpng', '-depsc2'}; % list all formats
                           %         that you want to save the figure as
-                          %         (see "doc print" for possible file
+                          %             (see "doc print" for possible file
                           %             formats, and don't forget the
-                          %             leading '-' before the format)
 
 defaults.plot_selected_voxels = 0; % a value of n means that the currently 
                                % selected voxels (e.g. a searchlight, ROI, 

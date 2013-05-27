@@ -55,10 +55,12 @@
 %               1: plot every step,
 %               2: every second step, 100: every hundredth step...
 %           Default: 0 (no plotting)
+%       cfg.fighandles.plot_selected_voxels (optional): Figure handle to
+%           plot selected voxels (updated in background)
 % DISPLAY:
 %   cfg.plot_design = 1 (default); will plot your design. 
 %       See decoding_defaults for possible values. 
-%
+%   cfg.fighandles.plot_design (optional): Figure handle to plot design 
 % OUTPUT:
 %   results: 1 x n structure array, containing the decoding results of each
 %       of the n requested outputs (see. cfg.results.output)
@@ -202,8 +204,10 @@ dispv(1,ver)
 %% try show design to user and save to result dir
 % plot design if required
 try
-    if cfg.plot_design
-        figure_handle = plot_design(cfg,0); save_fig(fullfile(cfg.results.dir, 'design'), cfg); close(figure_handle);
+    if cfg.plot_design == 1 % plot + save fig, save hdl
+        cfg.fighandles.plot_design = plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg); drawnow;
+    elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
+        fighdl = plot_design(cfg, 0); save_fig(fullfile(cfg.results.dir, 'design'), cfg); close(fighdl); clear fighdl
     end
 catch
     warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
@@ -329,6 +333,7 @@ else
     dispv(2, 'Using normal method')    
 end
 
+lasttime = now; % for updating figures
 
 % Start
 for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
@@ -337,14 +342,21 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
     % Display status info (i.e. how far is the analysis?)
     if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
-
+    % update display every 500ms
+    if cfg.plot_design == 1 && (now - lasttime)*24*60*60 > .5
+        drawnow; lasttime = now;
+    end
+    
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template);
 
     if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
+        if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')
+            cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI');
+        end
         try
             % plot searchlight with brain projection
-            plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index);
+            plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index, [], cfg.fighandles.plot_selected_voxels);
         catch
             warningv('DECODING:PlotSelectedVoxelsFailed', 'plot_selected_voxels failed');
         end

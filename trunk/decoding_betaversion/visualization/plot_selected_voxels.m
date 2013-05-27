@@ -1,4 +1,4 @@
-% function plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images)
+% fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images, fighdl)
 %
 % This function plots a given voxelselection (e.g. searchlight, ROI), and
 % can in addition show a 2d projection of an image.
@@ -21,9 +21,13 @@
 %   mask_index: 1xBD vector specifying the position of each value in 
 %       brain_data in the sz-dimensional space
 %   borader_image: specify type of background image. Possible value:
-%       'projection', 'slices', 'projection+slices' (default)
+%       'projection', 'slices', 'projection+slices' (default), []: default
+%   fighdl: Handle to a figure that should be plotted to. By default, the
+%       current axis will be used.
+%       Remark: Plotting will happen in the background, and the previously 
+%           current axis will be activated in the end again
 %
-% Martin Hebart, Kai Görgen, 2013/04/14      
+% Martin Hebart, Kai Görgen, 2013/05/27
 
 % Possible IMPROVEMENTS:
 % Adjust size of each axis to get "real" shape of ROI, not distorted along
@@ -36,13 +40,22 @@
 %       but of course plot searchlight
 %   -- somewhere on the way there: save projections
 
-function plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images)
+function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images, fighdl)
 
 % check that the correct arguments are provided
 if exist('brain_data', 'var')
     if ~exist('mask_index', 'var')
         error('brain_data is provided, but mask_index not. Both arguments must be provided')
     end
+end
+
+%% set focus silently
+
+if exist('fighdl', 'var')
+    previous_fig = gcf;
+else
+    previous_fig = -1; % mark that fighdl has not been passed
+    fighdl = gcf;
 end
 
 %%
@@ -80,7 +93,7 @@ for i = 1:n_vox
 end
 
 clf
-h = patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
+patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*length(position_index),1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);
 axis([0 sz(1) 0 sz(2) 0 sz(3)])
@@ -107,7 +120,7 @@ if exist('brain_data', 'var')
     % % - only project outer voxels 
     %
 
-    if ~exist('boarder_image', 'var')
+    if ~exist('boarder_image', 'var') || isempty(boarder_image)
         boarder_images = 'projection+slices'; % choose if you want to project slice (e.g. the middle) or the projection
     end
     % check that value is valid
@@ -178,3 +191,8 @@ end
 
 %% draw image
 drawnow;
+
+%% set figurehandle back to what it was before
+if previous_fig ~= -1  % fighdl not passed
+    set(0,'CurrentFigure',previous_fig) % set figurehandle back to previous axis
+end

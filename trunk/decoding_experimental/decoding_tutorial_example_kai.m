@@ -132,8 +132,8 @@ cfg.design = make_design_cv(cfg);
 % automatically in the main function.
 
 %% Print your design to look at it
-display_design(cfg);
-plot_design(cfg);
+% display_design(cfg);
+% plot_design(cfg);
 
 % cfg.plot_design = 0; % does not plot your design
 % cfg.plot_design = 1; % plots your design using the default file formats
@@ -159,7 +159,7 @@ cfg.verbose = 2; % you want all information to be printed on screen
 
 %% Decide whether you want to plot the searchlight while it goes
 
-% cfg.plot_selected_voxels = 500; % 1: every step, 2: every second step, 100: every hundredth step...
+% cfg.plot_selected_voxels = 50; % 1: every step, 2: every second step, 100: every hundredth step...
 
 %% only select a number of voxels to decode
 % cfg.searchlight.subset = [5:100]' %, 1000, 1001]';

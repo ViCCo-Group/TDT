@@ -8,7 +8,7 @@
 %       automatically)
 %
 % OPTIONAL INPUT
-%   cfg.plot_data: if this is a cell of strings, each string specifies one
+%   cfg.plot_design_formats: if this is a cell of strings, each string specifies one
 %       format to save the files as. E.g. {'-dpng', '-depsc2'} will save
 %       the figure as png and eps. See print.m for more formats.
 %       Other input types will be ignored (e.g. numbers), and the default
@@ -23,9 +23,9 @@ function save_fig(filename, cfg)
         cfg = [];
     end
 
-    if isfield(cfg, 'plot_design')
+    if isfield(cfg, 'plot_design_formats')
         if iscell(cfg.plot_design) && ischar(cfg.plot_design{1})
-            formats = cfg.plot_design;
+            formats = cfg.plot_design_formats;
         end
     end
 

@@ -56,6 +56,8 @@ end
 switch lower(cfg.decoding.method)
     case 'classification'
         libsvm_options = cfg.decoding.train.classification.model_parameters;
+    case 'classification_kernel'
+        error('Weights cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
     case 'regression'
         libsvm_options = cfg.decoding.train.regression.model_parameters;
 end

@@ -5,10 +5,12 @@ function output = wildcard2regexp(input)
 % versions without regexptranslate.
 %
 % Example: The search 'myfilename*.img' will lead to '^myfilename.*\.img$';
+%
+% by Martin Hebart
 
 %% 
 % Be cautious with meta characters
-metachars = {'+','?','{','}','(',')','[',']','\','.'};
+metachars = {'+','?','{','}','(',')','[',']','\','|','.','$'};
 
 output = [];
 
@@ -49,6 +51,7 @@ if ~isempty(wildcard_ind)
        output = output_adjusted; % update
    end
 end
+
 
 %% Adjust search at end of file
 

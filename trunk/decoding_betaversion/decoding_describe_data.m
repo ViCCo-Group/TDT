@@ -3,7 +3,11 @@
 % This functions creates the link between the file names of regressors
 % (e.g. beta_0001.img) and its corresponding label name (e.g. button press),
 % label number (e.g. -1 or 1) and decoding step number (e.g. run 1). These 
-% inputs are needed to create a design matrix with all make_design functions.
+% inputs are needed to create a design matrix with all make_design
+% functions. Wildcards (*) can be used to include all files matching a part
+% of the string (e.g. '*name*' will include all regressor names that contain
+% the string 'name', and 'name*' only those regressor names starting with
+% 'name').
 %
 % INPUT:
 %   cfg: configuration file (see decoding.m)
@@ -46,12 +50,10 @@
 %           regressor names from SPM (more or less)
 %
 %
-% by Martin Hebart 11/06/12, Update Kai 13/04/16
+% by Martin Hebart 11/06/12, Update Kai 13/04/16, Update Martin 13/06/12
 
-% TODO: add wildcards, but make sure a warning is printed when wildcards
-% are used across bins (which should rarely be done, otherwise it may
-% happen that several bins are accidentally grouped)
-
+% Update Martin 13/06/12
+%   Introduced possibility to use wildcards
 % Update Kai, 13/04/16
 %   Added files.descr, normally full SPM regressor name
 % MH: added cross classification and help file: 11/09/05
@@ -86,7 +88,17 @@ end
 n_inputs = length(labelnames);
 
 for i_input = 1:n_inputs
-    label_index = strcmp(regressor_names(1,:),labelnames{i_input});
+    
+    % Prepare labelnames to regular expression
+    labelnames{i_input} = wildcard2regexp(labelnames{i_input});
+    % Apply regular expression
+    ind = regexp(regressor_names(1,:),labelnames{i_input});
+    try label_index = ~cellfun(@isempty,ind);
+    % catch for users without cellfun
+    catch, label_index = zeros(1,length(ind)); for i = 1:length(ind), label_index(i) = ~isempty(ind{i}); end %#ok<CTCH> 
+    end
+        
+        
     if ~any(label_index)
         error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',labelnames{i_input})
     end

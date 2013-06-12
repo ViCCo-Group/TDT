@@ -39,7 +39,7 @@ if ~exist(spm_file,'file')
         dispv(1, 'design_from_spm: Could not find SPM.mat in %s, but found %s instead.',spm_folder,otherSPM.name);
         spm_file = fullfile(spm_folder, otherSPM.name);
     elseif length(otherSPM) > 1
-        error('Could not find a SPM.mat in %s, but multiple other *_SPM.mat files. Please make sure that only one such file exists.',spm_folder);
+        error('Could not find an SPM.mat in %s, but multiple other *_SPM.mat files. Please make sure that only one such file exists.',spm_folder);
     else    
         error('No SPM.mat or *_SPM.mat could be found in %s',spm_folder);
     end
@@ -89,7 +89,7 @@ for i = 1:length(regressors)
     ind1 = unique(cell2mat(ind1));
       
     val = regressors{i}(ind1);
-    regressor_names{2,i} = str2double(val);
+    regressor_names{2,i} = str2double(val); % run number
     
     %== Get basis function number from regressors ==
     

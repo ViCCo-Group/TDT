@@ -75,8 +75,9 @@ cfg.plot_selected_voxels = 1;
 
 
 % The following function extracts all beta names and corresponding run
-% numbers from the SPM.mat (and adds 'bin 1' to 'bin m', if a FIR design 
-% was used)
+% numbers from the SPM.mat. Adds 'bin 1' to 'bin m', if multiple
+% regressors were used for each condition within a run, e.g. when using
+% time derivatives or an FIR design.
 regressor_names = design_from_spm(beta_dir);
 
 % Now with the names of the labels, we can extract the filenames and the 

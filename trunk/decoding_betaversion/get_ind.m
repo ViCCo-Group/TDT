@@ -60,8 +60,8 @@ elseif strcmpi(cfg.analysis,'ROI')
     end
 
     fname = mask_names{i_decodingstep};
-    hdr = spm_vol(fname); % get headers of mask
-    mask = spm_read_vols(hdr); % get mask
+    hdr = read_header(cfg.software,fname); % get headers of mask
+    mask = read_image(cfg.software,hdr); % get mask
     
     % Select indices that relate to the ROI within mask_indices
     [c,indexindex] = intersect(mask_index,find(mask));

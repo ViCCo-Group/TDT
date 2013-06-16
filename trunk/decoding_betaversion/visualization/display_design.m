@@ -17,11 +17,12 @@ function table = display_design(cfg)
 %% check if input is design subfield
 if ~isfield(cfg, 'design')
     if isfield(cfg, 'train') && isfield(cfg, 'test')
-        warning(sprintf('Seems you called diplay_design(cfg.defaults).\nUse display_design(cfg) if possible:  for more information'))
+        str = sprintf('Seems you called diplay_design(cfg.defaults).\nUse display_design(cfg) if possible.');
+        warning(str)
         % save design in cfg.design for this function
         cfg.design = cfg;
     else
-        error('Unvalid argument for display_design(). The input should be either a cfg containing .design, or cfg.design containing .train and .test')
+        error('Invalid argument for display_design(). The input should be either a cfg containing .design, or cfg.design containing .train and .test')
     end
 end
 

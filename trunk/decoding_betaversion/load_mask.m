@@ -1,4 +1,4 @@
-% function [mask_vol,mask_hdr,sz] = load_mask(cfg)
+% function [mask_vol,mask_hdr,sz,vol] = load_mask(cfg)
 %
 % Subfunction for decoding.m
 % This function loads one or several masks from cfg.files.mask in which the
@@ -8,7 +8,7 @@
 %
 % Martin Hebart, 2011/01/10 
 
-function [mask_vol,mask_hdr,sz] = load_mask(cfg)
+function [mask_vol,mask_hdr,sz,vol] = load_mask(cfg)
 
 mask_names = cfg.files.mask;
 if ischar(mask_names) % to deal with different types of input

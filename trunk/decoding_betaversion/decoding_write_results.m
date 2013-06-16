@@ -1,6 +1,6 @@
-% function decoding_write_results(cfg,results,mask_index)
+% function decoding_write_results(cfg,results)
 %
-% This is a subfunction of the decoding toolbox that saves previously
+% This is a subfunction of The Decoding Toolbox that saves previously
 % processed data to a prespecified target location. For example, it can be
 % used to write brain images in a searchlight analysis or write a mat-file
 % for ROI analyses, containing a structure with fields for each ROI.
@@ -15,14 +15,31 @@
 % the same name are created between this initial check in decoding.m and
 % when they should be saved here.
 
+% by Martin Hebart and Kai Görgen
+%
 % HISTORY
+% MARTIN: 2013/06/16: removed input mask_index (should anyway be contained
+%   in results struct), restructured ROI and wholebrain writing section
 % KAI, 2011/08/16
 %   Added copying of result files if result files exist and
 %   cfg.results.overwrite = 1
+%
 
-function decoding_write_results(cfg,results,mask_index)
+function decoding_write_results(cfg,results)
 
-global reports %#ok<NUSED>
+global reports
+
+% Unpack results and set output variables
+mask_index = results.mask_index;
+output_variables = {'output','mask_index','resultdim'};
+if strcmpi(cfg.analysis,'searchlight') && cfg.searchlight.subset
+    decoding_subindex = results.decoding_subindex; %#ok<NASGU>
+    output_variables = [output_variables {'decoding_subindex'}];
+end
+if isfield(results,'mask_index_separate')
+    mask_index_separate = results.mask_index_separate;
+    output_variables = [output_variables {'mask_index_separate'}];
+end
 
 % Save warning messages
 if ~isempty(reports) % if any warnings were present
@@ -33,6 +50,9 @@ if ~isempty(reports) % if any warnings were present
 end
 
 n_outputs = length(cfg.results.output);
+
+
+%% WRITE SEARCHLIGHT RESULTS
 
 if strcmpi(cfg.analysis,'searchlight')
     
@@ -53,6 +73,7 @@ if strcmpi(cfg.analysis,'searchlight')
         %%%%%%%%%%%%%%%%%%%%%
         % WRITE AS MAT-FILE %
         %%%%%%%%%%%%%%%%%%%%%
+        % write as mat-file if the output makes it necessary or if results cannot be written
         if iscell(results.(outputname).output) || isstruct(results.(outputname).output) || fallback
             
             fdir = cfg.results.dir;
@@ -61,13 +82,15 @@ if strcmpi(cfg.analysis,'searchlight')
             if exist(fname,'file')
                 if cfg.results.overwrite
                     % simply overwrite the file
-                    warningv('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname)
+                    str = sprintf('Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname);
+                    warningv('decoding_write_results:overwrite_results', str)
                 else
                     % dont overwrite file, copy it
                     [old_results_path, old_results_file, dummy_ending] = fileparts(fname);
                     old_fname = fullfile(old_results_path, old_results_file);
                     backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
-                    warningv('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
+                    str = sprintf('Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
+                    warningv('decoding_write_results:overwrite_results', str);
                     
                     fext = '.mat';
                     source = [old_fname, fext];
@@ -82,9 +105,9 @@ if strcmpi(cfg.analysis,'searchlight')
             output = results.(outputname).output; %#ok<NASGU>
             resultdim = cfg.datainfo.dim; %#ok<NASGU>
             
-            save(fname,'output','mask_index','resultdim')
-            
-            results.(outputname).(outputname).fname = fname;
+            save(fname,output_variables{:});
+                        
+            results.(outputname).fname = fname;
             
             % Save set results (should each set be saved separately?)
             if cfg.results.setwise
@@ -94,7 +117,7 @@ if strcmpi(cfg.analysis,'searchlight')
                     dispv(2,'Saving results for set %i to %s', i_set, fname)
                     output = results.(outputname).set(i_set).output; %#ok<NASGU>
                     
-                    save(fname,'output','mask_index','resultdim')
+                    save(fname,output_variables{:})
 
                     results.(outputname).set(i_set).fname = fname;
                 end
@@ -160,8 +183,18 @@ if strcmpi(cfg.analysis,'searchlight')
         end
     end
 
+%% WRITE ROI OR WHOLEBRAIN RESULTS    
+    
 elseif strcmpi(cfg.analysis,'ROI') || strcmpi(cfg.analysis,'wholebrain')
 
+    % Get roi names from masks
+    if strcmpi(cfg.analysis,'ROI') && isfield(cfg,'files') && isfield(cfg.files,'mask')
+        for i_mask = 1:length(cfg.files.mask)
+            [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask});
+        end
+        output_variables = [output_variables,{'roi_names'}];
+    end
+    
     for i_output = 1:n_outputs
 
         % TODO: add input roinames to cfg to be able to apply names later.
@@ -169,27 +202,51 @@ elseif strcmpi(cfg.analysis,'ROI') || strcmpi(cfg.analysis,'wholebrain')
         outputname = cfg.results.output{i_output};
 
         % Save overall results and save to returning variable
-        fname = sprintf('%s.mat',cfg.results.resultsname{i_output});
-        resultsmat_fname = fullfile(cfg.results.dir,fname);
-        resultsmat = results.(outputname).output; %#ok<NASGU>
-        dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsmat_fname)
-        save(resultsmat_fname,'resultsmat')
+        fdir = cfg.results.dir;
+        fname = fullfile(fdir,sprintf('%s.mat',cfg.results.resultsname{i_output}));
 
-        results.(outputname).fname = resultsmat_fname;
+        if exist(fname,'file')
+            if cfg.results.overwrite
+                % simply overwrite the file
+                str = sprintf('Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname);
+                warningv('decoding_write_results:overwrite_results', str)
+            else
+                % dont overwrite file, copy it
+                [old_results_path, old_results_file, dummy_ending] = fileparts(fname);
+                old_fname = fullfile(old_results_path, old_results_file);
+                backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
+                str = sprintf('Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
+                warningv('decoding_write_results:overwrite_results', str);
+                
+                fext = '.mat';
+                source = [old_fname, fext];
+                target = [backup_fname, fext];
+                dispv(1, 'Copying %s to %s', source, target)
+                r = copyfile(source, target);
+            end
+        end
+        
+        dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
+        
+        output = results.(outputname).output; %#ok<NASGU>
+        resultdim = cfg.datainfo.dim; %#ok<NASGU>
+        
+        save(fname,output_variables{:});
 
+        results.(outputname).fname = fname;
+        
         % Save set results (should each set be saved separately?)
         if cfg.results.setwise
             n_sets = length(results.(outputname).set);
             for i_set = 1:n_sets
-                fname = sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
-                resultsmat_fname = fullfile(cfg.results.dir,fname);
-                resultsmat_set = results.(outputname).set(i_set).output; %#ok<NASGU>
-                dispv(2,'Saving results for set %i to %s', i_set, resultsmat_fname)
-                save(resultsmat_fname,'resultsmat_set');
-                results.(outputname).set(i_set).fname = resultsmat_fname;
+                fname = fullfile(fdir,sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id));
+                dispv(2,'Saving results for set %i to %s', i_set, fname)
+                output = results.(outputname).set(i_set).output; %#ok<NASGU>
+                
+                save(fname,output_variables{:})
+                
+                results.(outputname).set(i_set).fname = fname;
             end
         end
-
     end
-
 end

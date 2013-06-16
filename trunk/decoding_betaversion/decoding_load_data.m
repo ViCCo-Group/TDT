@@ -14,22 +14,27 @@
 % OUTPUT:
 % passed_data: struct containing all important data for the decoding.
 %   Provided fields:
-%       .data: nSamples x nVoxels matrix of data that is used for decoding.
-%              This is not all data from the data files, but only the data
-%              that corresponds to the voxels that are selected in
-%              .mask_index.
-%       .mask_index: indices of those voxels that were selected by the
-%                    mask minus those that are nan in the input data.
+%       .data: n_samples x n_voxels matrix of data that is used for 
+%             decoding. This is not all data from the data files, but only 
+%             the data that corresponds to the voxels that are selected in
+%             .mask_index.
+%       .mask_index: indices of those voxels that were selected by all
+%             masks minus those that are nan in the input data.
+%       .mask_index_separate: indices of those voxels that were selected by
+%             each mask separately (1xn cell array), only when several
+%             masks were provided
 %       .files: Contains file information as in cfg.files, especially
-%               filenames of datafiles (.name) and mask(s) (.mask)
+%             filenames of datafiles (.name) and mask(s) (.mask)
 %       .hdr: a header from either a mask or a data file (if
 %             cfg.files.mask{1} == 'all voxels')
 %       .dim: 1x3 vector containing the dimension of original
 %             dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
-%                   calculated)
+%             calculated)
 
 % Kai, 2012-03-12
+
+% HISTORY: Added passing several mask_indices for ROIs, Martin 2013/06/16
 
 function [passed_data, cfg] = decoding_load_data(cfg, passed_data)
 
@@ -124,11 +129,16 @@ if strcmp(cfg.files.mask{1}, 'all voxels');
 
 else
     % Load the brain or ROI mask(s)
-    [mask_vol, mask_hdr, sz] = load_mask(cfg);
+    [mask_vol, mask_hdr, sz, vol] = load_mask(cfg);
     
 end
 
 mask_index = find(mask_vol); % get indices of all voxels inside the mask
+
+mask_index_separate = cell(1,size(vol,4));
+for i_mask = 1:size(vol,4)
+    mask_index_separate{i_mask} = find(vol(:,:,:,i_mask));
+end
 
 %% Load data
 
@@ -190,6 +200,10 @@ if sum(nan_index)
     warning('DECODING:nansPresent',['Data contains %i NaNs. \n ',...
         'There might be problems with the definition of data files or ',...
         'mask file. \n Parts of masks are non-overlapping with data. NaNs are masked...'],sum(nan_index))
+    
+    for i_mask = 1:size(vol,4)
+        mask_index_separate{i_mask} = intersect(mask_index,mask_index_separate{i_mask});
+    end
 end
 
 %% Prepare data for return
@@ -198,6 +212,9 @@ end
 passed_data.files = cfg.files;
 passed_data.data = data;
 passed_data.mask_index = mask_index;
+if size(vol,4) > 1
+    passed_data.mask_index_separate = mask_index_separate;
+end
 passed_data.hdr = mask_hdr;
 passed_data.dim = sz;
 

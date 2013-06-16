@@ -1,7 +1,10 @@
 % function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz)
 %
-% Function for decoding. Determines number of times a full classification
-% is performed (e.g. number of searchlights or number of ROIs).
+% This is a subfunction of The Decoding Toolbox. It determines number of 
+% times a full classification is performed (e.g. number of searchlights or 
+% number of ROIs).
+%
+% Martin Hebart & Kai Görgen, 2013
 
 function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz)
 
@@ -25,7 +28,7 @@ if strcmpi(cfg.analysis,'searchlight')
         if subset_sz(2)~=3
             decoding_subindex = cfg.searchlight.subset;
             if any(decoding_subindex>length(mask_index))
-                error('Some indices in cfg.searchlight.subset are larger than the number of decodings which are %i. Please check!',n_decodings)
+                error('Some indices in cfg.searchlight.subset are larger than the number of decodings which are %i. Please check!',length(mask_index))
             end
 
             % if provided as matrix
@@ -67,5 +70,5 @@ elseif strcmpi(cfg.analysis,'wholebrain')
     decoding_subindex = 1:n_decodings;
 
 else
-    error('get_n_decodings does not know how to get n_decodings for cfg.analysis = %s', cfg.analysis)
+    error('Function ''get_n_decodings'' does not know how to get n_decodings for cfg.analysis = %s', cfg.analysis)
 end

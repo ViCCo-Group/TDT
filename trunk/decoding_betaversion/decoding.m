@@ -57,10 +57,12 @@
 %           Default: 0 (no plotting)
 %       cfg.fighandles.plot_selected_voxels (optional): Figure handle to
 %           plot selected voxels (updated in background)
+%
 % DISPLAY:
 %   cfg.plot_design = 1 (default); will plot your design. 
 %       See decoding_defaults for possible values. 
 %   cfg.fighandles.plot_design (optional): Figure handle to plot design 
+%
 % OUTPUT:
 %   results: 1 x n structure array, containing the decoding results of each
 %       of the n requested outputs (see. cfg.results.output)
@@ -264,12 +266,22 @@ results = {};
 % Prepare searchlight template (if needed, sl_template will be empty for other methods)
 [cfg,sl_template] = decoding_prepare_searchlight(cfg);
 
+% Save number of conditions (e.g. to get the chancelevel later)
+results.n_cond = n_cond;
+% Save mask_index
+results.mask_index = mask_index;
+% Save all mask indices separately if several masks are provided
+if isfield(passed_data,'mask_index_separate')
+    results.mask_index_separate = passed_data.mask_index_separate;
+end
+% Save subindices if they are provided
+if isfield(cfg.searchlight,'subset')
+    results.decoding_subindex = decoding_subindex;
+end
+
 for i_output = 1:n_outputs
     outname = cfg.results.output{i_output};
-
-    % Save number of conditions (e.g. to get the chancelevel later)
-    results.n_cond = n_cond;
-
+    
     if strcmp(cfg.analysis, 'searchlight')
         % use number of voxels to allocate space independent of number of
         % decodings (because cfg.searchlight.subset allows to choose fewer
@@ -529,7 +541,7 @@ dispv(1,'done!')
 
 % Write results
 dispv(1,'Writing results to disk...')
-decoding_write_results(cfg,results,mask_index)
+decoding_write_results(cfg,results)
 dispv(1,'done!')
 
 % Save cfg

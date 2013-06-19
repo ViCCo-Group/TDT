@@ -6,6 +6,8 @@ Lots of things added, including
 - feature selection working
 - and many more
 
+* beta 2.2 - some time in the past
+Stable version of 2.1, but still has 2.1 as number displayed when starting
+Widely used last stable version before starting this log
 
 * beta 2.1 - some time in the past
-Widely used last stable version before starting this log

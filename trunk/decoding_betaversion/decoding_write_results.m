@@ -32,7 +32,7 @@ global reports
 % Unpack results and set output variables
 mask_index = results.mask_index;
 output_variables = {'output','mask_index','resultdim'};
-if strcmpi(cfg.analysis,'searchlight') && cfg.searchlight.subset
+if strcmpi(cfg.analysis,'searchlight') && isfield(results,'decoding_subindex')
     decoding_subindex = results.decoding_subindex; %#ok<NASGU>
     output_variables = [output_variables {'decoding_subindex'}];
 end

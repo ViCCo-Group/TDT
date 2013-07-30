@@ -87,7 +87,7 @@ defaults.searchlight.spherical = 0;
 defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur when searchlight is shifted. Only switch off when you are sure that your brain is not near the boarder and when you need even more speed (the check is extremely fast, though).
 
 % Decoding specific values
-defaults.decoding.method = 'classification'; % classification as standard
+defaults.decoding.method = 'classification_kernel'; % classification using the kernel speedup as standard
 defaults.decoding.software = 'libsvm'; % libsvm as a standard
 defaults.decoding.kernel.function = @(X,Y) X*Y'; % for kernel method linear kernel as default
 

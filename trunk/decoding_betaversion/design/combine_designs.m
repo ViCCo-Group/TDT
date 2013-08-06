@@ -148,7 +148,7 @@ for si = 1:length(cfg2.design.set) % si == set index
             if ~isempty(ocfg.files.xclass)
                 ocfg.files.xclass(clen+1) = cfg2.files.xclass(z_ind);
             end
-            ocfg.files.description{clen+1} = cfg2.files.description{z_ind};
+            ocfg.files.descr{clen+1} = cfg2.files.descr{z_ind};
         end
     end
 

@@ -132,12 +132,12 @@ end
 if isfield(cfg.files, 'description')
     % move yaxis to the right
     set(gca, 'YAxisLocation', 'right')
-    if size(cfg.files.description, 1) == 1
-        cfg.files.description = cfg.files.description';
+    if size(cfg.files.descr, 1) == 1
+        cfg.files.descr = cfg.files.descr';
     end
     
-    set(gca, 'YTick', 1:size(cfg.files.description, 1))
-    set(gca,'YTickLabel', cfg.files.description);
+    set(gca, 'YTick', 1:size(cfg.files.descr, 1))
+    set(gca,'YTickLabel', cfg.files.descr);
 else
     % switch yaxis off
 end

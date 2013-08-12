@@ -1,4 +1,4 @@
-function varargout = read_header_spm12(varargin)
+function varargout = read_header_spm12b(varargin)
 
 %   read_header: 
 %       input: name of volume (full path , 1 x n string)

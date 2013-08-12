@@ -1,9 +1,8 @@
-function checked = check_software_spm12(software)
+function checked = check_software_spm12b(software)
 
 if length(software)>=3 && strcmpi(software(1:3),'spm')
     try
         spm_ver = spm('ver');
-        % spm_ver = spm_ver(1:5); %remove the "b" of the beta
     catch %#ok<CTCH>
         error('SPM is not in your path!\nPlease add a version of SPM to your path or change cfg.software to another software')
     end

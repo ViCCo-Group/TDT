@@ -17,7 +17,7 @@
 % OPTIONAL:
 % output_dir: Where results should be saved (if they should be saved at all)  
 % radius: for decoding_type 'searchlight', you may specify the radius of
-%   the searchlight.
+%   the searchlight (in voxels).
 
 function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius)
 
@@ -26,7 +26,11 @@ cfg = decoding_defaults;
 cfg.testmode = 0;
 cfg.analysis = decoding_type;
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % linear classification
-cfg.software = 'SPM8';
+try
+    cfg.software = spm('ver');
+catch % else try out spm8
+    cfg.software = 'SPM8';
+end
 
 if exist('output_dir','var')
     cfg.results.dir = output_dir;
@@ -49,6 +53,8 @@ switch lower(decoding_type)
         % Use mask in beta dir (e.g. SPM mask) as brain mask
         cfg.files.mask = fullfile(beta_dir,'mask.img');
         
+%         cfg.plot_selected_voxels = 100; % activate to plot searchlights
+        
     case 'roi'
         
         [fnames,fpath] = uigetfile('*.img', 'Select your ROI masks', 'Multiselect', 'on');
@@ -64,10 +70,13 @@ switch lower(decoding_type)
             cfg.files.mask = [repmat(fpath,2,1) vertcat(char(fnames{:}))];
         end
         
+        cfg.plot_selected_voxels = 1;
+        
     case 'wholebrain'
         
         % Use mask in beta dir (e.g. SPM mask) as brain mask
         cfg.files.mask = fullfile(beta_dir,'mask.img');
+                
 end
 
 if exist('output_dir','var')
@@ -83,6 +92,8 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 
 % assign these values to the standard matrix and create the matrix
 cfg.design = make_design_cv(cfg);
+
+% cfg.results.output = {'AUC_minus_chance'}; % activate for alternative output
 
 % run results = decoding(cfg)
 results = decoding(cfg);

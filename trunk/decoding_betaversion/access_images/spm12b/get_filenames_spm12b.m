@@ -1,4 +1,4 @@
-function varargout = get_filenames_spm12(varargin)
+function varargout = get_filenames_spm12b(varargin)
 
 %   get_filenames:
 %       inputs: file path (1 x n string), possible filenames with wildcards (e.g. *.img or rf*.img)

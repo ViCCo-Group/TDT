@@ -1,4 +1,4 @@
-function varargout = read_image_spm12(varargin)
+function varargout = read_image_spm12b(varargin)
 
 %   read_image:
 %       input: header (struct variable generated with read_header)

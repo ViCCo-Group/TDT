@@ -207,6 +207,7 @@ dispv(1,ver)
 % plot design if required
 try
     if cfg.plot_design == 1 % plot + save fig, save hdl
+        if ~isdir(cfg.results.dir), mkdir(cfg.results.dir), end
         cfg.fighandles.plot_design = plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg); drawnow;
     elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
         fighdl = plot_design(cfg, 0); save_fig(fullfile(cfg.results.dir, 'design'), cfg); close(fighdl); clear fighdl
@@ -838,7 +839,7 @@ fnames = char(cfg.files.name);
 n_files = size(fnames,1);
 n_str = size(fnames,2);
 for i_str = 1:n_str
-    str = strmatch(fnames(1,1:i_str),fnames(2:end,:));
+    str = strncmp(fnames(1,1:i_str),fnames(2:end,:),i_str);
     if length(str) ~= n_files-1
         n_match = i_str-1;
         break

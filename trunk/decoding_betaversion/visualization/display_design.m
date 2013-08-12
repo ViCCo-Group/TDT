@@ -46,7 +46,7 @@ n_files = size(fnames,1);
 n_str = size(fnames,2);
 n_match = 0; % just if nothing matches
 for i_str = 1:n_str
-    str = strmatch(fnames(1,1:i_str),fnames(2:end,:));
+    str = strncmp(fnames(1,1:i_str),fnames(2:end,:),i_str);
     if length(str) ~= n_files-1
         n_match = i_str-1;
         break

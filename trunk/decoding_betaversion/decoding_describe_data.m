@@ -86,11 +86,12 @@ if isempty(beta_names)
 end
 
 n_inputs = length(labelnames);
+orig_labelnames = labelnames;
 
 for i_input = 1:n_inputs
     
     % Prepare labelnames to regular expression
-    labelnames{i_input} = wildcard2regexp(labelnames{i_input});
+    labelnames{i_input} = wildcard2regexp(orig_labelnames{i_input});
     % Apply regular expression
     ind = regexp(regressor_names(1,:),labelnames{i_input});
     try label_index = ~cellfun(@isempty,ind);
@@ -100,7 +101,7 @@ for i_input = 1:n_inputs
         
         
     if ~any(label_index)
-        error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',labelnames{i_input})
+        error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',orig_labelnames{i_input})
     end
     cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
     cfg.files.step = [cfg.files.step cell2mat(regressor_names(2,label_index))];

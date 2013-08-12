@@ -1,4 +1,4 @@
-function varargout = read_voxels_spm12(varargin)
+function varargout = read_voxels_spm12b(varargin)
 
 %   read_voxels: 
 %       inputs: header, coordinates (n x 3 (XYZ))

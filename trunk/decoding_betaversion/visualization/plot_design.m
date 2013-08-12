@@ -46,16 +46,17 @@ max_label = max(cfg.design.label(:));
 
 %% create figure
 
+figure_position = round(get(0,'defaultFigurePosition') .* [1 1 1.2 1]); % increase width by 20%
 if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
     figure(cfg.fighandles.plot_design)
     warning('Ignoring visible_on at the moment')
 else
     if visible_on
-        figure_handle = figure('name', 'Decoding Design','visible','on');
+        figure_handle = figure('name', 'Decoding Design','visible','on', 'Position', figure_position);
     else
         % TODO: problem with visible off: when opening .fig, figure remains
         % invisible
-        figure_handle = figure('name', 'Decoding Design','visible','off');
+        figure_handle = figure('name', 'Decoding Design','visible','off', 'Position', figure_position);
     end
 end
 
@@ -86,7 +87,7 @@ fnames = char(cfg.files.name);
 n_files = size(fnames,1);
 n_str = size(fnames,2);
 for i_str = 1:n_str
-    str = strmatch(fnames(1,1:i_str),fnames(2:end,:));
+    str = strncmp(fnames(1,1:i_str),fnames(2:end,:),i_str);
     if length(str) ~= n_files-1
         n_match = i_str-1;
         break

@@ -207,10 +207,18 @@ dispv(1,ver)
 % plot design if required
 try
     if cfg.plot_design == 1 % plot + save fig, save hdl
-        if ~isdir(cfg.results.dir), mkdir(cfg.results.dir), end
-        cfg.fighandles.plot_design = plot_design(cfg); save_fig(fullfile(cfg.results.dir, 'design'), cfg); drawnow;
+        cfg.fighandles.plot_design = plot_design(cfg);
+        if cfg.results.write
+            if ~isdir(cfg.results.dir), mkdir(cfg.results.dir), end
+            save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
+        end
+        drawnow;
     elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
-        fighdl = plot_design(cfg, 0); save_fig(fullfile(cfg.results.dir, 'design'), cfg); close(fighdl); clear fighdl
+        fighdl = plot_design(cfg, 0); 
+        if cfg.results.write
+            save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
+        end
+        close(fighdl); clear fighdl
     end
 catch
     warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
@@ -565,7 +573,10 @@ cfg.progress.endtime = datestr(now);
 % Endtime shows user that job is over
 try
     if cfg.plot_design
-        plot_design(cfg,1); save_fig(fullfile(cfg.results.dir, 'design'), cfg);
+        plot_design(cfg,1); 
+        if cfg.results.write
+            save_fig(fullfile(cfg.results.dir, 'design'), cfg);
+        end
     end
 catch %#ok<*CTCH>
     warningv('DECODING:PlotDesignFailed', 'Failed to plot design')

@@ -1,6 +1,9 @@
 % This script is a demo showing some simple decoding on simulated toy data.
 % The toy data are simple matlab matrices and no "real" fMRI or EEG data.
 
+fpath = fileparts(fileparts(mfilename('fullpath')));
+addpath(fpath)
+
 clear all
 dbstop if error % if something goes wrong
 
@@ -144,3 +147,5 @@ for use_correct_weights = 0:1
     legstr(end+1) = {weight_str};
     legend(legstr)
 end
+
+dbclear if error

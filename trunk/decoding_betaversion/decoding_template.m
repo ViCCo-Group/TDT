@@ -33,7 +33,7 @@ labelname2 =
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
 
 % Some other cool stuff
-% Checkout 
+% Check out 
 %   combine_designs(cfg, cfg2)
 % if you like to combine multiple designs in one cfg.
 

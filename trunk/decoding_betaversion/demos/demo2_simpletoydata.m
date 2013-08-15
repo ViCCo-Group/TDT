@@ -1,6 +1,9 @@
 % This script is a demo showing some simple decoding on simulated toy data.
 % The toy data are simple matlab matrices and no "real" fMRI or EEG data.
 
+fpath = fileparts(fileparts(mfilename('fullpath')));
+addpath(fpath)
+
 clear all
 dbstop if error % if something goes wrong
 
@@ -45,6 +48,7 @@ cfg.files.mask = '';
 
 %% plot the data (if 2d)
 if size(data, 2) == 2
+    h = figure;
     scatter(data(:, 1), data(:, 2), 30, cfg.files.label);
 end
 
@@ -85,7 +89,10 @@ if isfield(results, 'model_parameters')
     Z = X;
     [predicted, acc, decision_values] = svmpredict(zeros(size(X(:))),[X(:), Y(:)],svm_model,cfg.decoding.test.classification.model_parameters);
     Z(:) = decision_values;
+    figure(h)
     hold on
     contour(X,Y,Z, -1:1);
     hold off
 end
+
+dbclear if error

@@ -1,12 +1,14 @@
-% function regressor_names = design_from_spm(spm_folder)
+% function regressor_names = design_from_spm(spm_folder,save_on)
 % 
 % This function will extract the relevant information for the current
-% decoding from a SPM design matrix.
+% decoding from an SPM design matrix and will save it as
+% regressor_names.mat to the folder of the design matrix.
 %
 % INPUT:
 % spm_folder: The folder where the design matrix is stored as SPM.mat.
 %   Alternatively, the matrix can also be stored in a *_SPM.mat file (e.g.
-%   to reduce the filesize when data is passed on to someone else).
+%   if you want to reduce the filesize when data is passed on to someone else).
+% save_on (optional, default = 1): Should regressor names be saved or not.
 %
 % OUTPUT:
 % regressor_names: a 3-by-n cell matrix.
@@ -21,13 +23,20 @@
 % by Martin Hebart & Kai Görgen, 2012/03/01, Update 13/04/16 Kai
 
 % History:
+% 2013/08/14 Martin
+%   - Introduced possibility to switch off saving regressor names
+%   - Controlled for the (unlikely, but possible) case a user names his
+%   regressor 'constant' which would conflict with the SPM constant. From
+%   now on, the regressors are named 'SPM constant'.
 % 2013/04/16 Kai
 %   Passing original SPM regressor name as third row
 % 2012/03/09, Kai
 %   Also *_SPM.mat files will be used (if no SPM.mat is found)
 % 2012/03/01, Martin: v1
 
-function regressor_names = design_from_spm(spm_folder)
+function regressor_names = design_from_spm(spm_folder,save_on)
+
+if ~exist('save_on','var'), save_on = 1; end
 
 spm_file = fullfile(spm_folder,'SPM.mat');
 regressor_file = fullfile(spm_folder,'regressor_names.mat');
@@ -133,5 +142,27 @@ end
 % add full SPM regressor name as third row
 regressor_names(3,:) = regressors;
 
-% save to get regressors quicker
-save(regressor_file,'regressor_names')
+% Check if user used constant as regressor name
+k = strcmp(regressor_names(1,:),'constant');
+n_constants = sum(k);
+n_runs = length(unique([regressor_names{2,:}]));
+if n_constants > n_runs
+    warning(['Regressor name ''constant'' seems to be used in SPM.mat. ',...
+        'This might be mixed up with the regressor name ''constant'' that',...
+        'SPM normally uses. Tried to automatically rename the SPM ',...
+        '''constant'' regressor names to ''SPM constant'' and keep the ',...
+        'user-defined ''constant'' names, but no guarantee it worked. Please check ',...
+        'regressor_names.mat manually or do not use ''constant'' as regressor name.']) %#ok
+end
+
+% Most likely location for SPM constants are the last few regressors
+k_ind = find(k,n_runs,'last');
+for i_rename = k_ind
+    regressor_names{1,i_rename} = 'SPM constant';
+end
+
+if save_on
+    % save to get regressors quicker
+    save(regressor_file,'regressor_names')
+end
+

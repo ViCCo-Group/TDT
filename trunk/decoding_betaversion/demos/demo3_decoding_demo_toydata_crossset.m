@@ -4,6 +4,9 @@
 % run this many times
 % for n_rep = 1:50
 
+fpath = fileparts(fileparts(mfilename('fullpath')));
+addpath(fpath)
+
 %% output dir
 % cfg.results.dir = 'toyexample' % set cfg.results.write = 1 if wanted
 cfg.results.write = 0;

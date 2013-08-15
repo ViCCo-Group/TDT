@@ -4,3 +4,7 @@ B5: Using the CORRELATION CLASSIFIER (MVPA) with more than two trials per run ge
 Question: Then again  what happens with unbalanced test data (which is valid).
 
 B6: When warnings appear while the searchlight counter is running, then the warning may be truncated.
+
+B7: When disconnected data are used with the online plotting function, they are not plotted correctly
+
+B8: In the online plotting function, no brain is shown when ROI is used rather than searchlight

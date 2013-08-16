@@ -46,10 +46,11 @@ max_label = max(cfg.design.label(:));
 
 %% create figure
 
-figure_position = round(get(0,'defaultFigurePosition') .* [1 1 1.2 1]); % increase width by 20%
+figure_position = round(get(0,'defaultFigurePosition') .* [1 1 1.3 1]); % increase width by 30%
 if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
     figure(cfg.fighandles.plot_design)
-    warning('Ignoring visible_on at the moment')
+%     warning('Ignoring visible_on at the moment') % MH: deactivated this
+%     warning, because it would come always. What does it mean?
 else
     if visible_on
         figure_handle = figure('name', 'Decoding Design','visible','on', 'Position', figure_position);

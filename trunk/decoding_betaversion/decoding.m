@@ -846,17 +846,18 @@ if ~cfg.results.write
 end
 
 % Find common string in all files to print this only once
-fnames = char(cfg.files.name);
-n_files = size(fnames,1);
-n_str = size(fnames,2);
+fnames = cfg.files.name;
+fnames_char = char(fnames);
+n_str = size(fnames_char,2); % maximum string length
 for i_str = 1:n_str
-    str = strncmp(fnames(1,1:i_str),fnames(2:end,:),i_str);
-    if length(str) ~= n_files-1
+    match = strncmp(fnames{1},fnames(2:end),i_str);
+    if ~all(match)
         n_match = i_str-1;
         break
     end
 end
-filestart = fnames(1,1:n_match);
+filestart = fnames_char(1,1:n_match); % common file start
+filerest =  fnames_char(:, n_match+1:end); % get not common part
 
 for i_step = 1:n_steps
 
@@ -883,7 +884,7 @@ for i_step = 1:n_steps
     end
 
     for curr_i_train = i_train'
-        text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, cfg.files.name{curr_i_train}(n_match+1:end));
+        text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, filerest(curr_i_train,:));
         dispv(2, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
@@ -891,7 +892,7 @@ for i_step = 1:n_steps
 
 
     for curr_i_test = i_test'
-        text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, cfg.files.name{curr_i_test}(n_match+1:end));
+        text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, filerest(curr_i_test,:));
         dispv(2, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end

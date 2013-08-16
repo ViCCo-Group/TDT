@@ -62,7 +62,7 @@ end
 
 % get first column (filenames + header) as string
 % filename_str = char([{'files.name'}; {'---'}; cfg.files.name; {'---'}; {'design.set'}]);
-filename_str = char([{'files.name'}; {'---'}; fnames; {'---'}; {'design.set'}]);
+filename_str = char([{'files.name'}; {'---'}; fnames_char; {'---'}; {'design.set'}]);
 
 % set
 if isfield(cfg.design, 'set')

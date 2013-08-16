@@ -83,26 +83,26 @@ if size(cfg.files.name, 1) == 1
 end
 
 % reduce file name length
-fnames = char(cfg.files.name);
-n_files = size(fnames,1);
-n_str = size(fnames,2);
+fnames = cfg.files.name;
+fnames_char = char(fnames);
+n_str = size(fnames_char,2); % maximum string length
 for i_str = 1:n_str
-    str = strncmp(fnames(1,1:i_str),fnames(2:end,:),i_str);
-    if length(str) ~= n_files-1
+    match = strncmp(fnames{1},fnames(2:end),i_str);
+    if ~all(match)
         n_match = i_str-1;
         break
     end
 end
-filestart = fnames(1,1:n_match); % common file start
+filestart = fnames_char(1,1:n_match); % common file start
 if length(filestart) > 15
-    filerest = [repmat('...', size(fnames, 1), 1), fnames(:, n_match+1:end)]; % get not common part + initial '...'
-    fnames = filerest;
+    filerest = [repmat('...', size(fnames_char, 1), 1), fnames_char(:, n_match+1:end)]; % get not common part + initial '...'
+    fnames_char = filerest;
 else
-	% keep fnames as they are (not cut)
+	% keep fnames_char as they are (not cut)
 end
 
-set(gca,'YTick', 1:size(fnames,1))
-set(gca,'YTickLabel', fnames)
+set(gca,'YTick', 1:size(fnames_char,1))
+set(gca,'YTickLabel', fnames_char)
 xlabel('Training Data - Step number')
 
 %% same for testset

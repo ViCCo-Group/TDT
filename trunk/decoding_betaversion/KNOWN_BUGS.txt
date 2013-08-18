@@ -8,3 +8,5 @@ B6: When warnings appear while the searchlight counter is running, then the warn
 B7: When disconnected data are used with the online plotting function, they are not plotted correctly
 
 B8: In the online plotting function, no brain is shown when ROI is used rather than searchlight
+
+B9: When plot_design is shown the second time, the starttime is overwritten, rather than the endtime used.

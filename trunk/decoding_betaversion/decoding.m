@@ -98,8 +98,8 @@
 % to be set manually:
 %   cfg.searchlight.unit: searchlight unit ('voxels' or 'mm') [default = 'voxels']
 %   cfg.searchlight.radius: searchlight radius [default = 4]
-%   cfg.searchlight.spherical: should the searchlight be spherical in real
-%       space or in voxel space (for real space, spherical = 1) [default = 0]
+%   cfg.searchlight.spherical: should the searchlight be spherical, i.e. 
+%       should we correct for a non-isotropic voxel [default = 0]
 %
 % Other optional input includes:
 %   cfg.scale: Perform scaling on data (may improve decoding performance)

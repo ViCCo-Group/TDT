@@ -22,10 +22,6 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
         message = sprintf('%s: %d/%d', cfg.analysis, cnt, n_decodings);
     end
     
-    % delete old message and state time
-    if ~isempty(msg_length)
-        fprintf(repmat('\b', 1, msg_length + 2)); % delete old text
-    end
     % add estimated time to go
     p = cnt / n_decodings * 100;
     el_time = now - start_time;
@@ -40,6 +36,11 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
     message = [message ', time to go: ' est_time_left_str ', time running: ' el_time_str ', finish: ' est_finish_str];
     msg_length = length(message);
 
-    % print message
-    fprintf(['\n' message '\n'])
+    % print message and delete old message
+    if ~isempty(msg_length)
+        reverse_str = sprintf(repmat('\b', 1, msg_length + 2)); % delete old text
+    else
+        reverse_str = [];
+    end
+    fprintf([reverse_str '\n' message '\n'])
 end

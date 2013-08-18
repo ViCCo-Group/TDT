@@ -23,6 +23,9 @@
 % Clear cfg (otherwise if you re-run this script, previous parameters may still be present)
 clear cfg
 
+% To set the path, run
+decoding_defaults; % use cfg = decoding_defaults to set the defaults, too
+
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 
 % it to be on the safe side.
@@ -60,20 +63,6 @@ labelname2 = [$NAME OF LABEL2 AS STRING$];
 % matrix).
 cfg.files.mask = [$ADD PATH AS STRING$];
 
-% decide whether you want to see the searchlight/ROI/... going along
-cfg.plot_selected_voxels = 1;
-% REMARK: PLOTTING IS VERY SLOW!
-% It indeed takes nearly all the time, if you want to draw every single
-% step. 
-%
-% Alternatively, use e.g.
-%   cfg.plot_selected_voxels = 50;
-% to draw every 50th step (or in general, n to draw every nth step).
-%
-% Or switch online plotting of completely:
-%   cfg.plot_selected_voxels = 0;
-
-
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat. Adds 'bin 1' to 'bin m', if multiple
 % regressors were used for each condition within a run, e.g. when using
@@ -84,6 +73,7 @@ regressor_names = design_from_spm(beta_dir);
 % run numbers of each label. The labels will be -1 and 1.
 % Important: You have to make sure to get the label names correct and that
 % they have been uniquely assigned, so please check them in regressor_names
+% or with decoding_plot_regressor_names(beta_dir)
 cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 %
 % Other examples:
@@ -106,9 +96,6 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 %       any two numbers as class labels)
 
 %% Third, create your design for the decoding analysis
-
-% REMARK AHEAD: Checkout combine_designs.m if you like to combine multiple
-%   designs in one cfg.
 
 % In a design, there are several matrices, one for training, one for test,
 % and one for the labels that are used (there is also a set vector which we
@@ -161,15 +148,8 @@ cfg.design = make_design_cv(cfg);
 % inspection. Dependencies between training and test set will be checked
 % automatically in the main function.
 
-%% Look at your design
-
-% The following calls allow you to look at your design. The design will
-% also be shown when you perform the decoding.
-
-% Display the design in textform
-display_design(cfg);
-% Display the design as a plot
-plot_design(cfg);
+% Another remark: Check out combine_designs.m if you like to combine 
+% multiple designs in one cfg.
 
 %% Fourth, set additional parameters manually
 
@@ -220,9 +200,20 @@ cfg.verbose = 1;
 % You got it. 
 % Just try different values and observe the running time you get.
 
-cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
+cfg.plot_selected_voxels = 500;
+
+% Or switch online plotting off completely:
+%   cfg.plot_selected_voxels = 0;
 
 cfg.plot_design = 1; % this is by default set to 1, but if you repeat the same design again and again, it can get annoying...
+
+% The following calls allow you to look at your design. The design will
+% also be shown when you perform the decoding.
+
+% Display the design in textform
+display_design(cfg);
+% Display the design as a plot
+plot_design(cfg);
 
 %% Fifth, run the decoding analysis
 

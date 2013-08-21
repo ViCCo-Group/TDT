@@ -11,6 +11,7 @@ dbstop if error % if something goes wrong
 % cfg.results.dir = % e.g. 'toyresults'
 cfg.results.write = 0; % no results are written to disk
 
+cfg.decoding.method = 'classification';
 
 %% generate some toy data
 % define number of "runs" and center means

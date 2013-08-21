@@ -7,10 +7,13 @@ addpath(fpath)
 clear all
 dbstop if error % if something goes wrong
 
+res_fig = figure;
+
 %% Set the output directory where data will be saved
 % cfg.results.dir = % e.g. 'toyresults'
 cfg.results.write = 0; % no results are written to disk
 
+cfg.decoding.method = 'classification';
 
 %% generate some toy data
 % define number of "runs" and center means
@@ -72,6 +75,7 @@ cfg.files.mask = '';
 
 %% plot the data (if 2d)
 if size(data, 2) == 2
+    figure(res_fig);
     scatter(data(:, 1), data(:, 2), 30, cfg.files.label + min(cfg.files.label));
 end
 
@@ -128,6 +132,7 @@ for use_correct_weights = 0:1
 
     %% Print decision boundary in figure
     if isfield(results, 'model_parameters')
+        figure(res_fig)
         svm_model = results.model_parameters.output(1).model(1); % get the model of the first SVM
         [X, Y] = meshgrid(min(data(:)):.11:max(data(:)));
         Z = X;

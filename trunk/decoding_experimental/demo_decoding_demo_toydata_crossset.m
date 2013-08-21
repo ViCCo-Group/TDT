@@ -10,6 +10,7 @@ addpath(fpath)
 %% output dir
 % cfg.results.dir = 'toyexample' % set cfg.results.write = 1 if wanted
 cfg.results.write = 0;
+cfg.decoding.method = 'classification';
 
 %% Generate the toy data
 % define number of "runs" and center means

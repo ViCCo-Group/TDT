@@ -24,6 +24,11 @@ if ~exist('visible_on','var')
     visible_on = 1;
 end
 
+if ischar(cfg.files.name)
+    cfg.files.name = num2cell(cfg.files.name,2);
+    warningv('BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
+end
+
 %% define colours
 max_color = [.7, .5, .2]; % RGB values for the max color -- min color is black at the moment
 background_color = [.5, .5, .5];
@@ -177,7 +182,7 @@ if ~isempty(filestart)
 end
 
 % result dir
-if isfield(cfg.results, 'dir')
+if isfield(cfg,'results') && isfield(cfg.results, 'dir')
     outtext_mrow = ['Results: ' cfg.results.dir];
     while ~isempty(outtext_mrow)
         outtext{end+1} = outtext_mrow(1:min(text_maxlength, end));

@@ -11,7 +11,9 @@
 % accuracy_minus_chance: decoding accuracy minus chance level (useful for 
 %   SPM 2nd level)
 % sensitivity: accuracy of first label
+% sensitivity_minus_chance: sensitivity minus chance level
 % specificity: accuracy of second label
+% specificity_minus_chance: specificity minus chance level
 % dprime: z(hit rate) - z(false alarm rate)
 % loglikelihood: measure of bias to one label: -1/2*(zHIT_rate^2 - zFA_rate^2)
 % AUC: Area under the ROC (Receiver Operator Characteristics) Curve

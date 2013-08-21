@@ -37,10 +37,10 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
     msg_length = length(message);
 
     % print message and delete old message
-    if ~isempty(msg_length)
-        reverse_str = sprintf(repmat('\b', 1, msg_length + 2)); % delete old text
+    if ~isempty(msg_length) && cnt ~=1
+        reverse_str = sprintf(repmat('\b', 1, msg_length + 3)); % delete old text
     else
         reverse_str = [];
     end
-    fprintf([reverse_str '\n' message '\n'])
+    fprintf([reverse_str '\n' message '\n\n'])
 end

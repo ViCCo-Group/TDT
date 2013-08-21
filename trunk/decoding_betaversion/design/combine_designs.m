@@ -67,15 +67,15 @@
 %
 % files.name	design.train         design.test           design.label                       
 % ---       	                     
-% ...06.img 	0  1  1 0  0  0      1  0  0  0  0  0     -1 -1 -1  0  0  0 
-% ...14.img 	1  0  1 0  0  0      0  1  0  0  0  0     -1 -1 -1  0  0  0 
-% ...22.img 	1  1  0 0  0  0      0  0  1  0  0  0     -1 -1 -1  0  0  0 
-% ...08.img 	0  1  1 0  1  1      1  0  0  1  0  0      1  1  1  1  1  1 
-% ...16.img 	1  0  1 1  0  1      0  1  0  0  1  0      1  1  1  1  1  1 
-% ...24.img 	1  1  0 1  1  0      0  0  1  0  0  1      1  1  1  1  1  1 
-% ...07.img 	0  0  0 0  1  1      0  0  0  1  0  0      0  0  0 -1 -1 -1 
-% ...15.img 	0  0  0 1  0  1      0  0  0  0  1  0      0  0  0 -1 -1 -1 
-% ...23.img 	0  0  0 1  1  0      0  0  0  0  0  1      0  0  0 -1 -1 -1 
+% ...06.img 	0  1  1  0  0  0      1  0  0  0  0  0     -1 -1 -1  0  0  0 
+% ...14.img 	1  0  1  0  0  0      0  1  0  0  0  0     -1 -1 -1  0  0  0 
+% ...22.img 	1  1  0  0  0  0      0  0  1  0  0  0     -1 -1 -1  0  0  0 
+% ...08.img 	0  1  1  0  1  1      1  0  0  1  0  0      1  1  1  1  1  1 
+% ...16.img 	1  0  1  1  0  1      0  1  0  0  1  0      1  1  1  1  1  1 
+% ...24.img 	1  1  0  1  1  0      0  0  1  0  0  1      1  1  1  1  1  1 
+% ...07.img 	0  0  0  0  1  1      0  0  0  1  0  0      0  0  0 -1 -1 -1 
+% ...15.img 	0  0  0  1  0  1      0  0  0  0  1  0      0  0  0 -1 -1 -1 
+% ...23.img 	0  0  0  1  1  0      0  0  0  0  0  1      0  0  0 -1 -1 -1 
 % ---       	                                  	                                  	                                   
 % design.set	1  1  1 2  2  2      1  1  1  2  2  2      1  1  1  2  2  2 
 %
@@ -87,6 +87,7 @@
 % cfg.results.setwise = 1 option (by default as of 12-4-2013 the option is
 % 0).
 
+% TODO: introduce possibility to combine more than two designs
 
 function ocfg = combine_designs( cfg1, cfg2 )
 
@@ -141,7 +142,7 @@ for si = 1:length(cfg2.design.set) % si == set index
             clen = length(ocfg.design.label);
             ocfg.design.label(clen+1,os_l) = cfg2.design.label(z_ind,si);
             ocfg.design.train(clen+1,os_l) = cfg2.design.train(z_ind,si);
-            ocfg.design.test(clen+1,os_l) =cfg2.design.test(z_ind,si);
+            ocfg.design.test(clen+1,os_l) = cfg2.design.test(z_ind,si);
             ocfg.files.name{clen+1} = cfg2.files.name{z_ind};
             ocfg.files.step(clen+1) = cfg2.files.step(z_ind);
             ocfg.files.label(clen+1) = cfg2.files.label(z_ind);

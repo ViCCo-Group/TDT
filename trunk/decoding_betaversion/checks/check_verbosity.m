@@ -13,7 +13,7 @@ function out = check_verbosity(msg,rule)
 %       before or verbosity does not permit the message to be shown again
 
 global verbose
-global reports
+global reports %#ok<NUSED>
 
 % Default state of out = 0
 out = 0;
@@ -45,6 +45,10 @@ else % if string should be displayed
         strx = 'field';
     end
     field_id = [field_id '.' strx];
+    
+    if length(field_id)>63 % check if maximum Matlab length exceeded
+        field_id = field_id(1:63);
+    end
     
     % The use of eval is not very elegant, but it is fast.
     

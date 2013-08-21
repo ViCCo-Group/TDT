@@ -8,8 +8,9 @@
 %
 % INPUT
 % cfg: structure passed from decoding.m with at least the following fields:
+%
 %   parameter_selection: struct containing feature selection parameters
-%   fields:
+%     fields:
 %       method:
 %           'grid':       Performs parameter selection using grid search
 %           'none':       Perform no parameter selection
@@ -17,11 +18,11 @@
 %       parameters: string variable denoting parameter that should be
 %           selected (see parameter descriptions in the classifier)
 %           (for more than one parameter, this is a cell-matrix with
-%           n_parameters x 1 fields)
+%           n_parameters x 1 fields), example: 'c'
 %
 %       parameter_range: n x 1 vector as range which to search (for more 
 %           than one parameter, this is a cell-matrix with 
-%           n_parameters x 1 fields)
+%           n_parameters x 1 fields), example: 2.^[-6 -4 -2 -1 0 1 2 4 6 8]
 %
 %       grid: (for method = 'grid'):
 %            'peak':       Parameters are selected based on the highest
@@ -31,10 +32,7 @@
 % i_train_external: Index of training data (from function decoding.m)
 
 
-% (c) Martin Hebart, 12/02/08
-
-% TODO: replace i_train with i_train_ext, itrain with i_train and itest
-% with i_test
+% Martin Hebart, 12/02/08
 
 % TODO: externalize the "replacement of parameters" part which can be done
 % once on the defaults

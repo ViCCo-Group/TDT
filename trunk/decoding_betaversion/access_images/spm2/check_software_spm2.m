@@ -7,7 +7,7 @@ if length(software)>=3 && strcmpi(software(1:3),'spm')
         error('SPM is not in your path!\nPlease add a version of SPM to your path or change cfg.software to another software')
     end
     if ~strcmpi(spm_ver,software)
-        error('cfg.software == %s , but spm version in path = %s.\nPlease decided what you want to use and set the path accordingly.',...
+        error('cfg.software == %s , but spm version in path = %s.\nPlease decide what you want to use and set the path accordingly.',...
             software,spm_ver);
     end
     % seems to be fine, so return this

@@ -1,4 +1,4 @@
-function checked = check_software_spm8(software)
+function checked = check_software_spm8b(software)
 
 if length(software)>=3 && strcmpi(software(1:3),'spm')
     try

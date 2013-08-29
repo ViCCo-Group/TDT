@@ -126,7 +126,7 @@ if strcmp(cfg.files.mask{1}, 'all voxels');
 
     sz = mask_hdr.dim(1:3); % get dimensions of data
     mask_vol = ones(sz); % use all voxels
-
+    vol = mask_vol; % use all voxels again
 else
     % Load the brain or ROI mask(s)
     [mask_vol, mask_hdr, sz, vol] = load_mask(cfg);

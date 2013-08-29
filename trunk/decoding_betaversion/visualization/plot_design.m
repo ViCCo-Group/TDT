@@ -42,7 +42,7 @@ pos.test = [7, 8, 11, 12];
 pos.text = [1:4];
 % to create a bit more space for text and legend, we add extra space by
 % using a 8x4 grid
-pos.legend = [29];
+pos.legend = [29:31];
 
 %% get min and max label for later scaling
 
@@ -161,8 +161,10 @@ end
     
 subplot(8, 4, pos.legend)
 image(show_legend)
-title({'Unique label values'; '(NOT necessary linearly scaled)'})
-set(gca, 'ytick', [])
+set(gca, 'YTick', [0.75, 1.25])
+set(gca, 'YAxisLocation', 'right')
+set(gca,'YTickLabel', {'Unique label values'; '(maybe not linearly scaled)'});
+% set(gca, 'ytick', [])
 set(gca, 'XTick', 1:length(unique_labels)+1)
 set(gca, 'XTickLabel', [sprintf('%i|', unique_labels) 'unused'])
 

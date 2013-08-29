@@ -68,7 +68,7 @@ filename_str = char([{'files.name'}; {'---'}; fnames_char; {'---'}; {'design.set
 if isfield(cfg.design, 'set')
     set_str = char([{num2str(cfg.design.set)}]);
 else
-    set_str = '';
+    set_str = ' ';
 end
 
 train_str = char([{'design.train'}; {''}; {num2str(cfg.design.train)}; {''}; set_str]);

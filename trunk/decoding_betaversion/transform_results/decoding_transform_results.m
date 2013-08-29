@@ -3,7 +3,11 @@
 % This function caculates a lot of different result measures defined by
 % METHOD.
 %
-% It also calls external transres_XX functions that implement other
+% FURTHER METHODS: Type
+%   >> transres_  
+% and hit tab key
+%
+% E.g., it also calls external transres_XX functions that implement other
 % methods, e.g. "trans_model_parameters" if method = 'model_parameter'.
 %
 % METHODS IMPLEMENTED HERE:

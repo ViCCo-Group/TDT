@@ -48,6 +48,10 @@ else % if string should be displayed
     
     if length(field_id)>63 % check if maximum Matlab length exceeded
         field_id = field_id(1:63);
+        % remove a potential final dot
+        if strcmp(field_id(end), '.')
+            field_id(end) = [];
+        end
     end
     
     % The use of eval is not very elegant, but it is fast.

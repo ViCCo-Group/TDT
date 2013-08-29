@@ -553,6 +553,8 @@ dispv(1,'Writing results to disk...')
 decoding_write_results(cfg,results)
 dispv(1,'done!')
 
+cfg.progress.endtime = datestr(now);
+
 % Save cfg
 cfg_fname = [cfg.results.filestart '_' cfg.results.output{1} '_cfg.mat'];
 cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
@@ -566,8 +568,6 @@ if numel(cfg.results.output)>1
         tmp = copyfile(cfg_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_cfg.mat']); %#ok<NASGU>
     end
 end
-
-cfg.progress.endtime = datestr(now);
 
 %% plot & save design again at the end (to show that job is finished
 % Endtime shows user that job is over

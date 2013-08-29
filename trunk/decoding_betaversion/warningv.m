@@ -9,9 +9,15 @@ function warningv(msg_id,msg)
 %   msg_id: Message identifier
 %   msg: The actual warning message
 % No additional sprintf-like input is allowed!
-
+%
+% Output: 
+% global reports %#ok
+%   reports.warning.DBSTACK; % to save flags for warning
+%   reports.warnstc.DBSTACK; % to save full dbstack
 
 global reports %#ok
+field_id_init = 'reports.warning'; % to save flags for warning
+stack_id_init = 'reports.warnstc'; % to save full dbstack
 
 if ~exist('msg','var')
     error('warningv needs two inputs: messageID and message!')
@@ -24,7 +30,7 @@ if isempty(stop_ind)
     stop_ind = length(callers_name); % when decoding was not included in the call, include all levels
 end
 
-field_id = 'reports.warning'; % define level at which message should be deactivated
+field_id = field_id_init; % define level at which message should be deactivated
 for i = stop_ind:-1:1
     field_id = [field_id '.' callers_name{i}];
 end
@@ -41,10 +47,13 @@ field_id = [field_id '.' msg_id_short];
 
 try % try adding one to the field
     eval([field_id '=' field_id '+1;'])
-    eval(['if ' field_id ' == 2, fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg.\n''), end'])
+    eval(['if ' field_id ' == 2, fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg. dbstack stored in global reports, reports.warnstc\n''), end'])
 catch %#ok if not possible, create field and plot warning message
     eval([field_id '= 1;']);
     warning(msg_id,'%s',msg) % this format prevents a problem when pathnames are passed
+    % also save stack
+    stack_field_id = [stack_id_init field_id(length(field_id_init)+1:end)];
+    eval([stack_field_id '= dbstack;']);
 end
 
 

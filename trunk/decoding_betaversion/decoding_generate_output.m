@@ -1,13 +1,16 @@
 % function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model)
 % 
-% This function calls all decoding_tranform_results for all entries in
+% This function calls all decoding_transform_results for all entries in
 % cfg.results.output and saves the returning outputs at results.(outname).
 %
 % It also handles initialization of output fields if they are not single
 % numerical values.
 % 
 % Try to see it as a black box and ignore it, as far as possible. Look at
-% decoding_transform_results instead.
+%
+%   decoding_transform_results 
+%
+% instead.
 %
 % Kai, 2013/04/19
 

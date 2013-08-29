@@ -91,7 +91,7 @@
 
 function ocfg = combine_designs( cfg1, cfg2 )
 
-warningv('COMBINE_DESIGNS:IgnoreCfg2','Ignores all the values in cfg2 except for cfg2.files and cfg2.design');
+dispv(1, 'COMBINE_DESIGNS ignores all the values in cfg2 except for cfg2.files and cfg2.design');
 
 if ~length(cfg1.files.name)==length(cfg2.files.name)
     warningv('COMBINE_DESIGNS:FileCountsDifferent','File counts are not the same, some files will only appear in one set. WARNING: THIS HAS NEVER BEEN TESTED!!!!');

@@ -210,10 +210,10 @@ cfg.plot_design = 1; % this is by default set to 1, but if you repeat the same d
 % The following calls allow you to look at your design. The design will
 % also be shown when you perform the decoding.
 
-% Display the design in textform
+% If you want to display the design in textform in the Matlab window
 display_design(cfg);
-% Display the design as a plot
-plot_design(cfg);
+% Display the design as a plot (will be done later anyway, so it can stay deactivated)
+% plot_design(cfg);
 
 %% Fifth, run the decoding analysis
 
@@ -226,7 +226,7 @@ results = decoding(cfg);
 % course.
 
 % cfg.searchlight.subset = [5, 100, 1000, 1001]'; 
-%   only decode some voxels (good e.g. if you like to get the models at 
-% these positions). Takes either single values or 3d coordinates.
+%   only decode some searchlights (good e.g. if you like to get the models 
+%   at these locations). Takes either single values or 3d coordinates.
 % (call "help decoding" and search for "subset" for more infos)
 

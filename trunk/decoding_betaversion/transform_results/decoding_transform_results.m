@@ -114,7 +114,7 @@ elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
     true_labels = vertcat(decoding_out.true_labels);
     labels = unique(true_labels);
     
-    if length(labels) > 2
+    if length(labels) > 2 && isfield(cfg, 'AUC') && cfg.AUC.experimental == 1 % otherwise it will fail
         decoding_out = equalize_set_labels(decoding_out, cfg);
         % redo ordering
         decision_values = vertcat(decoding_out.decision_values);

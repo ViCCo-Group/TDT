@@ -112,8 +112,16 @@ elseif strcmpi(method, 'loglikelihood')
 elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
     decision_values = vertcat(decoding_out.decision_values);
     true_labels = vertcat(decoding_out.true_labels);
-    
     labels = unique(true_labels);
+    
+    if length(labels) > 2
+        decoding_out = equalize_set_labels(decoding_out, cfg);
+        % redo ordering
+        decision_values = vertcat(decoding_out.decision_values);
+        true_labels = vertcat(decoding_out.true_labels);
+        labels = unique(true_labels);
+    end
+    
     output = AUCstats(decision_values,true_labels,labels,0);
     if strcmpi(method, 'AUC_minus_chance')
         output = 100*output - chancelevel; % center around 0 and express in percent

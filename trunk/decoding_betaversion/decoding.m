@@ -791,8 +791,9 @@ if cfg.results.write
 
         % Check if it is ok to overwrite existing files
 
-        for ext = {'.img','.hdr'}
-            output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{1}];
+        ext = {'.img','.hdr'};
+        for ext_ind = 1:length(ext)
+            output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
             if exist(output_fname,'file')
                 if ~cfg.results.overwrite
                     error(['Resultfile %s already exists. Change filename or ',...

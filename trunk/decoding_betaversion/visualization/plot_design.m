@@ -66,7 +66,35 @@ else
     end
 end
 
-%% show train design (incl. labels)
+%% create a row with the set information to add to figure
+
+row_length = size(cfg.design.train, 2);
+% get set_row
+if ~isfield(cfg.design, 'set')
+    warning('cfg.design.set does not exist, adding an empty line')
+    set_row(1, 1:row_length) = 0;
+elseif length(cfg.design.set) == 1
+    set_row(1, 1:row_length) = cfg.design.set;
+elseif length(cfg.design.set) > row_length
+    warning('Set vector is longer than train design matrix, this is strange')
+    set_row(1, 1:row_length) = cfg.design.set(1:row_length);
+elseif length(cfg.design.set) < size(cfg.design.train, 2)
+    warning('Set vector is shorter than train design matrix but not 1, this is strange. Filling with 0s')
+    set_row(1, row_length) = 0;
+    set_row(1, 1:length(cfg.design.set)) = cfg.design.set;
+else
+    set_row(1, 1:row_length) = cfg.design.set;
+end
+
+% normalize set values for plotting
+set_row = set_row - min(set_row) + 1; 
+set_row = set_row / max(set_row);
+
+% create a 3d version for RGB plotting
+set_row(:, :, 2) = set_row;
+set_row(:, :, 3) = 0; % setting 3rd value 0 for better contrast
+
+%% create train design (incl. labels)
 clear show_train
 for rgb = 1:3
     currcol = cfg.design.train;
@@ -74,9 +102,10 @@ for rgb = 1:3
     currcol(cfg.design.train == 1) = (cfg.design.label(cfg.design.train == 1)-min_label)./(max_label-min_label).*max_color(rgb);
     show_train(:, :, rgb) = currcol;
 end
-    
+
+% show train design
 subplot(4, 4, pos.train)
-image(show_train)
+image([show_train; set_row]);
 title('Training Data')
 
 %% add filenames
@@ -107,6 +136,10 @@ else
 	% keep fnames_char as they are (not cut)
 end
 
+% add two extra rows, one empty, one with set
+fnames_char(end+1, :) = ' ';
+fnames_char(end, end-2:end) = 'Set';
+
 set(gca,'YTick', 1:size(fnames_char,1))
 set(gca,'YTickLabel', fnames_char)
 xlabel('Training Data - Step number')
@@ -121,17 +154,20 @@ for rgb = 1:3
 end
     
 subplot(4, 4, pos.test)
-image(show_test)
+image([show_test; set_row])
 title('Test Data')
 
 set(gca, 'YTick', 1:size(cfg.files.name, 1))
 xlabel('Test Data - Step number')
 
+descr_and_set = cfg.files.descr;
+descr_and_set{end+1} = ' ';
+
 % add file description on the left if available
 if isfield(cfg.files, 'descr')
     set(gca,'yaxislocation','right')
-    set(gca, 'YTick', 1:size(cfg.files.name, 1))
-    set(gca,'YTickLabel', cfg.files.descr)
+    set(gca, 'YTick', 1:length(descr_and_set))
+    set(gca,'YTickLabel', descr_and_set)
 end
 
 %% if a description is available, also add this on the right

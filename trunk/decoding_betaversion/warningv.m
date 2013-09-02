@@ -1,5 +1,5 @@
-function warningv(msg_id,msg)
-
+% function warningv(msg_id,msg)
+% 
 % This function makes sure that a warning is only printed once at each
 % level of execution. For example, in feature selection a warning message
 % should only be printed once. It is similar to warning.m, but does not
@@ -14,6 +14,8 @@ function warningv(msg_id,msg)
 % global reports %#ok
 %   reports.warning.DBSTACK; % to save flags for warning
 %   reports.warnstc.DBSTACK; % to save full dbstack
+
+function warningv(msg_id,msg)
 
 global reports %#ok
 field_id_init = 'reports.warning'; % to save flags for warning

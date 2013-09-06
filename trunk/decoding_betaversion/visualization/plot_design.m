@@ -17,6 +17,7 @@
 
 % TODO: In contrast to display_design, plot_design(cfg.design) does not work at
 % the moment.
+% TODO: Improve how sets are displayed
 
 function figure_handle = plot_design(cfg,visible_on)
 
@@ -66,6 +67,7 @@ else
     end
 end
 
+
 %% create a row with the set information to add to figure
 
 row_length = size(cfg.design.train, 2);
@@ -94,7 +96,19 @@ set_row = set_row / max(set_row);
 set_row(:, :, 2) = set_row;
 set_row(:, :, 3) = 0; % setting 3rd value 0 for better contrast
 
+%% get x-axis description
+% first row: decoding step [set x]
+
+for x_ind = 1:size(cfg.design.train, 2)
+    if isfield(cfg.design, 'set')
+        xstr{x_ind} = sprintf('%i[%i]', x_ind, cfg.design.set(x_ind));
+    else
+        xstr{x_ind} = sprintf('%i', x_ind);
+    end
+end
+
 %% create train design (incl. labels)
+
 clear show_train
 for rgb = 1:3
     currcol = cfg.design.train;
@@ -142,6 +156,10 @@ fnames_char(end, end-2:end) = 'Set';
 
 set(gca,'YTick', 1:size(fnames_char,1))
 set(gca,'YTickLabel', fnames_char)
+
+%% set xaxis training
+set(gca,'XTick', 1:length(xstr))
+set(gca,'XTickLabel', xstr)
 xlabel('Training Data - Step number')
 
 %% same for testset
@@ -158,17 +176,20 @@ image([show_test; set_row])
 title('Test Data')
 
 set(gca, 'YTick', 1:size(cfg.files.name, 1))
-xlabel('Test Data - Step number')
-
-descr_and_set = cfg.files.descr;
-descr_and_set{end+1} = ' ';
 
 % add file description on the left if available
 if isfield(cfg.files, 'descr')
+    descr_and_set = cfg.files.descr;
+    descr_and_set{end+1} = ' ';
     set(gca,'yaxislocation','right')
     set(gca, 'YTick', 1:length(descr_and_set))
     set(gca,'YTickLabel', descr_and_set)
 end
+
+%% set xaxis test
+xlabel('Test Data - Step number')
+set(gca,'XTick', 1:length(xstr))
+set(gca,'XTickLabel', xstr)
 
 %% if a description is available, also add this on the right
 

@@ -28,7 +28,8 @@
 %            'peak':       Parameters are selected based on the highest
 %                          overall response
 %
-% data_train: Training data (either vectors of actual data or entries of kernel matrix)
+% data_train: Training data (either vectors of actual data or data.kernel 
+% containing the kernel matrix)
 % i_train_external: Index of training data (from function decoding.m)
 
 
@@ -44,13 +45,15 @@
 %       cfg.parameter_selection.parameters = {'c','e'};
 %       cfg.parameter_selection.parameter_range = {10^(-5:5),10^(-2:7)};
 
+% History
+% Kai, 2013-09-05
+%   Changed Kernel passing, now: data_train.kernel/data_test.kernel.
+
 function cfg = decoding_parameter_selection(cfg,data_train,i_train_external)
 
 
 % TODO: some parameters may be passed differently, e.g. not as a string.
 % For now allow only string input (e.g. 'c', 's', etc.)
-
-% TODO: pass kernel (no need to recompute: saves a lot of time!)
 
 parameters = cfg.parameter_selection.parameters;
 parameter_range = cfg.parameter_selection.parameter_range;
@@ -206,8 +209,12 @@ for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
     i_test = find(cfg.parameter_selection.design.test(:, i_step) > 0);
     
     if cfg.decoding.use_kernel
-        data_train = data(i_train, i_train);
-        data_test = data(i_test, i_train);
+        data_train.kernel = data.kernel(i_train, i_train);
+        data_test.kernel = data.kernel(i_test, i_train);
+        if cfg.decoding.kernel.pass_vectors
+            data_train.vectors = data(i_train, :);
+            data_test.vectors = data(i_test, :);
+        end
     else
         data_train = data(i_train, :);
         data_test = data(i_test, :);

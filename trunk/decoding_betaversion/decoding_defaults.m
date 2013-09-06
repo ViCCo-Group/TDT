@@ -90,7 +90,10 @@ defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur
 defaults.decoding.method = 'classification_kernel'; % classification using the kernel speedup as standard
 defaults.decoding.software = 'libsvm'; % libsvm as a standard
 defaults.decoding.kernel.function = @(X,Y) X*Y'; % for kernel method linear kernel as default
-
+defaults.decoding.kernel.pass_vectors = 0; % if 1, original data vectors will be passed
+                                           % additionally to the kernelas data_train./_test.vectors .
+                                           % might be useful if you e.g. need the  dimension of the 
+                                           % original data
 
 % parameters (in defaults for libsvm)
 defaults.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % linear classification

@@ -49,7 +49,7 @@ cfg.files.mask = '';
 
 %% plot the data (if 2d)
 if size(data, 2) == 2
-    h = figure;
+    resfig = figure('name', 'Data');
     scatter(data(:, 1), data(:, 2), 30, cfg.files.label);
 end
 
@@ -73,24 +73,30 @@ cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see 
 %% Nothing needs to be changed below for a standard leave-one-run out cross validation analysis.
 % Create a leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
-display_design(cfg);
+
+plot_design(cfg);
 
 %% Decoding Parameters
 
 % default: -s 0 -t 0 -c 1 -b 0 -q
-% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1000 -b 0 -q';
+cfg.decoding.method = 'classification';
+cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q';
 
 %% Run decoding
 [results, cfg] = decoding(cfg, pass_data);
 
 %% Print decision boundary in figure
+
 if isfield(results, 'model_parameters')
+    if length(cfg.decoding.method) >= 6 && strcmp(cfg.decoding.method(end-6:end), '_kernel')
+        error('Sorry, plotting does only work for non-kernel methods at the moment')
+    end
     svm_model = results.model_parameters.output(1).model(1); % get the model of the first SVM
     [X, Y] = meshgrid(-2:.11:3);
-    Z = X;
-    [predicted, acc, decision_values] = svmpredict(zeros(size(X(:))),[X(:), Y(:)],svm_model,cfg.decoding.test.classification.model_parameters);
-    Z(:) = decision_values;
-    figure(h)
+    Z = X;    
+    decoding_out = libsvm_test(zeros(size(X(:))),[X(:), Y(:)],cfg,svm_model);
+    Z(:) = decoding_out.decision_values;
+    figure(resfig);
     hold on
     contour(X,Y,Z, -1:1);
     hold off

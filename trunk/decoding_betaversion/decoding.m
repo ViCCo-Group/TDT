@@ -115,6 +115,8 @@
 %       Nx3 matrix corresponding to the XYZ coordinates of the volume
 %   cfg.decoding.kernel.function: Kernel function passed, (default linear: @(X,Y) X*Y')
 %       Will only be used, if cfg.design.method ends on "_kernel"
+%   cfg.decoding.kernel.pass_vectors: If 1, the original data will be passed 
+%       in addition to the kernel as data_train.vectors/data_test.vectors
 %   cfg.results.overwrite: Should existing results be overwritten [default = 0]
 %   cfg.results.setwise: Should results of each set be returned separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
@@ -169,13 +171,17 @@
 %   output
 
 % HISTORY
+% 2013-09-05 Kai
+%   Changed Kernel passing, now: data_train.kernel/data_test.kernel.
+%   Pervious version had too much potential for confusion. 
+%   Original data vectors can be passed additionally using 
+%   cfg.decoding.kernel.pass_vectors.
 % 2013-04-23 Kai
 %   Rewrote Kernel related stuff
 % 2013-04-22 Martin
 %   Added possibility to use kernels
 % 2013-04-16 Kai
 %   Added cfg.files in help description
-%
 % 2013-04-14 Kai
 %   Separated i_decoding into i_decoding and curr_decoding. Detailed
 %   explanation what is what below.
@@ -394,14 +400,10 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % if all decoding steps use the same data, calculating the
         % kernel only once and then passing the training and test
         % part of the kernel is in most cases faster than calculating
-        % a kernel in every step. As default, a linear kernel used
+        % a kernel in every step. As default, a linear kernel is used
         % (@(X,Y) X*Y' ; see decoding_defaults);
         kernel = cfg.decoding.kernel.function(data(:,indexindex),data(:,indexindex));
     end
-    
-    % TODO: Get a better order of the decodings steps (i.e. reorder the
-    % decoding step index i_step so that the same training is used in
-    % successive steps)
 
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
@@ -415,11 +417,16 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         if use_kernel
             % in each step, set the kernel-submatrix containing the
             % training entries as training data
-            data_train = kernel(i_train, i_train);
+            data_train.kernel = kernel(i_train, i_train);
             % get submatrix with kernel entries between test and train
-            % examples from the kernel -- this is the way that a kernel is
+            % examples from the kernel -- this is the way a kernel is
             % used. No leak between training data and the test data.
-            data_test = kernel(i_test, i_train);
+            data_test.kernel = kernel(i_test, i_train);
+            % additionally pass original data vectors, if selected
+            if cfg.decoding.kernel.pass_vectors
+                data_train.vectors = data(i_train, indexindex);
+                data_test.vectors = data(i_test, indexindex);
+            end
         else
             % no kernel used, set the training vectors as training data
             data_train = data(i_train, indexindex);
@@ -448,6 +455,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % TODO: feature selection should give vector of selected voxels as
         % output, then vectors_test can be adjusted later on
         if ~strcmpi(cfg.feature_selection.method,'none')
+            if use_kernel, error('Features selection does not work with the kernel option at the moment, use non-kernel method'), end
             if ~skip_training
                 % pack
                 if cfg.feature_selection.useall
@@ -487,10 +495,16 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Do scaling on training set if requested
         if ~skip_training && strcmpi(cfg.scale.estimation,'across')
+            if use_kernel, error('Scaling of data on training set only does not work with kernel method at the moment, use non-kernel method'), end
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [data_train,scaleparams] = decoding_scale_data(cfg,data_train);
         end
 
+        % Development Remark: Additional KERNEL calculation might go here, 
+        % if feature selection or scaling on training data is used. Passing
+        % a kernel might still be faster for certain methods/more
+        % convinient if nothing needs to be changed.
+        
         if skip_training
             model(i_step) = model(i_step-1);
         else

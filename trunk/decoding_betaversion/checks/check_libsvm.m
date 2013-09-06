@@ -66,7 +66,8 @@ function [working, libsvmdir] = check_libsvm(cfg, display_path)
     % test if call via function handles calling wrapper functions works
     if use_kernel
         % use kernel, give fake kernel matrix as input
-        model = cfg.decoding.fhandle_train([-1;1],[1,-1;-1,1],cfg);
+        fakedata.kernel = [1,-1;-1,1];
+        model = cfg.decoding.fhandle_train([-1;1],fakedata,cfg);
     else
         % no kernel, give fake vectors as input
         model = cfg.decoding.fhandle_train([-1;1],[-1;1],cfg);

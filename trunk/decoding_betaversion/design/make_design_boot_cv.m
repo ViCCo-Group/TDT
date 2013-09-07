@@ -1,11 +1,12 @@
 % function design = make_design_boot_cv(cfg,n_boot,n_test)
 % 
 % Function to generate design matrix for classification using bootstrapping 
-% (without replacement) in bccn_decode. This design is helpful if it is not 
-% clear how to separate training and test data or if there is unbalanced 
-% data (i.e. more datapoints belonging to one class than to the other).
-% In addition to bootstrapping, a leave-one-run-out procedure is applied in
-% order to preserve independence of datapoints. Otherwise, spurious below 
+% (without replacement) in the decoding toolbox. This design is helpful if 
+% it is not clear how to separate training and test data or if there is 
+% unbalanced data (i.e. more datapoints belonging to one class than to the 
+% other).
+% In addition to bootstrapping, a leave-one-step-out procedure is applied 
+% in order to preserve independence of datapoints. Otherwise, spurious below 
 % chance classification may occur (ask Martin H. for details). In addition,
 % it naturally limits the number of necessary bootstrap samples.
 %
@@ -65,8 +66,9 @@ elseif length(unique(cfg.files.set))>1
     error(['More than one set specified in a design used in combination\n',...
         'with ''make_design_boot_cv''. Currently, using more than one \n',...
         'set is not implemented yet in this design structure. If you \n',...
-        'really need it, contact the authors of the toolbox and we will \n',...
-        'see what we can do.'])
+        'really need it, you can create two separate designs first, \n',...
+        'combine them using combine_designs and manually introducing \n',...
+        'set number afterwards.'])
 end
 
 % Make sure that input has the right orientation
@@ -169,5 +171,5 @@ end
 
 msg = 'Design for CV decoding for %i files x %i steps created\n';
 if check_verbosity(msg,1)
-    dispv(1, msg, n_files, counter)
+    dispv(1, msg, n_files)
 end

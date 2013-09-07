@@ -1,35 +1,37 @@
 This is a collection of questions that might occur more often. This FAQ section should grow with time.
 
 
-Q1. My searchlight analysis takes several hours, compared to your example which takes only minutes.
-    I checked my script and all parameters seem to make sense. I'm not using parameter selection,
-    feature selection and the such, which I know make processing a lot slower. What am I doing wrong?
+Q2. My searchlight analysis takes several hours, compared to your example which takes only minutes.
+    I checked my script and all parameters seem to make sense. I'm not displaying the searchlights,
+    not using parameter selection or feature selection and the such, which I know make processing 
+    a lot slower. What am I doing wrong?
 
-A1. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
+A2. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
     of searchlights, the radius of the searchlight and the number of cross-validation steps.
     Smaller searchlights are usually trained faster, unless the number of voxels in the searchlight
     are equal or smaller than the number of samples that are entered into the analysis; it that case
-    separating hyperplane is more difficult to find.
+    the separating hyperplane is more difficult to find.
     If you run classification in libsvm, try using cfg.decoding.method = 'classification_kernel' 
     which can double or triple the speed of classification. If your voxel resolution is 2x2x2 mm or 
     higher and you want a speed-up, consider resampling your data at a lower resolution, e.g. 3x3x3 mm.
     In many cases, downsampling does not interfere much with the classification accuracies.
     You could also consider reducing the size of your mask, e.g. limit yourself to gray-matter
-    voxels, only.
+    voxels, only, but here the actual size of the searchlight will vary a lot depending on the position
+    of the searchlight, because voxels outside the mask are not considered.
 
 
-Q2. Some of my ROIs take extremely long to calculate while others run much faster. How is that possible? 
+Q3. Some of my ROIs take extremely long to calculate while others run much faster. How is that possible? 
 
-A2. Some examples might be more difficult to separate than others. If your ROI is small, this is more
+A3. Some examples might be more difficult to separate than others. If your ROI is small, this is more
     likely to be the case. If the time difference is very large, try using scaling and possibly reduce
     outlier voxels as implemented in the scaling method.
 
 
-Q3. I want to run classification across subjects, and I know that imbalances in training data are bad,
+Q4. I want to run classification across subjects, and I know that imbalances in training data are bad,
     but there separating data into pairs of both categories for cross-validation doesn't make much sense.
     How should I proceed?
 
-A3. It is in many cases no problem if your data has a slight imbalance, and if you have the same number
+A4. It is in many cases no problem if your data has a slight imbalance, and if you have the same number
     of subjects in both groups (e.g. 20 patient, 20 control), the imbalance should not be too bad. If 
     any, it should rather make your results more conservative. Just set cfg.design.unbalanced_data = 'ok'
     If you are worried that the imbalance reduces your accuracy, consider also calculating AUC which 
@@ -38,29 +40,31 @@ A3. It is in many cases no problem if your data has a slight imbalance, and if y
     process many times (e.g. 100), but this type of analysis is a lot slower.
 
 
-Q4. I ran a searchlight analysis and did a group-level analysis, but none of my voxels were significant.
-    Did I do anything wrong?
+Q5. I ran a searchlight analysis and did a group-level analysis, but none of my voxels were significant,
+    although it really was expected to find something. Did I do anything wrong?
 
-A4. It is possible that you made a mistake, but this is difficult to find. First, check a decoding 
-    analysis with the same data where you expect to find something, e.g. buttonpress left vs. right, 
-    or visual stimulation in the left vs. the right hemisphere. If you still find nothing, probably 
-    you made a mistake in the assignment of the data entering the classification (e.g. betas), your 
-    labels were wrong, or your mask did not contain the right regions.
-    If classification worked and you are sure that you made no mistake, then see if you can improve the 
-    quality of your data: Check the movement parameters and possibly include movement regressors into 
-    your design. Reduce the number of other regressors in your SPM design to a minimum (you can still
-    check for correlations with other variables of no interest later). Try AUC rather than accuracy 
-    which should give you a slightly more sensitive value. Only in rare cases the optimization of 
+A5. It is possible that you made a mistake, but this is difficult to find. First, check a decoding 
+    analysis with the same data where you expect to find something, e.g. buttonpress left hand vs. 
+    right hand, or visual stimulation in the left vs. the right hemisphere. If you still find nothing, 
+    probably you made a mistake in the assignment of the data entering the classification (e.g. betas),
+    your labels were wrong, or your mask did not contain the right regions.
+    If classification worked here and you are sure that you made no mistake, then see if you can improve 
+    the quality of your data: Check the movement parameters and possibly include movement regressors into 
+    your subject-level design. Reduce the number of other regressors in your SPM design to a minimum (you 
+    can still check for correlations with other variables of no interest later). Try AUC rather than accuracy 
+    which can give you a slightly more sensitive value. Only in rare cases the optimization of 
     classification parameters (e.g. C) brings you from chance performance to a reasonable number, so 
     don't spend too much time on this step. Also feature selection can be very time consuming, so don't 
     waste your time trying to find a pattern that is not in the data.
+    If all of this doesn't help: Maybe you have just bad data or your design was not efficient enough for
+    the variable you were interested in.
 
 
-Q5. I ran parameter optimization of C in libsvm, but the results were identical to running without 
+Q6. I ran parameter optimization of C in libsvm, but the results were identical to running without 
     parameter optimization. However, I read in the libsvm tutorial that this should greatly improve 
     performance. How is that possible?
 
-A5. In most cases, the number of data samples n are much smaller than the number of features or 
+A6. In most cases, the number of data samples n are much smaller than the number of features or 
     dimensions p (e.g. voxels in a searchlight). That means that all data points will most likely 
     end up as support vectors, but since C acts as a regularization parameter, it should 
     begin to play a role for extreme values of C, where it will choose a simpler (sparser) solution.

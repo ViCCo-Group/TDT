@@ -21,6 +21,9 @@
 
 function figure_handle = plot_design(cfg,visible_on)
 
+
+alternative = 1;
+
 if ~exist('visible_on','var')
     visible_on = 1;
 end
@@ -30,8 +33,13 @@ if ischar(cfg.files.name)
     warningv('BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
 end
 
-%% define colours
+%% define color range
+if ~alternative
 max_color = [.7, .5, .2]; % RGB values for the max color -- min color is black at the moment
+else
+colors = jet(64);
+max_color = colors(1,:);
+end
 background_color = [.5, .5, .5];
 
 %% define position of subplots
@@ -109,12 +117,26 @@ end
 
 %% create train design (incl. labels)
 
+if ~alternative
 clear show_train
 for rgb = 1:3
     currcol = cfg.design.train;
     currcol(cfg.design.train == 0) = background_color(rgb);
     currcol(cfg.design.train == 1) = (cfg.design.label(cfg.design.train == 1)-min_label)./(max_label-min_label).*max_color(rgb);
     show_train(:, :, rgb) = currcol;
+end
+
+else
+selectind = cfg.design.train == 1;
+colorselect = (cfg.design.label(selectind) - min_label)./(max_label-min_label);
+colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
+show_train_rgb = selectind;
+show_train = repmat(selectind,[1 1 3]);
+
+for rgb = 1:3
+    show_train_rgb(selectind) = colors(colorselect,rgb);
+    show_train(:,:,rgb) = show_train_rgb;
+end
 end
 
 % show train design
@@ -163,6 +185,9 @@ set(gca,'XTickLabel', xstr)
 xlabel('Training Data - Step number')
 
 %% same for testset
+
+if ~alternative
+
 clear show_test
 for rgb = 1:3
     currcol = cfg.design.train;
@@ -171,6 +196,19 @@ for rgb = 1:3
     show_test(:, :, rgb) = currcol;
 end
     
+else
+selectind = cfg.design.test == 1;
+colorselect = (cfg.design.label(selectind) - min_label)./(max_label-min_label);
+colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
+show_test_rgb = selectind;
+show_test = repmat(selectind,[1 1 3]);
+
+for rgb = 1:3
+    show_test_rgb(selectind) = colors(colorselect,rgb);
+    show_test(:,:,rgb) = show_test_rgb;
+end
+end
+
 subplot(4, 4, pos.test)
 image([show_test; set_row])
 title('Test Data')
@@ -210,10 +248,24 @@ end
 
 clear show_legends
 unique_labels = sort(unique(cfg.design.label(:)))';
+if ~alternative
+    
 for rgb = 1:3
     currcol = (unique_labels-min_label)./(max_label-min_label).*max_color(rgb);
     currcol(end+1) = background_color(rgb);
     show_legend(:, :, rgb) = currcol;
+end
+
+else
+colorselect = (unique_labels-min_label)./(max_label-min_label);
+colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
+show_legend = zeros(1,size(colorselect,2),3);
+
+for rgb = 1:3
+    show_legend_rgb = colors(colorselect,rgb);
+    show_legend(1,:,rgb) = show_legend_rgb;
+end
+show_legend(:,end+1,:) = background_color;
 end
     
 subplot(8, 4, pos.legend)

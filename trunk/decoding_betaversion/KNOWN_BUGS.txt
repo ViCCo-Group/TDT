@@ -2,9 +2,10 @@ OPEN BUGS
 
 !!! B11: FIX CHANCELEVEL & REPORT CHANCELEVEL!!!
 At the moment, if 3 labels are used, chancelevel is set to 1/3
-Unfortunately, this makes absolutely no sense, because it can happen that 
-simple pairwise comparisons are used with multiple labels (to make the 
-design matrix look nicer, so in this case the proper chancelevel would be 2
+Unfortunately, this can in some cases make no sense, because it can happen 
+that simple pairwise comparisons are used with multiple labels (to make the 
+design matrix look nicer, so in this case the proper chancelevel would be 
+1/2
 The bigger problem is that chancelevel is not reported.
 Still open how to solve this problem, when it's solved, mail the list.
 
@@ -32,3 +33,6 @@ overwritten, rather than the endtime used.
 
 B10: Combination of scaling and parameter selection doesn't work, 
 see run_nest in decoding_parameter_selection
+
+B11: make_design_boot_cv.m does not work for one step only. Need to check 
+if it can be adapted or if a new function is needed.

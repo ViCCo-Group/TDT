@@ -18,7 +18,7 @@
 % Add path to this toolbox
 % If this function is in same path as the toolbox, simply comment the line
 % (then the path will be set automatically).
-% addpath([$ADD PATH AS STRING$])
+% addpath($ADD PATH AS STRING$)
 
 % Clear cfg (otherwise if you re-run this script, previous parameters may still be present)
 clear cfg
@@ -31,8 +31,8 @@ decoding_defaults; % use cfg = decoding_defaults to set the defaults, too
 % it to be on the safe side.
 cfg.analysis = 'searchlight';
 
-% Specify where the results should be saved
-cfg.results.dir = [$ADD PATH AS STRING$]; 
+% Specify where the results should be saved, e.g. 'c:\exp\results\buttonpress'
+cfg.results.dir = 
 
 %% Second, get the file names, labels and run number of each brain image
 %% file to use for decoding.
@@ -45,23 +45,26 @@ cfg.results.dir = [$ADD PATH AS STRING$];
 % There are two ways to get the information we need, depending on what you 
 % have done previously. The first way is easier.
 
-% === Automatic Creation === 
+% === Automatic Preparation === 
 % a) If you generated all parameter estimates (beta images) in SPM and were 
 % using only one model for all runs (i.e. have only one SPM.mat file), use
-% the following block. If not, go to "Manual Creation".
+% the following block. If not, go to "Manual Preparation".
 
-% Specify the directory to your SPM.mat and all related beta images:
-beta_dir = [$ADD PATH AS STRING$];
+% Specify the directory to your SPM.mat and all related beta images,
+% e.g. 'c:\exp\glm\model_buttonpress'
+beta_dir = 
 % Specify the label names that you gave your regressors of interest in the 
 % SPM analysis (e.g. 'button left' and 'button right').
 % Case sensitive!
-labelname1 = [$NAME OF LABEL1 AS STRING$]; % e.g. 'button left';
-labelname2 = [$NAME OF LABEL2 AS STRING$];
+labelname1 = 
+labelname2 = 
 
 % Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
 % Alternatively, you can specify (multiple) ROI masks as a cell or string 
 % matrix).
-cfg.files.mask = [$ADD PATH AS STRING$];
+% for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
+% for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
+cfg.files.mask = 
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat. Adds 'bin 1' to 'bin m', if multiple
@@ -91,9 +94,9 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % separately, e.g. with spm_select. This is not part of this example, but 
 % if you do it later, you should end up with the following fields:
 %   cfg.files.name: a 1xn cell array of file names
-%   cfg.files.step: a 1xn vector of data that you want to chunk together (e.g. run)
+%   cfg.files.step: a 1xn vector to indicate what data you want to chunk together (e.g. run numbers)
 %   cfg.files.label: a 1xn vector of labels (for decoding, you can choose 
-%       any two numbers as class labels)
+%       any two numbers as class labels, normally we use -1 and 1)
 
 %% Third, create your design for the decoding analysis
 

@@ -1,4 +1,4 @@
-% function warningv(msg_id,msg)
+% function warningv(msg_id,msg,varargin)
 % 
 % This function makes sure that a warning is only printed once at each
 % level of execution. For example, in feature selection a warning message
@@ -8,7 +8,8 @@
 % The input is similar to warning (see 'help warning'):
 %   msg_id: Message identifier
 %   msg: The actual warning message
-% No additional sprintf-like input is allowed!
+%   varargin: several additional optional fields if sprintf-like commands
+%       are desired
 %
 % Output: 
 % global reports %#ok

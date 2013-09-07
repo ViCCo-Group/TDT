@@ -1,3 +1,14 @@
+========
+CONTENTS
+========
+
+1. GENERAL
+2. ADVANTAGES OF THE TOOLBOX
+3. FUNCTIONALITY OF THE TOOLBOX AND BASICS
+4. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
+
+
+
 =======
 GENERAL
 =======
@@ -91,28 +102,61 @@ which provides you with a separate output for each cross-validation step.
 Then, average over the resulting output images. Alternatively, write your
 own routine (see HOWTOEXTEND.txt) 
 
-================
-Compiling libsvm
-================
+=========================================
+Compiling libsvm (getting libsvm to work)
+=========================================
 
-Some people experience problems with the mex-files of libsvm. If your 
-problem is that a module was not found, try downloading missing dll that 
-your mex file depends on here:
+Some people experience problems with the mex-files of libsvm that we 
+provided. Libsvm uses code that was created in the C programming language 
+which can be a lot faster than normal Matlab code. It was translated into 
+files that can be read by the computer and Matlab known as mex-files. 
+Sometimes, this translation depends on your particular system. In that 
+case, you need to re-compile these files yourself.
+
+**************************
+Easy fix for Windows users
+**************************
+
+If you use windows problem is that a module was not found, try downloading 
+the missing dll that your mex file depends on here:
 http://www.mathworks.de/support/solutions/en/data/1-2RQL4L/index.html
 or install a version of Visual C++ that is compatible with your version of 
 Matlab.
 
+**************
+How to compile
+**************
+
 Alternatively, you may want to use your own compilation or a later version 
-of libsvm, so you can follow these 6 steps. 
+of libsvm, so you can follow these 7 steps. 
+
+1. Select a compiler:
+a) Linux users: get the latest version of gcc.
+b) Windows users: get the appropriate compiler for your version of Matlab 
+(check the Mathworks website), probably Microsoft Visual C++ 2010 Express.
+If Matlab wants an earlier version (e.g. 2008), a later version will work, 
+too. Then set the installation path manually to Matlab using
+> mex -setup
+Would you like mex to locate installed compilers -> n
+Select a compiler: -> select the compiler which is most similar to yours.
+If a warning message appears and you are asked: "use path anyway?" -> n
+Manually enter the pathname which is similar to the suggested one (e.g. if 
+the suggestion is "Microsoft Visual Studio 8.0", then use "Microsoft Visual 
+Studio 10.0")
+c) Mac users: install the gcc compiler by downloading and installing 
+Xcode (need to register). If compilation fails, search the internet for 
+"Compiling Matlab Mex Files on a Mac".
+
+
 
 1. Use the mex-files provided or download libsvm from
 http://www.csie.ntu.edu.tw/~cjlin/libsvm/#download
 
 2. Unzip libsvm and navigate to the folder "Matlab".
 
-3. If your version is before 3.12, make the following adjustments (on our 
-request the authors of libsvm have introduced the quiet mode -q to the 
-svmpredict options)
+3. If your version is newer than 3.12, you can skip this step. Otherwise 
+make the following adjustments (on our request the authors of libsvm have 
+introduced the quiet mode -q to the svmpredict options)
 
 a) Open svmpredict.c in Matlab and find and delete (or
 comment by using // ) the following code:
@@ -158,19 +202,3 @@ Run your code using the compiled mex-files and see if everything worked.
 different compiler (see below). If that still doesn't work, then you 
 should in the meantime try a different decoding software (e.g. 
 correlation_classifier).
-
-Compiler:
-a) Linux users: get the latest version of gcc.
-b) Windows users: get the appropriate compiler for your version of Matlab 
-(check the Mathworks website), probably Microsoft Visual C++ 2010 Express.
-If Matlab wants an earlier version (e.g. 2008), a later version will work, 
-too! Then set the installation path manually to Matlab using
-> mex -setup
-Would you like mex to locate installed compilers -> n
-Select a compiler: -> select the compiler which is most similar to yours.
-If a warning message appears and you are asked: "use path anyway?" -> n
-Manually enter the pathname which is similar to the suggested one (e.g. if 
-the suggestion is "Microsoft Visual Studio 8.0", then use "Microsoft Visual 
-Studio 10.0")
-c) Mac users: install the gcc compiler by downloading and installing 
-Xcode (need to register).

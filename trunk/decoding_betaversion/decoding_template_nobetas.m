@@ -1,9 +1,7 @@
 % This script is a template that can be used for a decoding analysis on 
-% brain image data. It is for people who have betas available from an 
-% SPM.mat and want to automatically extract the relevant images used for
-% classification, as well as corresponding labels and decoding step numbers
-% (e.g. run numbers). If you don't have this available, then use
-% decoding_template_nobetas.m
+% brain image data. It is for people who don't have betas available to do
+% their classification and who need to enter their image names, labels and
+% decoding steps (e.g. run numbers) separately.
 
 % Set defaults
 cfg = decoding_defaults;
@@ -14,18 +12,20 @@ cfg.analysis = 'searchlight';
 % Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
 cfg.results.dir = 
 
-% Set the filepath where your SPM.mat and all related betas are, e.g. 'c:\exp\glm\model_button'
-beta_dir = 
-
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
 cfg.files.mask = 
 
-% Set the label names to the regressor names which you want to use for 
-% decoding, e.g. 'button left' and 'button right'
-labelname1 = 
-labelname2 = 
+% Set the following field:
+% File names (1xn cell array)
+cfg.files.name =  
+% and the other two fields if you use a make_design function (e.g. make_design_cv)
+% a 1xn vector to indicate what data you want to chunk together (e.g. run numbers) 
+cfg.files.step =
+% any two numbers as class labels, normally we use -1 and 1
+cfg.files.label = 
+
 
 % Set additional parameters manually if you want (see decoding.m or
 % decoding_defaults.m). Below some example parameters that you might want 
@@ -50,13 +50,6 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 
 %% Nothing needs to be changed below for a standard leave-one-run out cross
 %% validation analysis.
-
-% The following function extracts all beta names and corresponding run
-% numbers from the SPM.mat
-regressor_names = design_from_spm(beta_dir);
-
-% Extract all information for the cfg.files structure (labels will be [-1 1] )
-cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
 
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 

@@ -1,17 +1,21 @@
-% function ocfg = combine_designs(cfg1,cfg2)
+% function ocfg = combine_designs(...)
 % 
-% Version 12-4-2013, Dan Birman
+% Function to combine two or more design matrices.
 %
-% Function to combine two design matrices.
-%
-% IN
-%   cfg1: A config with design matrix, see usage.
-%   cfg2: A second config with it's own design matrix. None of the values
+% INPUT
+%   Possibility A:
+%   combine_designs(cfg1,cfg2,...)   
+%   cfg1: A cfg with design matrix, see usage.
+%   cfg2: A second cfg with its own design matrix. None of the values
 %       except for the files and design are used from cfg2.
+%   More cfgs can be entered
+%   Possibility B
+%   combine_designs(cfgcellmat)
+%   cfgcellmat: A cell matrix of cfgs with design matrices, see usage.
 %
-% OUT
-%   ocfg: A single config with a combined design matrix. Will contain all
-%       of the files of the two combined configs.
+% OUTPUT
+%   ocfg: A single cfg with a combined design matrix. Will contain all
+%       of the files of the two combined cfgs.
 %
 % EXAMPLE:
 %
@@ -19,7 +23,7 @@
 %
 % regressor_names = design_from_spm(beta_dir);
 % 
-% Now build up your two (or more) configs that you want to combine.
+% Now build up your two (or more) cfgs that you want to combine.
 %
 % cfg1 = decoding_describe_data(cfg,{ll ln},[-1 1],regressor_names,beta_dir);
 % cfg2 = decoding_describe_data(cfg,{lr ln},[-1 1],regressor_names,beta_dir);
@@ -77,7 +81,7 @@
 % ...15.img 	0  0  0  1  0  1      0  0  0  0  1  0      0  0  0 -1 -1 -1 
 % ...23.img 	0  0  0  1  1  0      0  0  0  0  0  1      0  0  0 -1 -1 -1 
 % ---       	                                  	                                  	                                   
-% design.set	1  1  1 2  2  2      1  1  1  2  2  2      1  1  1  2  2  2 
+% design.set	1  1  1  2  2  2      1  1  1  2  2  2      1  1  1  2  2  2 
 %
 % We see clearly the same patterns of training/testing appear. As well as
 % now the correct files are zeroed out (unused by the decoding toolbox) in
@@ -87,9 +91,26 @@
 % cfg.results.setwise = 1 option (by default as of 12-4-2013 the option is
 % 0).
 
-% TODO: introduce possibility to combine more than two designs
+% Version 12-4-2013, Dan Birman
+% 2013/09/08 Martin: Generalized to n designs entered as a cell matrix or
+% more inputs
 
-function ocfg = combine_designs( cfg1, cfg2 )
+function ocfg = combine_designs(varargin)
+
+if nargin == 1
+    if ~iscell(varargin{1})
+        error('Only one input delivered, but this input was no cell matrix.')
+    end
+    all_cfg = varargin{1};
+    if numel(all_cfg) < 2
+        error('Probably only one cfg was passed. Two or more cfgs needed to combine designs')
+    end
+else
+    all_cfg = varargin;
+end
+    
+cfg1 = all_cfg{1};
+cfg2 = all_cfg{2};
 
 dispv(1, 'COMBINE_DESIGNS ignores all the values in cfg2 except for cfg2.files and cfg2.design');
 
@@ -155,3 +176,6 @@ for si = 1:length(cfg2.design.set) % si == set index
 
 end
 
+if numel(all_cfg) > 2
+    ocfg = combine_designs({ocfg all_cfg{3:end}});
+end

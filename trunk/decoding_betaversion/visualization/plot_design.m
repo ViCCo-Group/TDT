@@ -21,8 +21,8 @@
 
 function figure_handle = plot_design(cfg,visible_on)
 
-
-alternative = 1;
+% switch alternative on for a different color scheme
+alternative = 0;
 
 if ~exist('visible_on','var')
     visible_on = 1;

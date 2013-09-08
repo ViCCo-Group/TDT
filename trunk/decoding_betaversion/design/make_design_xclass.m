@@ -187,19 +187,19 @@ end
 
 % Make sure that input has the right orientation
 if size(cfg.files.step,1) == 1
-    warning('cfg.files.step has the wrong orientation. Flipping.'); %#ok<WNTAG>
+    warningv('MAKE_DESIGN:ORIENTATION_STEP','cfg.files.step has the wrong orientation. Flipping.');
     cfg.files.step = cfg.files.step';
 end
 if size(cfg.files.label,1) == 1
-    warning('cfg.files.label has the wrong orientation. Flipping.'); %#ok<WNTAG>
+    warningv('MAKE_DESIGN:ORIENTATION_LABEL','cfg.files.label has the wrong orientation. Flipping.');
     cfg.files.label = cfg.files.label';
 end    
 if size(cfg.files.set,1) == 1
-    warning('cfg.files.set has the wrong orientation. Flipping.'); %#ok<WNTAG>
+    warningv('MAKE_DESIGN:ORIENTATION_SET','cfg.files.set has the wrong orientation. Flipping.');
     cfg.files.set = cfg.files.set';
 end    
 if size(cfg.files.xclass,1) == 1
-    warning('cfg.files.xclass has the wrong orientation. Flipping.'); %#ok<WNTAG>
+    warningv('MAKE_DESIGN:ORIENTATION_XCLASS','cfg.files.xclass has the wrong orientation. Flipping.');
     cfg.files.xclass = cfg.files.xclass';
 end 
 

@@ -94,8 +94,8 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % separately, e.g. with spm_select. This is not part of this example, but 
 % if you do it later, you should end up with the following fields:
 %   cfg.files.name: a 1xn cell array of file names
-%   cfg.files.step: a 1xn vector to indicate what data you want to chunk together (e.g. run numbers)
-%   cfg.files.label: a 1xn vector of labels (for decoding, you can choose 
+%   cfg.files.step: a nx1 vector to indicate what data you want to chunk together (e.g. run numbers)
+%   cfg.files.label: a nx1 vector of labels (for decoding, you can choose 
 %       any two numbers as class labels, normally we use -1 and 1)
 
 %% Third, create your design for the decoding analysis

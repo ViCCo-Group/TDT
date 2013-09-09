@@ -21,9 +21,10 @@ cfg.files.mask =
 % File names (1xn cell array)
 cfg.files.name =  
 % and the other two fields if you use a make_design function (e.g. make_design_cv)
-% a 1xn vector to indicate what data you want to chunk together (e.g. run numbers) 
+% a nx1 vector to indicate what data you want to chunk together (e.g. run numbers) 
 cfg.files.step =
-% any two numbers as class labels, normally we use -1 and 1
+% any numbers as class labels, normally we use -1 and 1. Each file gets a
+% label number (i.e. a nx1 vector)
 cfg.files.label = 
 
 
@@ -48,11 +49,19 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 % Add additional output measures if you like
 % cfg.results.output = {'accuracy_minus_chance', 'AUC'}
 
-%% Nothing needs to be changed below for a standard leave-one-run out cross
-%% validation analysis.
+% Nothing needs to be changed below for a standard leave-one-run out cross
+% validation analysis.
 
-% This creates the leave-one-run-out cross validation design:
-cfg.design = make_design_cv(cfg); 
+% This creates the leave-one-pair-out cross validation design (assuming there is only one step):
+cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
+% If there are several unbalanced steps, use this function:
+% cfg.design = make_design_boot_cv(cfg,100,1); % the 1 keeps test data balanced, too
+% If you have a balanced design, use this function
+% cfg.design = make_design_cv(cfg);
+
+% If you used a bootstrap design, then you might speed up processing using
+% this function:
+cfg = sort_design(cfg);
 
 % Run decoding
 results = decoding(cfg);

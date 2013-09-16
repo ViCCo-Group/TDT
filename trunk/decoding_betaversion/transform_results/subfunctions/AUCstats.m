@@ -8,10 +8,11 @@
 % zAUC - corresponding z-statistic for the AUC
 % p - Significance value of zAUC
 
-% by Thorsten Kahnt
+% rewritten (now more precise, because endpoints included): 2013/16/09
 % adjusted and debugged: 2010 Martin Hebart
 
-function [AUC, zAUC, p] = AUCstats(decision_values, true_labels, labels, plot_on)
+
+function [AUC, zAUC, p] = AUCstats_new(decision_values, true_labels, labels, plot_on)
 
 if ~exist('plot_on','var')
     plot_on = 0;
@@ -21,35 +22,43 @@ if numel(labels)~=2
     error('Number of labels must be 2.')
 end
 
-n1 = sum(true_labels==labels(1));
-n2 = sum(true_labels==labels(2));
+% sort values
+[decision_values,ind] = sort(-decision_values);
+true_labels = true_labels(ind);
 
-% identify thresholds
-thresholds = unique(decision_values);
-n_thresholds = length(thresholds);
+sens_labels = true_labels == labels(1);
+spec_labels = true_labels == labels(2);
+n1 = sum(sens_labels);
+n2 = sum(spec_labels);
 
-% compute ROC
+sensitivity = cumsum(sens_labels)/n1;
+specificity = cumsum(spec_labels)/n2;
 
-sensitivity = zeros(n_thresholds,1);
-specificity = zeros(n_thresholds,1);
-for i = 1:n_thresholds
-    res = decision_values >= thresholds(i);
-    sensitivity(i) = sum(true_labels == labels(1) & res == 1)/n1;
-    specificity(i) = sum(true_labels == labels(2) & res == 0)/n2;
-end
+% handle thresholds (if multiple items present)
+% [ignore,true_ind] = unique(decision_values); 
+[decision_values,true_ind] = sort(decision_values);
+true_ind(decision_values((1:end-1)') == decision_values((2:end)')) = [];
+sensitivity = sensitivity(true_ind);
+specificity = specificity(true_ind);
+
+% AUC needs to start at [0 0] and end at [1 1]
+sensitivity = [0 ; sensitivity ; 1];
+specificity = [0 ; specificity ; 1];
 
 % compute the area under the "curve"
-AUC = -trapz(1-specificity, sensitivity);
+% AUC = trapz(specificity, sensitivity);
+AUC = sum((specificity(2:end) - specificity(1:end-1)).*(sensitivity(2:end) + sensitivity(1:end-1)))/2;
 
 % given you want to see the ROC
 if plot_on
     figure;
-    fpr = 1-specificity;
-    plot(fpr,sensitivity); hold on
+    plot(specificity,sensitivity); hold on
     title(sprintf('AUC = %1.2f', AUC)); xlabel('false positive rate'); ylabel('hit rate')
     plot([0,1], [0,1], 'k')
 end
 
+% This part was taken from Thorsten Kahnt:
+%
 % Mann-Whitney-Wilcoxon rank sum test for AUC according to:
 % Cortes, C. & Mohri, M. (2004). Confidence intervals for the area under the ROC curve. Advances in neural information processing systems.
 % see also: McClish, D.K. (1987). Comparing the Areas under More Than Two Independent ROC Curves. Med Decis Making. 7:149

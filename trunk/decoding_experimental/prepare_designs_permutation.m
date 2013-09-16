@@ -205,8 +205,6 @@ n_samples_per_label = sort(n_samples_per_label);
 % Updated this from Ged Ridgway's uperms function to prevent overflow
 output = prod(n_samples_per_label(end)+1:sum(n_samples_per_label)) / prod(factorial(n_samples_per_label(1:end-1)));
 
-
-
 function output = uniqueperms(input)
     
     input = input(:);

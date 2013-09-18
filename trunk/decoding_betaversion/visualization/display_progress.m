@@ -18,6 +18,8 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
 
     if isfield(cfg, 'sn')
         message = sprintf('Subject: %02d %s: %d/%d', cfg.sn, cfg.analysis, cnt, n_decodings);
+    elseif isfield(cfg, 'display_progress') && isfield(cfg.display_progress, 'string')
+        message = sprintf('%s %s: %d/%d', cfg.display_progress.string, cfg.analysis, cnt, n_decodings);
     else
         message = sprintf('%s: %d/%d', cfg.analysis, cnt, n_decodings);
     end

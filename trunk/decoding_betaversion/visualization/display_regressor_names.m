@@ -49,7 +49,8 @@ n_runs = length(all_runs);
 
 all_names_char = char(all_names);
 
-fprintf('\nNumber of different regressors: %.0f\n',n_names)
+fprintf('\nTotal number of regressors: %.0f\n',size(regressor_names, 2))
+fprintf('Number of different regressors: %.0f\n',n_names)
 fprintf('Number of runs: %.0f\n',n_runs)
 fprintf('Regressor names (and run numbers where regressor occurs):\n')
 for i_name = 1:n_names

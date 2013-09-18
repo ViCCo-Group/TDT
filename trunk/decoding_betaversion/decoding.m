@@ -57,6 +57,8 @@
 %           Default: 0 (no plotting)
 %       cfg.fighandles.plot_selected_voxels (optional): Figure handle to
 %           plot selected voxels (updated in background)
+%       cfg.display_progress.string: Can contain any string that will be
+%           shown in front of the progress display (e.g. 'Bin2/8')
 %
 % DISPLAY:
 %   cfg.plot_design = 1 (default); will plot your design. 

@@ -14,6 +14,13 @@
 %   labelnames: 1xn cell array, containing all label names used in the SPM
 %       design matrix. These are the regressor names that are entered in the
 %       first-level analysis and which should serve as basis for the decoding.
+%       The wildcard '*' is allowed, e.g. in 't*p'. 
+%       You can also pass a regular expression (see doc regexp). For this,
+%       start the labelname with 'regexp:'. Example:
+%           labelnames{1} = 'regexp:^cond1 bin[(1)(2)]$'
+%               will find all regressors mathing '^cond1 bin[(1)(2)]$'
+%           
+%   labels: 1xn vector containing the label for each labelname, e.g. [-1;1]
 %   regressor_names: 2xn or 3xn cell array, containing information about
 %       input files. 
 %       regressor_names is created by the function design_from_spm.
@@ -52,6 +59,9 @@
 %
 % by Martin Hebart 11/06/12, Update Kai 13/04/16, Update Martin 13/06/12
 
+% Update Kai 13/09/19
+%   Introduced the possitility to use regexp directly, when string starts
+%   with 'regexp:'
 % Update Martin 13/06/12
 %   Introduced possibility to use wildcards
 % Update Kai, 13/04/16
@@ -90,8 +100,15 @@ orig_labelnames = labelnames;
 
 for i_input = 1:n_inputs
     
-    % Prepare labelnames to regular expression
-    labelnames{i_input} = wildcard2regexp(orig_labelnames{i_input});
+    % check if current labelname starts with 'regexp:'
+    if length(labelnames{i_input}) >= length('regexp:') && strcmp('regexp:', labelnames{i_input}(1:length('regexp:')))
+        % only remove leading regexp
+        labelnames{i_input}(1:length('regexp:')) = [];
+    else 
+        % convert labelnames to regular expression
+        labelnames{i_input} = wildcard2regexp(orig_labelnames{i_input});
+    end
+        
     % Apply regular expression
     ind = regexp(regressor_names(1,:),labelnames{i_input});
     try label_index = ~cellfun(@isempty,ind);

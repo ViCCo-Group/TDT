@@ -140,7 +140,7 @@ end
 end
 
 % show train design
-subplot(4, 4, pos.train)
+ah_train = subplot(4, 4, pos.train); 
 image([show_train; set_row]);
 title('Training Data')
 
@@ -209,7 +209,9 @@ for rgb = 1:3
 end
 end
 
-subplot(4, 4, pos.test)
+ah_test = subplot(4, 4, pos.test);
+% link to train axis
+try linkaxes([ah_train, ah_test]), catch, warning('Failed to link train and test axis'), end
 image([show_test; set_row])
 title('Test Data')
 

@@ -112,7 +112,14 @@ for i = 1:length(regressors)
     ind2 = unique(cell2mat(ind2));
     
     val = regressors{i}(ind2);
-    bf_numbers(i) = str2double(val);
+    if isempty(val)
+        % although str2double handles this correctly, EEGLab has it's own
+        % version that gives empty output rather than NaN. If user has
+        % EEGLab's str2double in the path this would generate an error message.
+        bf_numbers(i) = NaN;
+    else
+        bf_numbers(i) = str2double(val); 
+    end
     
     %== Get regressor name from regressors with indices ==
     

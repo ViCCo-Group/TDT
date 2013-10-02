@@ -12,7 +12,7 @@
 % adjusted and debugged: 2010 Martin Hebart
 
 
-function [AUC, zAUC, p] = AUCstats_new(decision_values, true_labels, labels, plot_on)
+function [AUC, zAUC, p] = AUCstats(decision_values, true_labels, labels, plot_on)
 
 if ~exist('plot_on','var')
     plot_on = 0;

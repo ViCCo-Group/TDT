@@ -2,9 +2,10 @@
 %
 % This function selects and changes parameters that are used for
 % training the model (for example the cost variable C in SVM) and is an
-% integral part of the decoding toolbox. Currently the only implemented
-% method is 'grid search' in which all combinations of all parameters that
-% should be optimized are searched and the peak is selected.
+% integral part of the decoding toolbox. This function is called from 
+% decoding.m and should not be called directly. Currently the only 
+% implemented method is 'grid search' in which all combinations of all 
+% parameters that should be optimized are searched and the peak is selected.
 %
 % INPUT
 % cfg: structure passed from decoding.m with at least the following fields:

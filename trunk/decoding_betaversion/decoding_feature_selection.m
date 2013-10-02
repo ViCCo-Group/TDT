@@ -1,9 +1,10 @@
 % function [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data)
 % 
 % This function performs feature selection of decoding data and is an
-% integral part of the decoding toolbox. Currently there are two forms of
-% feature selection implemented: filter methods and embedded methods (see
-% Guyon et al, 2002, for what sorts of feature selection exist).
+% integral part of the decoding toolbox. This function is called from 
+% decoding.m and should not be called directly. Currently there are two 
+% forms of feature selection implemented: filter methods and embedded 
+% methods (see Guyon et al, 2002, for what sorts of feature selection exist).
 %
 % INPUT
 % cfg: structure passed from decoding.m with at least the following fields:

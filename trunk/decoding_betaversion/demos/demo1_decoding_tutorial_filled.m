@@ -168,6 +168,8 @@ cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q';
 % Get different outputs
 cfg.results.output = {'accuracy_minus_chance', 'binomial_probability'};
 
+cfg.plot_selected_voxels = 30; % Plot every 30' step
+
 %% Fifth, run the decoding analysis
 
 % Fingers crossed it will not generate any error messages ;)

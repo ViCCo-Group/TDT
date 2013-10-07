@@ -21,9 +21,15 @@
 %    cfg                 : struct containing configuration information
 %    cfg.scale.method    : 'z', 'min0max1', 'none'. Defines type of scaling.
 %    cfg.scale.estimation: 'all', 'across' or 'none'. When all is selected,
-%                          all data is scaled, and when across is selected, 
-%                          data is scaled for training separately than for 
-%                          testing (slower).
+%                          the scaling parameter are estimated and applied 
+%                          to all data. When across is selected, the 
+%                          scaling parameters are estimated in each step 
+%                          on the training data only, and are then applied 
+%                          to both training and test data separately 
+%                         (slower). Remark: Because no class information is 
+%                         used to estimate the scaling parameters, we do
+%                         not believe that this can lead to any "double
+%                         dipping".
 %    [cfg.scale.cutoff]  : optional input for outlier reduction, 1x2 vector
 %                         ([lower bound upper bound])
 %    data                : contains samples to be scaled

@@ -58,6 +58,14 @@ else
     fighdl = gcf;
 end
 
+%% select the ROI figure for plotting
+try
+    set(0,'CurrentFigure',fighdl)
+catch e
+    e
+    warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure is close. Creating a new one')
+    fighdl = figure('name', 'Online ROI');
+end
 %%
 % position_index: indices of all voxel positions
 % sz: size of volume (optional)
@@ -92,7 +100,7 @@ for i = 1:n_vox
     large_faces_matrix(xpos,:) = faces_matrix + (i-1)*8;
 end
 
-clf
+clf(fighdl)
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*length(position_index),1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);

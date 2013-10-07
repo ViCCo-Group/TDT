@@ -1,11 +1,14 @@
 % This script is a demo showing some simple decoding on simulated toy data.
 % The toy data are simple matlab matrices and no "real" fMRI or EEG data.
 
+clear all
+dbstop if error % if something goes wrong
+
 fpath = fileparts(fileparts(mfilename('fullpath')));
 addpath(fpath)
 
-clear all
-dbstop if error % if something goes wrong
+% initialize TDT & cfg
+cfg = decoding_defaults;
 
 %% Set the output directory where data will be saved
 % cfg.results.dir = % e.g. 'toyresults'

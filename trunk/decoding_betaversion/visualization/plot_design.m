@@ -235,7 +235,7 @@ title('Test Data')
 
 set(gca, 'YTick', 1:size(cfg.files.name, 1))
 
-% add file description on the left if available
+% add file description on the right if available
 if isfield(cfg.files, 'descr')
     descr_and_set = cfg.files.descr;
     descr_and_set{end+1} = ' ';

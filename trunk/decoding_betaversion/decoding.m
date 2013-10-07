@@ -119,8 +119,8 @@
 %       Will only be used, if cfg.design.method ends on "_kernel"
 %   cfg.decoding.kernel.pass_vectors: If 1, the original data will be passed 
 %       in addition to the kernel as data_train.vectors/data_test.vectors
-%   cfg.results.overwrite: Should existing results be overwritten [default = 0]
-%   cfg.results.setwise: Should results of each set be returned separately [default = 0]
+%   cfg.results.overwrite: Overwrite existing result file(s) [default = 0]
+%   cfg.results.setwise: Save results of each set separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
 %   cfg.sn: Provide subject number for status messages
 %   cfg.verbose: How much output should be printed to the screen
@@ -385,7 +385,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         end
         try
             % plot searchlight with brain projection
-            plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index, [], cfg.fighandles.plot_selected_voxels);
+            cfg.fighandles.plot_selected_voxels = plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index, [], cfg.fighandles.plot_selected_voxels);
         catch
             warningv('DECODING:PlotSelectedVoxelsFailed', 'plot_selected_voxels failed');
         end
@@ -645,7 +645,9 @@ else
     % Run quick test that method is the same for both:
     if ~strcmpi(func2str(cfg.decoding.fhandle_train),[cfg.decoding.software '_train']) || ...
        ~strcmpi(func2str(cfg.decoding.fhandle_test),[cfg.decoding.software '_test'])
-       error('Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!') 
+       warningv('decoding_basic_checks:decoding_fhandle_name_mismatch', 'Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!')
+       cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
+       cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
     end
 end
 

@@ -57,7 +57,7 @@ end
 % accuracy = mean(zcorr_within > zcorr_between); % not needed here, but leave me here in case
 
 % force finite values for later z-transformation
-if any(abs(corr_within==1))
+if any(abs(corr_within==1)) || any(abs(corr_between==1))
 warning('CORRELATION_CLASSIFIER:ZCORRINF','Correlations of +1 or -1 found. Correcting to +/-0.99999 to avoid infinity for z-transformed correlations!')
 corr_within(corr_within==1) = 0.99999; % forces finite values
 corr_within(corr_within==-1) = -0.99999; % forces finite values

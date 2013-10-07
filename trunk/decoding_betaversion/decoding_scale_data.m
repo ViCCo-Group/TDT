@@ -12,6 +12,10 @@
 % set, so scaling can be performed using all data samples, which is more 
 % stable (recommended; estimation = 'all').
 %
+% To prevent dividing by 0 if input data has no variance, i.e. all input
+% data in one dimension/voxel are the same:
+%   'min0max1': will set max = min+1
+%          'z': will set std = 1
 %
 % Input variables:
 %    cfg                 : struct containing configuration information
@@ -36,6 +40,8 @@
 % TODO: introduce column scaling (would need to change position of scaling
 % function)
 
+% History: removed bug that min0max1 did not work when min==max
+
 function [data,scaleparams] = decoding_scale_data(cfg,data,scaleparams)
 
 % if no scaling is wanted, return to invoking function
@@ -50,6 +56,8 @@ if ~exist('scaleparams','var') || isempty(scaleparams)
         case 'min0max1'
             scaleparams.samples_min = min(data,[],1);
             scaleparams.samples_max = max(data,[],1);
+            min_eq_max = scaleparams.samples_min==scaleparams.samples_max; % check if in any dimension min == max
+            scaleparams.samples_max(min_eq_max) = scaleparams.samples_min(min_eq_max) + 1; % prevents divide by 0, if min == max
         case 'z'
             scaleparams.samples_mean = mean(data);
             scaleparams.samples_std = std(data);

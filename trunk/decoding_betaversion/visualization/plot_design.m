@@ -35,10 +35,10 @@ end
 
 %% define color range
 if ~alternative
-max_color = [.7, .5, .2]; % RGB values for the max color -- min color is black at the moment
+    max_color = [.7, .5, .2]; % RGB values for the max color -- min color is black at the moment
 else
-colors = jet(64);
-max_color = colors(1,:);
+    colors = jet(64);
+    max_color = colors(1,:);
 end
 background_color = [.5, .5, .5];
 
@@ -62,10 +62,28 @@ max_label = max(cfg.design.label(:));
 
 figure_position = round(get(0,'defaultFigurePosition') .* [1 1 1.3 1]); % increase width by 30%
 if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
-    figure(cfg.fighandles.plot_design)
-%     warning('Ignoring visible_on at the moment') % MH: deactivated this
-%     warning, because it would come always. What does it mean?
+    % try to reuse the old figure handel
+    try
+        figure(cfg.fighandles.plot_design)
+        figure_handle = cfg.fighandles.plot_design; % return currrent handle
+    catch e
+        % if the user already closed the figure, open a new one
+        e
+        warning('Could not use specified figure handle, creating a new figure')
+        % Remark: Same as in else-part above, please keep in synch
+        if visible_on
+            figure_handle = figure('name', 'Decoding Design','visible','on', 'Position', figure_position);
+        else
+            % TODO: problem with visible off: when opening .fig, figure remains
+            % invisible
+            figure_handle = figure('name', 'Decoding Design','visible','off', 'Position', figure_position);
+        end
+    end
+    
+    %     warning('Ignoring visible_on at the moment') % MH: deactivated this
+    %     warning, because it would come always. What does it mean?
 else
+    % Remark: Same as in catch-part above, please keep in synch
     if visible_on
         figure_handle = figure('name', 'Decoding Design','visible','on', 'Position', figure_position);
     else
@@ -97,7 +115,7 @@ else
 end
 
 % normalize set values for plotting
-set_row = set_row - min(set_row) + 1; 
+set_row = set_row - min(set_row) + 1;
 set_row = set_row / max(set_row);
 
 % create a 3d version for RGB plotting
@@ -118,29 +136,29 @@ end
 %% create train design (incl. labels)
 
 if ~alternative
-clear show_train
-for rgb = 1:3
-    currcol = cfg.design.train;
-    currcol(cfg.design.train == 0) = background_color(rgb);
-    currcol(cfg.design.train == 1) = (cfg.design.label(cfg.design.train == 1)-min_label)./(max_label-min_label).*max_color(rgb);
-    show_train(:, :, rgb) = currcol;
-end
-
+    clear show_train
+    for rgb = 1:3
+        currcol = cfg.design.train;
+        currcol(cfg.design.train == 0) = background_color(rgb);
+        currcol(cfg.design.train == 1) = (cfg.design.label(cfg.design.train == 1)-min_label)./(max_label-min_label).*max_color(rgb);
+        show_train(:, :, rgb) = currcol;
+    end
+    
 else
-selectind = cfg.design.train == 1;
-colorselect = (cfg.design.label(selectind) - min_label)./(max_label-min_label);
-colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
-show_train_rgb = selectind;
-show_train = repmat(selectind,[1 1 3]);
-
-for rgb = 1:3
-    show_train_rgb(selectind) = colors(colorselect,rgb);
-    show_train(:,:,rgb) = show_train_rgb;
-end
+    selectind = cfg.design.train == 1;
+    colorselect = (cfg.design.label(selectind) - min_label)./(max_label-min_label);
+    colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
+    show_train_rgb = selectind;
+    show_train = repmat(selectind,[1 1 3]);
+    
+    for rgb = 1:3
+        show_train_rgb(selectind) = colors(colorselect,rgb);
+        show_train(:,:,rgb) = show_train_rgb;
+    end
 end
 
 % show train design
-ah_train = subplot(4, 4, pos.train); 
+ah_train = subplot(4, 4, pos.train);
 image([show_train; set_row]);
 title('Training Data')
 
@@ -169,7 +187,7 @@ if length(filestart) > 15
     filerest = [repmat('...', size(fnames_char, 1), 1), fnames_char(:, n_match+1:end)]; % get not common part + initial '...'
     fnames_char = filerest;
 else
-	% keep fnames_char as they are (not cut)
+    % keep fnames_char as they are (not cut)
 end
 
 % add two extra rows, one empty, one with set
@@ -187,26 +205,26 @@ xlabel('Training Data - Step number')
 %% same for testset
 
 if ~alternative
-
-clear show_test
-for rgb = 1:3
-    currcol = cfg.design.train;
-    currcol(cfg.design.test == 0) = background_color(rgb);
-    currcol(cfg.design.test == 1) = (cfg.design.label(cfg.design.test == 1)-min_label)./(max_label-min_label).*max_color(rgb);
-    show_test(:, :, rgb) = currcol;
-end
+    
+    clear show_test
+    for rgb = 1:3
+        currcol = cfg.design.train;
+        currcol(cfg.design.test == 0) = background_color(rgb);
+        currcol(cfg.design.test == 1) = (cfg.design.label(cfg.design.test == 1)-min_label)./(max_label-min_label).*max_color(rgb);
+        show_test(:, :, rgb) = currcol;
+    end
     
 else
-selectind = cfg.design.test == 1;
-colorselect = (cfg.design.label(selectind) - min_label)./(max_label-min_label);
-colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
-show_test_rgb = selectind;
-show_test = repmat(selectind,[1 1 3]);
-
-for rgb = 1:3
-    show_test_rgb(selectind) = colors(colorselect,rgb);
-    show_test(:,:,rgb) = show_test_rgb;
-end
+    selectind = cfg.design.test == 1;
+    colorselect = (cfg.design.label(selectind) - min_label)./(max_label-min_label);
+    colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
+    show_test_rgb = selectind;
+    show_test = repmat(selectind,[1 1 3]);
+    
+    for rgb = 1:3
+        show_test_rgb(selectind) = colors(colorselect,rgb);
+        show_test(:,:,rgb) = show_test_rgb;
+    end
 end
 
 ah_test = subplot(4, 4, pos.test);
@@ -252,24 +270,24 @@ clear show_legends
 unique_labels = sort(unique(cfg.design.label(:)))';
 if ~alternative
     
-for rgb = 1:3
-    currcol = (unique_labels-min_label)./(max_label-min_label).*max_color(rgb);
-    currcol(end+1) = background_color(rgb);
-    show_legend(:, :, rgb) = currcol;
-end
-
-else
-colorselect = (unique_labels-min_label)./(max_label-min_label);
-colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
-show_legend = zeros(1,size(colorselect,2),3);
-
-for rgb = 1:3
-    show_legend_rgb = colors(colorselect,rgb);
-    show_legend(1,:,rgb) = show_legend_rgb;
-end
-show_legend(:,end+1,:) = background_color;
-end
+    for rgb = 1:3
+        currcol = (unique_labels-min_label)./(max_label-min_label).*max_color(rgb);
+        currcol(end+1) = background_color(rgb);
+        show_legend(:, :, rgb) = currcol;
+    end
     
+else
+    colorselect = (unique_labels-min_label)./(max_label-min_label);
+    colorselect = ceil((size(colors,1)-1) * colorselect) + 1;
+    show_legend = zeros(1,size(colorselect,2),3);
+    
+    for rgb = 1:3
+        show_legend_rgb = colors(colorselect,rgb);
+        show_legend(1,:,rgb) = show_legend_rgb;
+    end
+    show_legend(:,end+1,:) = background_color;
+end
+
 subplot(8, 4, pos.legend)
 image(show_legend)
 set(gca, 'YTick', [0.75, 1.25])
@@ -295,14 +313,16 @@ if ~isempty(filestart)
 end
 
 % result dir
-if isfield(cfg,'results') && isfield(cfg.results, 'dir')
+if isfield(cfg,'results') && isfield(cfg.results, 'write') && ~cfg.results.write
+    outtext{end+1} = ['Results: results will not be written (cfg.results.write = 0)'];
+elseif isfield(cfg,'results') && isfield(cfg.results, 'dir')
     outtext_mrow = ['Results: ' cfg.results.dir];
     while ~isempty(outtext_mrow)
         outtext{end+1} = outtext_mrow(1:min(text_maxlength, end));
         outtext_mrow(1:min(text_maxlength, end)) = [];
     end
 else
-    outtext{end+1} = ['Results: not written to file'];
+    outtext{end+1} = ['Results: directory not defined'];
 end
 
 % start & endtime, if available

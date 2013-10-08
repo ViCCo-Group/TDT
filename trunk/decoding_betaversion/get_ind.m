@@ -5,21 +5,21 @@
 % analysis (i.e. the current searchlight for searchlight decoding or the
 % current ROI for ROI decoding).
 %
+% Masks (e.g. ROIs) can be passed as passed_data.masks.mask_data{}. They are
+% a binary vector of the same size as the (original) image data (i.e. they
+% are exactly as loaded from the file).
+%
 % Martin Hebart, 2011/06/13
 
-% TODO comment: At current, we need to load ROI masks again here, because
-% they may overlap and there is no easy way to assign indices. It may
-% however be possible to overcome this problem in the mask definition.
-% Since we can assume that masks don't overlap a lot, we could load all
-% data for all masks, i.e. that some data would be loaded twice. Then we
-% would pass mask indices for each ROI. This should be done in a future
-% release.
+
 
 % HISTORY
-% KAI, 11/07/01
+% Kai, 13/10/08
+%   masks (ROIs) can be passed as passed_data.masks.mask_data{}
+% Kai, 11/07/01
 %   wrap-around correction and cfg.searchlight.wrap_control added
 
-function indexindex = get_ind(cfg,mask_index,i_decodingstep,sz,sl_template)
+function indexindex = get_ind(cfg,mask_index,i_decodingstep,sz,sl_template,passed_data)
 
 if strcmpi(cfg.analysis,'searchlight')
     % Get the current searchlight position as index
@@ -59,10 +59,15 @@ elseif strcmpi(cfg.analysis,'ROI')
         mask_names = num2cell(mask_names,2);
     end
 
-    fname = mask_names{i_decodingstep};
-    hdr = read_header(cfg.software,fname); % get headers of mask
-    mask = read_image(cfg.software,hdr); % get mask
-    
+    if isfield(passed_data, 'masks')
+        mask = passed_data.masks.mask_data{i_decodingstep};
+    else
+        % load masks from file
+        fname = mask_names{i_decodingstep};
+        hdr = read_header(cfg.software,fname); % get headers of mask
+        mask = read_image(cfg.software,hdr); % get mask
+    end
+        
     % Select indices that relate to the ROI within mask_indices
     [c,indexindex] = intersect(mask_index,find(mask));
     

@@ -155,6 +155,9 @@
 %              .mask_index.
 %       .mask_index: indices of those voxels that were selected by the
 %                    mask minus those that are NaN in the input data.
+%                    These are only the voxels of the input data that  were 
+%                    masked, NOT ROI masks. See .masks.mask_data{} below 
+%                    on how to pass ROI masks.
 %       .files: Contains file information as in cfg.files, especially
 %               filenames of datafiles (.name) and mask(s) (.mask) as cell
 %               of strings
@@ -165,6 +168,13 @@
 %             dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
 %                   calculated)
+%       Optional fields (passed_data):
+%       .masks.mask_data{}: each cell contains one binary mask of the same 
+%                           size as the original images containing the mask 
+%                           specified in .files.mask{}. This input is 
+%                           optional for passed_data. Remark: mask_data
+%                           does not contain the indices as mask_index, but
+%                           the same data as loaded from a maskfile.
 
 
 % TODO: add check to basic checks that chosen software can perform
@@ -173,6 +183,8 @@
 %   output
 
 % HISTORY
+% 2013-09-05 Kai
+%   Added passed_data.masks.mask_data{} to provide ROI data.
 % 2013-09-05 Kai
 %   Changed Kernel passing, now: data_train.kernel/data_test.kernel.
 %   Pervious version had too much potential for confusion. 
@@ -377,7 +389,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     end
     
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
-    indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template);
+    indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template,passed_data);
 
     if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
         if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')

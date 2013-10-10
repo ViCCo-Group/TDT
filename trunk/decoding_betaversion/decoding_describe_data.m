@@ -1,8 +1,8 @@
 % function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
-% 
+%
 % This functions creates the link between the file names of regressors
 % (e.g. beta_0001.img) and its corresponding label name (e.g. button press),
-% label number (e.g. -1 or 1) and decoding step number (e.g. run 1). These 
+% label number (e.g. -1 or 1) and decoding step number (e.g. run 1). These
 % inputs are needed to create a design matrix with all make_design
 % functions. Wildcards (*) can be used to include all files matching a part
 % of the string (e.g. '*name*' will include all regressor names that contain
@@ -14,15 +14,15 @@
 %   labelnames: 1xn cell array, containing all label names used in the SPM
 %       design matrix. These are the regressor names that are entered in the
 %       first-level analysis and which should serve as basis for the decoding.
-%       The wildcard '*' is allowed, e.g. in 't*p'. 
+%       The wildcard '*' is allowed, e.g. in 't*p'.
 %       You can also pass a regular expression (see doc regexp). For this,
 %       start the labelname with 'regexp:'. Example:
 %           labelnames{1} = 'regexp:^cond1 bin[(1)(2)]$'
 %               will find all regressors mathing '^cond1 bin[(1)(2)]$'
-%           
+%
 %   labels: 1xn vector containing the label for each labelname, e.g. [-1;1]
 %   regressor_names: 2xn or 3xn cell array, containing information about
-%       input files. 
+%       input files.
 %       regressor_names is created by the function design_from_spm.
 %       It contains for each file in cfg.files (same order):
 %           regressor_names(1,:) - Class name from SPM, and bin_ number, if
@@ -31,13 +31,13 @@
 %           regressor_names(3,:) [OPTIONAL] - Full name of SPM regressor
 %   beta_dir: Directory where images are stored that are used for decoding
 %       (e.g. beta_0001.img)
-%   xclass (optional): Useful for simple cross classification. Assigns 
-%       separate numbers to each label. The cross classification will go from 
+%   xclass (optional): Useful for simple cross classification. Assigns
+%       separate numbers to each label. The cross classification will go from
 %       class 1 to class 2. For classification, an example could look like this:
 %       labelnames = {'traininglabelAX','traininglabelBX','testlabelAY','testlabelBY'};
 %       labels = [1 -1 1 -1];
 %       xclass = [1 1 2 2];
-%       In this case, you classify A vs. B (e.g. face vs. house) and want 
+%       In this case, you classify A vs. B (e.g. face vs. house) and want
 %       to generalize (cross-classify) from X to Y (e.g. from stimulus left to
 %       right). Because you classify A vs. B, your labels will be 1 -1 1 -1
 %       (if you want to classify X vs. Y, then they would be 1 1 -1 -1).
@@ -53,7 +53,7 @@
 %         cfg.files.set: set number for each file
 %         cfg.files.xclass: cross-class information for each file (only
 %           necessary for cross-class decoding)
-%         cfg.files.descr: short text description of the file, normally the 
+%         cfg.files.descr: short text description of the file, normally the
 %           regressor names from SPM (more or less)
 %
 %
@@ -84,15 +84,27 @@ if length(labelnames) ~= length(labels)
     error('Label names have to be of equal size than label numbers!')
 end
 
-if beta_dir(end) == filesep % prevents some stupid spm_select bug
-    beta_dir = beta_dir(1:end-1);
-    if beta_dir(end) == ':' % also because of spm_select bug
-        error('At current, results cannot be saved in basic directories such as C:\')
+% check if beta_dir is a directory or a cellstr (in this case, assume it's the name of the input files directly)
+if iscellstr(beta_dir)
+    dispv(1, 'beta_dir is a cellstr, using the inputs directly as beta_names (e.g. for behavioural decoding)')
+    beta_names = beta_dir;
+else
+    if beta_dir(end) == filesep % prevents some stupid spm_select bug
+        beta_dir = beta_dir(1:end-1);
+        if beta_dir(end) == ':' % also because of spm_select bug
+            error('At current, results cannot be saved in basic directories such as C:\')
+        end
     end
-end
-beta_names = get_filenames(cfg.software,beta_dir,'beta*.img');
-if isempty(beta_names)
-    error('No img-files starting with ''beta'' found in %s',beta_dir)
+    dispv(1, 'getting betas from %s', beta_dir)
+    % get image and nii files
+    beta_names = get_filenames(cfg.software,beta_dir,'beta*.img');
+    beta_names = [beta_names; get_filenames(cfg.software,beta_dir,'beta*.nii')];
+    
+    if isempty(beta_names)
+        if isempty(beta_names)
+            error('No img-files starting with ''beta'' found in %s',beta_dir)
+        end
+    end
 end
 
 n_inputs = length(labelnames);
@@ -104,19 +116,19 @@ for i_input = 1:n_inputs
     if length(labelnames{i_input}) >= length('regexp:') && strcmp('regexp:', labelnames{i_input}(1:length('regexp:')))
         % only remove leading regexp
         labelnames{i_input}(1:length('regexp:')) = [];
-    else 
+    else
         % convert labelnames to regular expression
         labelnames{i_input} = wildcard2regexp(orig_labelnames{i_input});
     end
-        
+    
     % Apply regular expression
     ind = regexp(regressor_names(1,:),labelnames{i_input});
     try label_index = ~cellfun(@isempty,ind);
-    % catch for users without cellfun
-    catch, label_index = zeros(1,length(ind)); for i = 1:length(ind), label_index(i) = ~isempty(ind{i}); end %#ok<CTCH> 
+        % catch for users without cellfun
+    catch, label_index = zeros(1,length(ind)); for i = 1:length(ind), label_index(i) = ~isempty(ind{i}); end %#ok<CTCH>
     end
-        
-        
+    
+    
     if ~any(label_index)
         error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',orig_labelnames{i_input})
     end

@@ -33,19 +33,19 @@ function save_fig(filename, cfg)
         formats = {'-dpng', '-depsc2'}; % list all formats that you want to save the figure as
     end
 
-    set(gcf, 'InvertHardCopy', 'off');
-    % get old color for recovery
-    oldcolor = get(gcf, 'color');
-    % but set background to white
-    set(gcf, 'color', 'white');
-
     try
         dispv(2, '%s', ['Saving figure as ' filename '.fig'])
         saveas(gcf, filename, 'fig')
     catch %#ok<CTCH>
         warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
     end
-        
+
+    set(gcf, 'InvertHardCopy', 'off');
+    % get old color for recovery
+    oldcolor = get(gcf, 'color');
+    % but set background to white
+    set(gcf, 'color', 'white');    
+    
     for f_ind = 1:length(formats)
         curr_format = formats{f_ind};
         try

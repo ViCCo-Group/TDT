@@ -137,10 +137,13 @@ all_ind = cell2mat(all_ind);
 % Now fill all_perms by picking the appropriate row (in a for-loop)
 ct = 0;
 for i_step = 1:n_steps
+    curr_step = all_steps(i_step);
+    
     curr_row_ind = all_ind(:,i_step);
     curr_row = step_perms{i_step}(curr_row_ind,:);
     row_length = size(curr_row,2);
-    all_perms(:,ct+1:ct+row_length) = curr_row;
+%     all_perms(:,ct+1:ct+row_length) = curr_row; % OLD
+    all_perms(:,cfg.files.step == curr_step) = curr_row;
     ct = ct+row_length;
 end
 

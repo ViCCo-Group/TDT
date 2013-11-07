@@ -22,6 +22,10 @@ if ~isempty(varargin)
     msg = sprintf(msg, varargin{:});
 end
 
+if ~ischar(msg_id)
+    error('First argument must be of type char, but is not, please check')
+end
+
 global reports %#ok
 field_id_init = 'reports.warning'; % to save flags for warning
 stack_id_init = 'reports.warnstc'; % to save full dbstack

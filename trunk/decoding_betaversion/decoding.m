@@ -309,7 +309,7 @@ if isfield(cfg.searchlight,'subset')
 end
 
 for i_output = 1:n_outputs
-    outname = cfg.results.output{i_output};
+    outname = char(cfg.results.output{i_output}); % char necessary to get name of objects
     
     if strcmp(cfg.analysis, 'searchlight')
         % use number of voxels to allocate space independent of number of
@@ -787,7 +787,11 @@ if ischar(cfg.files.name)
 end
 
 if length(cfg.files.name) ~= length(unique(cfg.files.name))
-    warningv('BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!')
+    if isfield(cfg, 'basic_checks') && isfield(cfg.basic_checks, 'DoubleFilenameEntriesOk') && cfg.basic_checks.DoubleFilenameEntriesOk ~= 1
+        error('BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!! Set cfg.basic_checks.DoubleFilenameEntriesOk = 1 to allow double file names.')
+    else
+        warningv('BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!')
+    end
 else
     dispv(2,'  Check for double names in cfg.files.name: No double entries found.')
 end

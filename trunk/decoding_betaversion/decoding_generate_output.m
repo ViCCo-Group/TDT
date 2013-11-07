@@ -29,7 +29,8 @@ end
 
 for i_output = 1:n_outputs
 
-    outname = cfg.results.output{i_output};
+    curr_output = cfg.results.output{i_output};
+    outname = char(curr_output); % char necessary for classes
 
     % in case chance-level is not provided (which should only happen for
     % parameter selection or feature selection where it doesn't really matter
@@ -52,7 +53,7 @@ for i_output = 1:n_outputs
 %             return an (optional) chancelevels if asked?
     end
     
-    output = decoding_transform_results(outname,decoding_out,chancelevel,cfg,model);
+    output = decoding_transform_results(curr_output,decoding_out,chancelevel,cfg,model);
 
     % This is a lazy initialization (Martin would call it workaround) for
     % the case in which the output has more than one element (e.g. weights
@@ -73,7 +74,7 @@ for i_output = 1:n_outputs
     if cfg.results.setwise
         for i_set = 1:n_sets
             current_set = unique_sets(i_set);
-            output = decoding_transform_results(outname,decoding_out(cfg.design.set == current_set),chancelevel,cfg,model);
+            output = decoding_transform_results(curr_output,decoding_out(cfg.design.set == current_set),chancelevel,cfg,model);
 
             % This is a lazy initialization (Martin would call it workaround) for
             % the case in which the output has more than one element (e.g. weights

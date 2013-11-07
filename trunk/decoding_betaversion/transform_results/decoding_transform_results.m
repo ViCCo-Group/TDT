@@ -14,6 +14,8 @@
 % accuracy: decoding accuracy
 % accuracy_minus_chance: decoding accuracy minus chance level (useful for 
 %   SPM 2nd level)
+% decision_values: 'raw' decision values for all input patterns as returned 
+%   by the method
 % sensitivity: accuracy of first label
 % sensitivity_minus_chance: sensitivity minus chance level
 % specificity: accuracy of second label
@@ -58,6 +60,7 @@
 
 function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
 
+%% If method is a string
 if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
@@ -66,6 +69,12 @@ if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
     
     if strcmpi(method, 'accuracy_minus_chance')
         output = output - chancelevel; % subtract chancelevel from all output entries
+    end
+
+elseif strcmpi(method, 'decision_values')
+    output = cell(size(decoding_out));
+    for step_ind = 1:length(decoding_out)
+        output.decision_value{step_ind} = decoding_out(step_ind).decision_values;
     end
     
 elseif strcmpi(method, 'sensitivity') || strcmpi(method, 'sensitivity_minus_chance') % where the first label is correct
@@ -145,12 +154,21 @@ elseif strcmpi(method, 'zcorr')
     end
     output = mean(atanh(output_sep)); % z-transform
     
-else % all other methods
+elseif ischar(method) % all other methods
     
     fhandle = str2func(['transres_' method]);
     output = feval(fhandle,decoding_out,chancelevel,cfg,model);
     % e.g. if method = 'yourmethod', this calls:
     %  output = transres_yourmethod(decoding_out,chancelevel,cfg,model);
+    
+elseif isobject(method)
+    % use passed handle directly and return
+    output = method.apply(decoding_out,chancelevel,cfg,model);
+    
+else
+    error('Dont know how to handle method %s', method)
+    
+end
     
 end
 

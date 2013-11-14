@@ -75,10 +75,10 @@ if n_labels > 2, error('Correlation classifier cannot yet deal with more than tw
 %     test{i_label} = mean(vectors_test(labels_test==labels(i_label),:),1);
 % end
 
-% check that number of voxels is > 1
-if size(vectors_train, 2) == 1 % if only one voxel is present, a correlation is not possible
+% check that number of voxels is > 2
+if size(vectors_train, 2) <= 2 % if less than two voxels are present, a correlation is not possible
 
-    warning('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxel (may happen at borders of mask). Setting value to NaN!')
+    warning('CORRELATION_CLASSIFIER:LESSTHAN2VOXLS','Searchlight or ROI with <= 2 voxels (may happen at borders of mask). Setting value to NaN!')
 
     decision_values = nan;
     predicted_labels = nan;
@@ -106,14 +106,15 @@ else % normal case in which more than one voxel is present
     % translate to Fisher's z transformed values
     zcorr = atanh(corrmat);
 
+    class_vote = zeros(length(labels_test), length(unique_train_labels));
     % get average zcorr for each class for each test pattern
     for u_train_label_ind = 1:length(unique_train_labels)
         curr_label = unique_train_labels(u_train_label_ind);
-        class_vote(:, u_train_label_ind) = mean(zcorr(labels_train==curr_label, :), 2);
+        class_vote(:, u_train_label_ind) = mean(zcorr(labels_train==curr_label, :), 1); % get mean z-correlation for each pattern for each class
     end
     
-    % get the maximum in each row -- this is the class that was voted
-    % maximally for
+    % get the maximum in each row -- this is the class each pattern "voted"
+    % for (i.e. had the highest correlation with the current target pattern)
     [max_val, max_ind] = max(class_vote, [], 2);
     
     % translate max_ind back to predicted class

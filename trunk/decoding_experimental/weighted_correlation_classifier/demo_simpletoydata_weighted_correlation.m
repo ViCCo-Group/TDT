@@ -102,9 +102,7 @@ pass_data.dim = [length(set1.mean), 1, 1]; % add dimension information of the or
 %% Set the analysis that should be performed (here we only want to do 1
 % decoding)
 cfg.analysis = 'wholebrain';
-cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see the model
-
-warning('TODO: Make decision_values work!')
+cfg.results.output = {'accuracy', 'model_parameters', 'decision_values'}; % add if you want to see the model
 
 %% Nothing needs to be changed below for a standard leave-one-run out cross validation analysis.
 % Create a leave-one-run-out cross validation design:

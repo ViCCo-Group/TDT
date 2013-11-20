@@ -31,11 +31,11 @@ cfg.decoding.software = 'weighted_correlation_classifier';
 
 %% generate some toy data
 % define number of "runs" and center means
-nruns = 30; % lets simulate we have n runs
+nruns = 6; % lets simulate we have n runs
 
 % we need at least 3 dimensions here, because correlations is not defined
-% for 2 datapoints
-ndims = 3;
+% for 2 or less datapoints
+ndims = 2;
 
 %% Data Generation: Specify data means
 work_both = 1;  % 0: only euclidean, not correlation, 1: both
@@ -45,7 +45,8 @@ if work_both
     % Data means that works for correlation and euclidean distance
     set1.mean = randperm(ndims)*3;
     % make this pretty different from set1.mean
-    set2.mean = set1.mean([ceil(length(set1.mean)/2):end, 1:floor(length(set1.mean)/2)]) ; % should have the same dim as set1, otherwise it wont work (and would not make sense, either)
+    splitpoint = floor(length(set1.mean)/2);
+    set2.mean = set1.mean([(splitpoint+1):end, 1:splitpoint]) ; % should have the same dim as set1, otherwise it wont work (and would not make sense, either)
 
 elseif ~work_both
     

@@ -105,9 +105,9 @@ if n_labels > 2, error('Correlation classifier cannot yet deal with more than tw
 if strcmp(pdist_distance, 'correlation')
     if size(vectors_train, 2) <= 2 % if less than two voxels are present, a correlation is not possible
         warning('DISTANCE_CLASSIFIER:CORRELATION_LESSTHAN2VOXLS','Searchlight or ROI with <= 2 voxels (may happen at borders of mask). Setting value to NaN!')
-        decision_values = nan;
-        predicted_labels = nan;
-        not_unique = nan;
+        decision_values = nan(length(labels_test), length(unique_train_labels));
+        predicted_labels = nan(length(labels_test), 1);
+        not_unique = nan(length(labels_test), 1);
         return
     end
 end

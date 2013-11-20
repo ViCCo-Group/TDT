@@ -80,15 +80,9 @@ if size(vectors_train, 2) <= 2 % if less than two voxels are present, a correlat
 
     warning('CORRELATION_CLASSIFIER:LESSTHAN2VOXLS','Searchlight or ROI with <= 2 voxels (may happen at borders of mask). Setting value to NaN!')
 
-    decision_values = nan;
-    predicted_labels = nan;
-    not_unique = nan;
-
-    % use this if correlating the man only
-    % corr_within(1,1) = correl(train{1},test{1});
-    % corr_within(2,1) = correl(train{2},test{2});
-    % corr_between(1,1) = correl(train{1},test{2});
-    % corr_between(2,1) = correl(train{2},test{1});
+    decision_values = nan(length(labels_test), length(unique_train_labels));
+    predicted_labels = nan(length(labels_test), 1);
+    not_unique = nan(length(labels_test), 1);
 
 else % normal case in which more than one voxel is present
 

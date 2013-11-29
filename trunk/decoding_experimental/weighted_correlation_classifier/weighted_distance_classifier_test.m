@@ -5,7 +5,7 @@ if isstruct(data_test), error('This method requires training vectors in data_tes
 switch lower(cfg.decoding.method)
     
     case 'classification'
-        [predicted_labels decision_values not_unique] = weighted_distance_classifier(labels_test,data_test,model,cfg.decoding.pdist_distance);
+        [predicted_labels decision_values not_unique] = weighted_distance_classifier(labels_test,data_test,model,cfg.decoding.distance_classifier.pdist_distance,cfg.decoding.distance_classifier.mean_before);
         
     case 'classification_kernel'
         % Develop: If you implement this, adapt error at the beginning

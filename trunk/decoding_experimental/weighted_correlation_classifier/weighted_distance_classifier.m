@@ -4,14 +4,12 @@
 % the correlation to all training vectors.
 %
 % At the moment, the following pdist methods are implemented
-%   'correlation'
+%   'correlation': because it's a distance, 1-correlation will be used
 %   'euclidean'
+%   'cosine'
 % More methods can be implemented. Just make sure that
 %   - values are transformed into something that can be averaged (e.g.
 %       z-transformation for correlation)
-%   - check if larger or smaller values indicate that test patterns are
-%       closer (e.g. larger values for correlation, but smaller for
-%       euclidean distance)
 %
 % In detail, it does:
 %
@@ -31,15 +29,10 @@
 %
 %   As decision value, the difference between the two classes is returned.
 %
-% Possible alternative 1 (TODO, not implemented yet):
+% Possible alternative 1 (mean_before = 1):
 %   Instead of calculating all correlations, calculate the average vector
 %   for each training class first, and then do the correlation of this
 %   average vector to all test vectors (should be faster).
-%
-% Possible alternative 2 (TODO, not implemented yet):
-%   Analogue to above: Calculate the average vector each test class first,
-%   and then do the correlation of this average vector to all average
-%   training vectors (should be even faster).
 %
 %
 % IN
@@ -48,23 +41,27 @@
 %   model: struct with
 %       model.labels_train: n_train x 1 vector with training labels
 %       model.vecotrs_train: n_train x n_dim vector with training vectors
+%   pdist_distance: String argument to pdist.m
+%   mean_before: if 1, TRAINING data will be averaged within each class
+%       before voting, if 0, voting results will be averaged
 %
 % OUT
 %   predicted_labels: n_test x 1 vector with predicted labels. If two
 %       classes have equal maximal correlation values, the first of theses
 %       classes is taken. (Labels are sorted using sort).
-%   decision_value: n_test x n_unique_labels with average Fisher z
-%       tranformed correlation values for each class
+%   decision_value: n_test x n_unique_labels with final voting (i.e.
+%   average distance (mean_before = 0) or distance to the average
+%   (mean_before = 1) of each test label to the training data
 %   not_unique: n_test x 1 logical vector, having 1 for each test pattern
 %       for which there is no unique class decision, because multiple
 %       classes have equal average correlation values.
 %
 % See also: correlation_classifier.m (Haxby-style)
 
-function [predicted_labels decision_values not_unique] = weighted_distance_classifier(labels_test,vectors_test,model,pdist_distance)
+function [predicted_labels decision_values not_unique] = weighted_distance_classifier(labels_test,vectors_test,model,pdist_distance,mean_before)
 
 %% Check if method is implemented
-implemented_methods = {'correlation', 'euclidean'};
+implemented_methods = {'correlation', 'euclidean', 'cosine'};
 if ~any(strcmp(pdist_distance, implemented_methods))
     error('Method %s not implemented at the moment', pdist_distance)
 end
@@ -112,23 +109,41 @@ if strcmp(pdist_distance, 'correlation')
     end
 end
 
+%% If trainingspatterns should be averaged at the beginning, to it know
+
+% Here, no ztransformation is necessary, because we calculate the euclidean
+% average in all cases (data is still not processed)
+
+if mean_before
+    vectors_train_new = zeros(length(unique_train_labels), size(vectors_train, 2));
+    labels_train_new = zeros(length(unique_train_labels), 1);
+    for u_train_label_ind = 1:length(unique_train_labels)
+        curr_label = unique_train_labels(u_train_label_ind);
+        vectors_train_new(u_train_label_ind, :) = mean(vectors_train(labels_train==curr_label, :), 1);
+        labels_train_new(u_train_label_ind) = curr_label; % generate new labels
+    end
+    % replce patterns and labels by the averaged patterns
+    vectors_train = vectors_train_new; 
+    labels_train = labels_train_new;
+end
+
 %% Get distance
 distmat = pdist([vectors_train; vectors_test], pdist_distance);
 % only get relevant entris
 distmat = squareform(distmat);
-
+% get only the part of the distance matrix, that contains the 
+% n_vec_train x n_vec_test distances
 distmat = distmat(1:length(labels_train), length(labels_train)+1:end);
-% returns n_vec_train x n_vec_test correlation matrix
 
-%% Check values
-if strcmp(pdist_distance, 'correlation')
+%% Check values for correlation
+if ~mean_before && strcmp(pdist_distance, 'correlation')
     % for pdist, 'correlation' means 1 - correlation, thus we need to
     % revert this to get the proper correlation
-    distmat = 1 - distmat;
+    distmat = 1-distmat;
     
-    % force finite values for later z-transformation
+    % force finite values for later z-transformation (only if mean after
+    % voting)
     if any(abs(distmat(:)) > (1 - 1.0e-15))  % taking 1.0e-15 because abs does not work perfectly for -1.0
-        
         warningv('WEIGHTED_CORRELATION_CLASSIFIER:ZCORRINF','Correlations of +1 or -1 found. Correcting to +/-0.99999 to avoid infinity for z-transformed correlations!')
         distmat(distmat > (1 - 1.0e-15)) =  0.99999; % forces finite values
         distmat(distmat <-(1 - 1.0e-15)) = -0.99999; % forces finite values
@@ -136,11 +151,12 @@ if strcmp(pdist_distance, 'correlation')
 end
     
 %% Do z-tranformation before averaging if necessary
-if strcmp(pdist_distance, 'correlation')
-    if strcmp(pdist_distance, 'correlation')
-        % translate to Fisher's z transformed values
-        distmat = atanh(distmat);
-    end
+
+% Dont forget backtransformation below
+
+if ~mean_before && strcmp(pdist_distance, 'correlation')
+    % translate to Fisher's z transformed values
+    distmat = atanh(distmat);
 end
 %% Vote    
     class_vote = zeros(length(labels_test), length(unique_train_labels));
@@ -149,16 +165,18 @@ end
         curr_label = unique_train_labels(u_train_label_ind);
         class_vote(:, u_train_label_ind) = mean(distmat(labels_train==curr_label, :), 1); % get mean z-correlation for each pattern for each class
     end
+
+%% Back z-transform if necessary    
     
-    if strcmp(pdist_distance, 'correlation')
-        % get the maximum in each row -- this is the class each pattern "voted"
-        % for (e.g. the highest correlation with the current target pattern)
-        [closest_val, closest_ind] = max(class_vote, [], 2);
-    elseif strcmp(pdist_distance, 'euclidean')
-        % get the minimum in each row -- this is the class each pattern "voted"
-        % for (e.g. had the smallest mean euclidean distance to the target pattern)
-        [closest_val, closest_ind] = min(class_vote, [], 2);
-    end
+if ~mean_before && strcmp(pdist_distance, 'correlation')
+    % translate to Fisher's z transformed values
+    class_vote = 1-tanh(class_vote);
+end
+    
+%% Translate into classes    
+    % get the minimum in each row -- this is the class each pattern "voted"
+    % for (i.e. the smallest distance to the target pattern)
+    [closest_val, closest_ind] = min(class_vote, [], 2);
     
     % translate max_ind back to predicted class
     predicted_labels = unique_train_labels(closest_ind);

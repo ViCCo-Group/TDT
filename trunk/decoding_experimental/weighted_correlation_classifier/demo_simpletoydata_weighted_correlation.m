@@ -35,7 +35,7 @@ nruns = 6; % lets simulate we have n runs
 
 % we need at least 3 dimensions here, because correlations is not defined
 % for 2 or less datapoints
-ndims = 2;
+ndims = 3;
 
 %% Data Generation: Specify data means
 work_both = 1;  % 0: only euclidean, not correlation, 1: both
@@ -119,24 +119,75 @@ cfg.design = make_design_cv(cfg);
 display('For accuracy, "output" should be larger than "chancelevel" (at least when repeating this many times or using many runs)')
 results.accuracy
 
+%% Show a MDS plot
+% not working at the moment, we need the full matrix for this
+% what we could do is just one step with training and test the same, then
+% we would get it
+
 %% Do the same with the weighted classifier for correlation distance
 
-display('Repeating the same with more general method (should return the same)')
+display('Repeating the same with more general method (should return the same, except that voting values are now 1-correlation)')
 cfg.decoding.software = 'weighted_distance_classifier';
-cfg.decoding.pdist_distance = 'correlation';
+cfg.decoding.distance_classifier.pdist_distance = 'correlation';
+cfg.decoding.distance_classifier.mean_before = 0; % 1: training patterns per class are averaged before distance calculation, 0: distance between all training x test pattern are calcualted first and then averaged for each class
 [results, cfg] = decoding(cfg, pass_data);
 
-%% Display results
+%% Do the same with the weighted classifier for correlation distance
+
+display('Repeating the same with more general method, but average the training patterns for each class first (should return something similar to 1-correlation)')
+cfg.decoding.software = 'weighted_distance_classifier';
+cfg.decoding.distance_classifier.pdist_distance = 'correlation';
+cfg.decoding.distance_classifier.mean_before = 1; % 1: training patterns per class are averaged before distance calculation, 0: distance between all training x test pattern are calcualted first and then averaged for each class
+[results, cfg] = decoding(cfg, pass_data);
+
+% Display results
 display('For accuracy, "output" should be larger than "chancelevel" (at least when repeating this many times or using many runs)')
 results.accuracy
 
-%% Do the same with the weighted classifier for correlation distance
+%% Do the same with the weighted classifier for euclidean distance
 
 display('Calculating the eudlidean distance (should return something different)')
 cfg.decoding.software = 'weighted_distance_classifier';
-cfg.decoding.pdist_distance = 'euclidean';
+cfg.decoding.distance_classifier.pdist_distance = 'euclidean';
+cfg.decoding.distance_classifier.mean_before = 0; % 1: training patterns per class are averaged before distance calculation, 0: distance between all training x test pattern are calcualted first and then averaged for each class
 [results, cfg] = decoding(cfg, pass_data);
 
-%% Display results
+% Display results
+display('For accuracy, "output" should be larger than "chancelevel" (at least when repeating this many times or using many runs)')
+results.accuracy
+
+%% Do the same with the weighted classifier for euclidean distance
+
+display('Calculating the eudlidean distance, but average the training patterns for each class first (should return something similar to euclidean')
+cfg.decoding.software = 'weighted_distance_classifier';
+cfg.decoding.distance_classifier.pdist_distance = 'euclidean';
+cfg.decoding.distance_classifier.mean_before = 1; % 1: training patterns per class are averaged before distance calculation, 0: distance between all training x test pattern are calcualted first and then averaged for each class
+[results, cfg] = decoding(cfg, pass_data);
+
+% Display results
+display('For accuracy, "output" should be larger than "chancelevel" (at least when repeating this many times or using many runs)')
+results.accuracy
+
+%% Do the same with the weighted classifier for cosine distance
+
+display('Calculating the cosine distance (should return something different)')
+cfg.decoding.software = 'weighted_distance_classifier';
+cfg.decoding.distance_classifier.pdist_distance = 'cosine';
+cfg.decoding.distance_classifier.mean_before = 0; % 1: training patterns per class are averaged before distance calculation, 0: distance between all training x test pattern are calcualted first and then averaged for each class
+[results, cfg] = decoding(cfg, pass_data);
+
+% Display results
+display('For accuracy, "output" should be larger than "chancelevel" (at least when repeating this many times or using many runs)')
+results.accuracy
+
+%% Do the same with the weighted classifier for cosine distance
+
+display('Calculating the cosine distance, but average the training patterns for each class first (not clear how much sense this makes at the moment)')
+cfg.decoding.software = 'weighted_distance_classifier';
+cfg.decoding.distance_classifier.pdist_distance = 'cosine';
+cfg.decoding.distance_classifier.mean_before = 1; % 1: training patterns per class are averaged before distance calculation, 0: distance between all training x test pattern are calcualted first and then averaged for each class
+[results, cfg] = decoding(cfg, pass_data);
+
+% Display results
 display('For accuracy, "output" should be larger than "chancelevel" (at least when repeating this many times or using many runs)')
 results.accuracy

@@ -7,7 +7,7 @@
 %   >> transres_  
 % and hit tab key
 %
-% E.g., it also calls external transres_XX functions that implement other
+% e.g., it also calls external transres_XX functions that implement other
 % methods, e.g. "trans_model_parameters" if method = 'model_parameter'.
 %
 % METHODS IMPLEMENTED HERE:
@@ -22,7 +22,9 @@
 % specificity_minus_chance: specificity minus chance level
 % dprime: z(hit rate) - z(false alarm rate)
 % loglikelihood: measure of bias to one label: -1/2*(zHIT_rate^2 - zFA_rate^2)
-% AUC: Area under the ROC (Receiver Operator Characteristics) Curve
+% AUC: Area under the ROC (Receiver Operator Characteristics) Curve times 
+%   100 (i.e. values from 0 to 100), built from classifier decision values, 
+%   not from sensitivity/specificity
 % AUC_minus_chance: like AUC, but minus chance level(useful for SPM 2nd level)
 % corr: Correlation
 % zcorr: Fisher-z-transformed correlation (necessary for averaging correlations)
@@ -176,7 +178,7 @@ end
 
 
 
-%% Possibly use this function (replace unique by unique )
+%% Possibly use this function (replace unique by unique_labels )
 % % 30% faster than unique for the small arrays used here
 % function vect_out = unique_labels(vect_in)
 % 

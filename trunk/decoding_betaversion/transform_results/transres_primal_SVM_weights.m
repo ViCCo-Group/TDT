@@ -67,7 +67,7 @@ if isempty(findstr(libsvm_options, '-t 0'))
 end
 
 
-%% new version (unsing alphas and SVs)
+%% new version (using alphas and SVs)
 % see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804
 
 for i_model = 1:length(model)

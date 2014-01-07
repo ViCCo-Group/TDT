@@ -4,6 +4,8 @@
 
 function [msg_length] = display_progress(cfg,cnt,n_decodings,start_time,msg_length)
 
+global warningv_active % was a warning shown in between? (otherwise message will be truncated)
+
 if cnt == 1
     fprintf('\nStarting time: %s',datestr(start_time));
 end
@@ -39,10 +41,11 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
     msg_length = length(message);
 
     % print message and delete old message
-    if ~isempty(msg_length) && cnt ~=1
+    if ~isempty(msg_length) && cnt ~=1 && ~warningv_active
         reverse_str = sprintf(repmat('\b', 1, msg_length + 3)); % delete old text
     else
         reverse_str = [];
     end
     fprintf([reverse_str '\n' message '\n\n'])
+    warningv_active = 0;
 end

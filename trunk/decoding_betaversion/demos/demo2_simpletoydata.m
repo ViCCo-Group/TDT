@@ -40,11 +40,11 @@ data = [data1; data2];
 cfg.files.label = [ones(size(data1,1), 1); 2*ones(size(data1,1), 1)];
 
 % save run number
-cfg.files.step = [1:nruns, 1:nruns]';
+cfg.files.chunk = [1:nruns, 1:nruns]';
 
 % save a description
 for ifile = 1:length(cfg.files.label)
-    cfg.files.name(ifile) = {sprintf('class%i_run%i', cfg.files.label(ifile), cfg.files.step(ifile))};
+    cfg.files.name(ifile) = {sprintf('class%i_run%i', cfg.files.label(ifile), cfg.files.chunk(ifile))};
 end
 
 % add an empty mask

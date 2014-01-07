@@ -59,15 +59,15 @@ data = data * [cos(r) sin(r); -sin(r) cos(r)];
 cfg.files.label = labels;
 
 % save run number
-cfg.files.step = [];
+cfg.files.chunk = [];
 for ri = 1:nruns
     curr_run = ri * ones(set1.fact + set2.fact ,1);
-    cfg.files.step = [cfg.files.step curr_run] ;
+    cfg.files.chunk = [cfg.files.chunk curr_run] ;
 end
 
 % save a description
 for ifile = 1:length(cfg.files.label)
-    cfg.files.name(ifile) = {sprintf('class%i_run%i', cfg.files.label(ifile), cfg.files.step(ifile))};
+    cfg.files.name(ifile) = {sprintf('class%i_run%i', cfg.files.label(ifile), cfg.files.chunk(ifile))};
 end
 
 % add an empty mask

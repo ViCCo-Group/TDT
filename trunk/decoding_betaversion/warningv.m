@@ -18,6 +18,10 @@
 
 function warningv(msg_id,msg,varargin)
 
+global warningv_active
+
+warningv_active = 1; % makes sure that in display_progress.m the message will not be truncated
+
 if ~isempty(varargin)
     msg = sprintf(msg, varargin{:});
 end

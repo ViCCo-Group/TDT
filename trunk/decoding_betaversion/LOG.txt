@@ -1,3 +1,9 @@
+* beta 2.6 - 2014/01/07
+- Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
+iterations, e.g. cross-validation steps) can be different from chunks
+(i.e. data that should be kept together when cross-validation is performed)
+- Resolved bug of truncated warnings
+
 * beta 2.5 - 2013/06/19
 Lots of things added, including
 - automatic visualisation of design matrix and saving as image to results

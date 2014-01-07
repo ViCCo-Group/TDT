@@ -165,7 +165,7 @@ for si = 1:length(cfg2.design.set) % si == set index
             ocfg.design.train(clen+1,os_l) = cfg2.design.train(z_ind,si);
             ocfg.design.test(clen+1,os_l) = cfg2.design.test(z_ind,si);
             ocfg.files.name{clen+1} = cfg2.files.name{z_ind};
-            ocfg.files.step(clen+1) = cfg2.files.step(z_ind);
+            ocfg.files.chunk(clen+1) = cfg2.files.chunk(z_ind);
             ocfg.files.label(clen+1) = cfg2.files.label(z_ind);
             if ~isempty(ocfg.files.xclass)
                 ocfg.files.xclass(clen+1) = cfg2.files.xclass(z_ind);

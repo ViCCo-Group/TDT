@@ -68,7 +68,6 @@ if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
         figure_handle = cfg.fighandles.plot_design; % return currrent handle
     catch e
         % if the user already closed the figure, open a new one
-        e
         warning('Could not use specified figure handle, creating a new figure')
         % Remark: Same as in else-part above, please keep in synch
         if visible_on

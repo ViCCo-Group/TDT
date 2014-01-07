@@ -7,17 +7,19 @@
 % class than to the other). For each cross-validation iteration, a subset 
 % of samples are drawn (without replacement). The only limitation is that
 % at least one label per group has to be present in the test data.
-% This function is useful only if there is only one decoding step, i.e. if
+% This function is useful only if there is only one decoding chunk, i.e. if
 % data does not consist of several chunks of data (as is the case with e.g.
 % leave-one-run-out). For example, if you classify across different groups
 % of subjects and want to make sure that training data stays balanced, this
 % function might be useful.
 % 
-% If you have more than one step, use make_design_boot_cv.
+% If you have more than one chunk, use make_design_boot_cv.
 %
 % INPUT
-%   cfg.files.step: a vector, one step (e.g. run) number for each file in
-%       cfg.files.name
+%   cfg.files.chunk: a vector, one chunk number for each file in
+%       cfg.files.name. Chunks can be used to keep data together in 
+%       decoding iterations, e.g. when cross-validation should be 
+%       performed across runs.
 %   cfg.files.label: a vector, one label number for each file in
 %       cfg.files.name
 %   cfg.files.set (optional): currently only one set is possible in this 
@@ -52,14 +54,27 @@ function design = make_design_boot(cfg,n_boot,balance_test,n_train)
 %% generate design matrix
 
 design.function.name = mfilename;
-design.function.ver = 'v20130908';
+design.function.ver = 'v20140107';
 
 if ~exist('balance_test','var'), balance_test = 0; end
+
+% Downward compatibility (cfg.files.chunk used to be called cfg.files.step)
+if isfield(cfg.files,'step')
+    if isfield(cfg.files,'chunk') 
+        if any(cfg.files.step-cfg.files.chunk)
+        error('Both cfg.files.step and cfg.files.chunk were passed. Not sure which one to use, because both are different')
+        end
+    else
+        cfg.files.chunk = cfg.files.step;
+        cfg.files = rmfield(cfg.files,'step');
+    end
+    warningv('MAKE_DESIGN_BOOT:deprec','Use of cfg.files.step is deprecated. Please change your scripts to cfg.files.chunk.')
+end
 
 % Internal function to check prerequisites (see bottom)
 cfg = basic_checks(cfg);
 
-n_files = length(cfg.files.step);
+n_files = length(cfg.files.chunk);
 
 % Set labels and set
 design.label = repmat(cfg.files.label, 1, n_boot);
@@ -143,16 +158,16 @@ elseif length(unique(cfg.files.set))>1
         'set number afterwards.'])
 end
 
-if unique(cfg.files.step) > 1
-    error(['cfg.files.step contains more than one entry. This function is ',...
-           'designed for one entry only. Use one step number only, '...
+if unique(cfg.files.chunk) > 1
+    error(['cfg.files.chunk contains more than one entry. This function is ',...
+           'designed for one entry only. Use one chunk number only, '...
            'use make_design_boot_cv instead or create your design manually.'])
 end
 
 % Make sure that input has the right orientation
-if size(cfg.files.step,1) == 1
-    warningv('MAKE_DESIGN:ORIENTATION_STEP','cfg.files.step has the wrong orientation. Flipping.');
-    cfg.files.step = cfg.files.step';
+if size(cfg.files.chunk,1) == 1
+    warningv('MAKE_DESIGN:ORIENTATION_CHUNK','cfg.files.chunk has the wrong orientation. Flipping.');
+    cfg.files.chunk = cfg.files.chunk';
 end
 if size(cfg.files.label,1) == 1
     warningv('MAKE_DESIGN:ORIENTATION_LABEL','cfg.files.label has the wrong orientation. Flipping.');

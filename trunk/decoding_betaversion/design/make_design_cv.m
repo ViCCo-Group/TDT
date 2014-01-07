@@ -6,8 +6,10 @@
 % validation method.
 %
 % IN
-%   cfg.files.step: a vector, one step (e.g. run) number for each file in
-%       cfg.files.name
+%   cfg.files.chunk: a vector, one chunk number for each file in
+%       cfg.files.name. Chunks can be used to keep data together in 
+%       decoding iterations, e.g. when cross-validation should be 
+%       performed across runs.
 %   cfg.files.label: a vector, one label number for each file in
 %       cfg.files.name
 %   cfg.files.set (optional): a vector, one set number for each file in
@@ -32,11 +34,11 @@
 % >> cfg.files
 % ans = 
 %      name: {12x1 cell}
-%      step: [12x1 double]
+%      chunk: [12x1 double]
 %      label: [12x1 double]
 %      set:  [12x1 double]
 %
-% >> [cfg.files.step, cfg.files.label cfg.files.set]
+% >> [cfg.files.chunk, cfg.files.label cfg.files.set]
 % ans =
 %      1     1     1
 %      2     1     1
@@ -132,7 +134,20 @@ function design = make_design_cv(cfg)
 %% generate design matrix (CV)
 
 design.function.name = mfilename;
-design.function.ver = 'v20100613';
+design.function.ver = 'v20140107';
+
+% Downward compatibility (cfg.files.chunk used to be called cfg.files.step)
+if isfield(cfg.files,'step')
+    if isfield(cfg.files,'chunk') 
+        if any(cfg.files.step-cfg.files.chunk)
+        error('Both cfg.files.step and cfg.files.chunk were passed. Not sure which one to use, because both are different')
+        end
+    else
+        cfg.files.chunk = cfg.files.step;
+        cfg.files = rmfield(cfg.files,'step');
+    end
+    warningv('MAKE_DESIGN_CV:deprec','Use of cfg.files.step is deprecated. Please change your scripts to cfg.files.chunk.')
+end
 
 if isfield(cfg.files, 'xclass') && ~isempty(cfg.files.xclass)
     error(sprintf(['xclass for standard cross-validation design\n' ...
@@ -148,9 +163,9 @@ if ~isfield(cfg.files,'set') || isempty(cfg.files.set)
 end
 
 % Make sure that input has the right orientation
-if size(cfg.files.step,1) == 1
-    warningv('MAKE_DESIGN:ORIENTATION_STEP','cfg.files.step has the wrong orientation. Flipping.');
-    cfg.files.step = cfg.files.step';
+if size(cfg.files.chunk,1) == 1
+    warningv('MAKE_DESIGN:ORIENTATION_CHUNK','cfg.files.chunk has the wrong orientation. Flipping.');
+    cfg.files.chunk = cfg.files.chunk';
 end
 if size(cfg.files.label,1) == 1
     warningv('MAKE_DESIGN:ORIENTATION_LABEL','cfg.files.label has the wrong orientation. Flipping.');
@@ -164,7 +179,7 @@ end
 set_numbers = unique(cfg.files.set);
 n_sets = length(set_numbers);
 
-n_files = length(cfg.files.step);
+n_files = length(cfg.files.chunk);
 
 % design.train = zeros(n_files, n_steps);
 % design.test = zeros(n_files, n_steps);
@@ -180,19 +195,19 @@ for i_set = 1:n_sets
 
     set_filter = cfg.files.set == i_set;
     
-    step_numbers = unique(cfg.files.step(set_filter));
-    n_steps = length(step_numbers);
+    chunk_numbers = unique(cfg.files.chunk(set_filter));
+    n_steps = length(chunk_numbers);
     
     for i_step = 1:n_steps
         
         counter = counter + 1;
         
         % set all training entries
-        train_filter = cfg.files.step(set_filter) ~= step_numbers(i_step);
+        train_filter = cfg.files.chunk(set_filter) ~= chunk_numbers(i_step);
         design.train(train_filter, counter) = 1;
         
         % set all test entries
-        test_filter = cfg.files.step(set_filter) == step_numbers(i_step);
+        test_filter = cfg.files.chunk(set_filter) == chunk_numbers(i_step);
         design.test(test_filter, counter) = 1;
     end
     

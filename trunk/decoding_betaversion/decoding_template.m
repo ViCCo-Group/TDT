@@ -1,7 +1,7 @@
 % This script is a template that can be used for a decoding analysis on 
 % brain image data. It is for people who have betas available from an 
 % SPM.mat and want to automatically extract the relevant images used for
-% classification, as well as corresponding labels and decoding step numbers
+% classification, as well as corresponding labels and decoding chunk numbers
 % (e.g. run numbers). If you don't have this available, then use
 % decoding_template_nobetas.m
 
@@ -55,8 +55,8 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 % numbers from the SPM.mat
 regressor_names = design_from_spm(beta_dir);
 
-% Extract all information for the cfg.files structure (labels will be [-1 1] )
-cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+% Extract all information for the cfg.files structure (labels will be [1 -1] )
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir);
 
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 

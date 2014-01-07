@@ -1,0 +1,279 @@
+% function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
+%
+% This is a subfunction of decoding and an integral part of the decoding
+% toolbox. This function should not be called directly. It fulfills two 
+% purposes: First, it carries out a lot of checks that make sure the user  
+% specified the right options and that the decoding analysis can be 
+% carried out without later errors happening in the middle of everything. 
+% Second, some parameters are set that are later needed.
+
+% History 
+% Martin (2014/01/07): Externalized function from decoding.m
+
+function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
+
+% Display image access software that is used
+dispv(1, 'Image access with: %s',cfg.software);
+
+% File check here not necessary anymore.
+% Moved the check to when a file function is used for the first time.
+% - Kai
+% check_software(cfg);
+
+% TODO: make sure that the chosen program can perform
+% the chosen algorithm (e.g. can libsvm perform SVR)
+
+% check if design exists, and create if it doesn't
+field_names = {'label','train','test','set'};
+missing = [1 1 1 1];
+for i_field = 1:length(field_names)
+    if isfield(cfg.design,field_names{i_field})
+        missing(i_field) = 0;
+    end
+end
+
+if any(missing) % if only some or no fields for a design exist
+    if isfield(cfg.design,'function') % create design with passed method
+        if ~all(missing) % throw warning if some fields exist, but others not
+            warningv('DECODING_BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function)
+        end
+        fhandle = str2func(cfg.design);
+        cfg.design = feval(fhandle,cfg);
+    else % throw error if no method has been passed and design incomplete
+        error('Design is missing or incomplete. Either create design in advance or pass method to create design (see ''help decoding'')');
+    end
+end
+
+% Set function handle for classifier here (saves time to do only once)
+if ~isfield(cfg.decoding,'fhandle_train') && ~isfield(cfg.decoding,'fhandle_test')
+        cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
+        cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
+else
+    % Run quick test that method is the same for both:
+    if ~strcmpi(func2str(cfg.decoding.fhandle_train),[cfg.decoding.software '_train']) || ...
+       ~strcmpi(func2str(cfg.decoding.fhandle_test),[cfg.decoding.software '_test'])
+       warningv('DECODING_BASIC_CHECKS:decoding_fhandle_name_mismatch', 'Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!')
+       cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
+       cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
+    end
+end
+
+% Set function handle for classifier in parameter_selection
+if ~strcmpi(cfg.parameter_selection.method,'none') && (~isfield(cfg.parameter_selection.decoding,'fhandle_train') || ~isfield(cfg.parameter_selection.decoding,'fhandle_test'))
+    cfg.parameter_selection.decoding.fhandle_train = str2func([cfg.parameter_selection.decoding.software '_train']); % this format allows variable input
+    cfg.parameter_selection.decoding.fhandle_test = str2func([cfg.parameter_selection.decoding.software '_test']); % this format allows variable input
+end
+
+% Set function handle for classifier in feature_selection
+if ~strcmpi(cfg.feature_selection.method,'none') && (~isfield(cfg.feature_selection.decoding,'fhandle_train') || ~isfield(cfg.feature_selection.decoding,'fhandle_test'))
+    cfg.feature_selection.decoding.fhandle_train = str2func([cfg.feature_selection.decoding.software '_train']); % this format allows variable input
+    cfg.feature_selection.decoding.fhandle_test = str2func([cfg.feature_selection.decoding.software '_test']); % this format allows variable input
+end
+
+% try the most simple decoding possible (only if libsvm is used)
+if strcmpi(cfg.decoding.software,'libsvm')
+    [working, libsvm_path] = check_libsvm(cfg);
+    if ~working
+        error('libsvm does not seem to work with the current parameters (Path: %s)', libsvm_path)
+    else
+        dispv(2, 'Checked that libsvm works with the current parameters')
+        dispv(2, 'Using libsvm in: %s', libsvm_path)
+    end
+end
+
+
+% Check if kernel method is used
+use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
+cfg.decoding.use_kernel = use_kernel;
+if use_kernel
+    dispv(1, 'Using a "_kernel" decoding method.')
+    dispv(2, sprintf('\nThis means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nparameters to be selected'))
+else
+    dispv(2, 'Using normal method')    
+end
+
+% Using a precomputed kernel doesn't work for scaling across
+if use_kernel && strcmpi(cfg.scale.estimation,'across')
+    error('Cant use scaling method ''across'' for "_kernel" methods. It does not make sense, because a kernel must be calculated in this case in every step anyway (which is the same what normal methods do, but slower)');
+end
+
+% Using feature selection with the kernel method doesn't work.
+if use_kernel && ~strcmpi(cfg.feature_selection.method,'none')
+    error('Features selection does not work with the kernel option at the moment, use non-kernel method instead');
+end
+
+% Using feature selection in the main function with a kernel method doesn't make sense
+if ~isempty(strfind(cfg.decoding.method, '_kernel')) && ~strcmpi(cfg.feature_selection.method,'none')
+    newmethod = strrep(cfg.decoding.method,'_kernel','');
+    str = sprintf(['Use of feature selection and decoding method ''%s'' in the main function makes processing slower. ',...
+                   'Method is now reverted to ''%s''.'],cfg.decoding.method,newmethod);
+    warningv('DECODING_BASIC_CHECKS:KernelAndFeatureSelection',str)
+    cfg.decoding.method = newmethod;
+end
+
+if ~strcmpi(cfg.feature_selection.method,'none')
+    warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsTestmode','Feature selection has not been fully debugged. Running in test mode!')
+end
+
+[n_files, n_steps] = size(cfg.design.train);
+
+dispv(1,'Performing %i decoding steps for %i files', n_steps, n_files)
+
+% check that number of files = number of rows in cfg.design
+if n_files ~= size(cfg.design.train, 1)
+    error('Number of files in cfg.files (%i) does not correspond to number of rows in cfg.design.train', n_files, size(cfg.design.train, 1))
+end
+
+if n_files ~= size(cfg.design.test, 1)
+    error('Number of files in cfg.files (%i) does not correspond to number of rows in cfg.design.test', n_files, size(cfg.design.train, 1))
+end
+
+if ~isequal(size(cfg.design.train), size(cfg.design.test))
+    error('Size mismatch: ~isequal(size(cfg.design.train), size(cfg.design.test))')
+end
+
+problem = 0;
+for i_step = 1:n_steps
+    curr_train = cfg.design.train(:,i_step);
+    curr_test = cfg.design.test(:,i_step);
+    curr_label = cfg.design.label(:,i_step);
+    if length(unique(curr_label(logical(curr_train)))) == 1
+        error('Training data in decoding step %i contains only one label, but needs at least two.',i_step)
+    end
+    if length(unique(curr_label(logical(curr_test)))) == 1
+        problem = problem+1;
+    end
+end
+if problem && n_steps == 1
+    warningv('DECODING_BASIC_CHECKS:TestDataOnlyOneLabel',...
+        ['Test data in %i steps contains only one label and there is only ',...
+         'one decoding step. This might be a problem when using correlation, ',...
+         'AUC, sensitivity, specificity and similar measures!'],problem)
+end
+    
+if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
+    warningv('DECODING_BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
+end
+
+if ischar(cfg.results.output)
+    cfg.results.output = num2cell(cfg.results.output,2);
+end
+
+% check if masks exist, and maybe correct it. Otherwise set it to "auto"
+
+if isfield(cfg.files, 'mask')
+    if ischar(cfg.files.mask)
+        cfg.files.mask = num2cell(cfg.files.mask,2);
+    end
+else % mask does not exist, set it to auto
+    dispv(1, 'No mask file detected, using all voxels')
+    cfg.files.mask = {'all voxels'}; % will generate a mask later (using all voxels)
+end
+
+results_out_flag = output_arguments >= 1; % flag showing whether the results are returned from the function
+
+if cfg.results.write == 0 && ~results_out_flag
+    error('''Write results'' set to 0, but results are not returned either. Change ''write results'' to 1 or return results as output')
+end
+
+if strcmpi(cfg.parameter_selection.method,'none') && isfield(cfg.parameter_selection,'parameters')
+    error('Field ''cfg.parameter_selection.parameters'' exists, but ''cfg.parameter_selection.method = ''none''!')
+end
+
+% Checking for independence of training and test data
+if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
+    disp('Positions of Entries in Training- & Testset:')
+    disp(cfg.design.train ~= 0 & cfg.design.test ~= 0)
+    error('Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!')
+else
+    dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
+end
+
+% Check if training data is balanced (test data does not matter)
+check_imbalance(cfg);
+
+if ischar(cfg.files.name)
+    cfg.files.name = num2cell(cfg.files.name,2);
+    warningv('DECODING_BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
+end
+
+if length(cfg.files.name) ~= length(unique(cfg.files.name))
+    if isfield(cfg, 'DECODING_BASIC_CHECKS') && isfield(cfg.basic_checks, 'DoubleFilenameEntriesOk') && cfg.basic_checks.DoubleFilenameEntriesOk ~= 1
+        error('DECODING_BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!! Set cfg.basic_checks.DoubleFilenameEntriesOk = 1 to allow double file names.')
+    else
+        warningv('DECODING_BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!')
+    end
+else
+    dispv(2,'  Check for double names in cfg.files.name: No double entries found.')
+end
+
+if ~strcmpi(cfg.scale.method,'none') && numel(cfg.scale.cutoff) ~= 2
+    error('Wrong number of entries for field ''cfg.scale.cutoff''.')
+end
+
+if length(unique(cfg.design.set)) == 1
+    cfg.results.setwise = 0;
+end
+
+
+if cfg.results.write
+
+    dir_output = cfg.results.dir; % results directory
+    if ~exist(dir_output, 'dir'), mkdir(dir_output); end
+
+    n_outputs = length(cfg.results.output);
+    if ~isfield(cfg.results,'resultsname')
+        for i_output = 1:n_outputs
+            outputname = cfg.results.output{i_output};
+            cfg.results.resultsname(i_output) = { sprintf('%s_%s',cfg.results.filestart,outputname) };
+        end
+    end
+
+    for i_output = 1:n_outputs
+
+        % TODO: should we also introduce this check for each set if sets
+        % are written?
+
+        % Check if it is ok to overwrite existing files
+
+        ext = {'.img','.hdr'};
+        for ext_ind = 1:length(ext)
+            output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
+            if exist(output_fname,'file')
+                if ~cfg.results.overwrite
+                    error(['Resultfile %s already exists. Change filename or ',...
+                        'set cfg.results.overwrite = 1'],output_fname)
+                else
+                    warningv('DECODING_BASIC_CHECKS:OverwritingExistingResultsfile',sprintf('Resultfile %s already existed. Overwriting...',output_fname))
+                end
+            end
+
+            % Check if it is possible to write
+            temp = fopen(output_fname, 'w');
+            fclose(temp);
+            delete(output_fname);
+        end
+    end
+end
+
+
+% Check for unbalanced training data
+function check_imbalance(cfg)
+dispv(2, 'Checking for imbalances in cfg.design.train')
+for decoding_step = 1:size(cfg.design.train, 2)
+    curr_labels = cfg.design.label(:, decoding_step);
+    curr_training_labels = curr_labels(cfg.design.train(:, decoding_step) == 1);
+    unique_labels = unique(curr_training_labels);
+    n_each_label = zeros(length(unique_labels),1);
+    for label_ind = 1:length(unique_labels)
+        n_each_label(label_ind) = sum(curr_training_labels == unique_labels(label_ind));
+    end
+    if any(diff(n_each_label) ~= 0)
+        message_str = sprintf('Unbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
+        if isfield(cfg.design, 'unbalanced_data') && strcmp(cfg.design.unbalanced_data, 'ok')
+            warningv('DECODING:CheckUnbalancedDataOk', [message_str, ' You decided this is ok, because cfg.design.unbalanced_data = ''ok''']);
+        else
+            error('DECODING:CheckUnbalancedDataOk', [message_str, ' If this is ok, set cfg.design.unbalanced_data = ''ok'''])
+        end
+    end
+end

@@ -86,7 +86,7 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % separately, e.g. with spm_select. This is not part of this example, but 
 % if you do it later, you should end up with the following fields:
 %   cfg.files.name: a 1xn cell array of file names
-%   cfg.files.step: a 1xn vector of run numbers
+%   cfg.files.chunk: a 1xn vector of run numbers
 %   cfg.files.label: a 1xn vector of labels (for decoding, you can choose 
 %       any two numbers as class labels)
 
@@ -101,19 +101,19 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % the first 5 runs and leaving out the 6th run. Then the columns of the 
 % design matrix will look as follows (we also add the run numbers and file
 % names to make it clearer):
-% cfg.design.train cfg.design.test cfg.design.label cfg.files.step cfg.files.name
-%        1                0              -1               1        ..\beta_0001.img
-%        1                0               1               1        ..\beta_0002.img
-%        1                0              -1               2        ..\beta_0009.img 
-%        1                0               1               2        ..\beta_0010.img 
-%        1                0              -1               3        ..\beta_0017.img 
-%        1                0               1               3        ..\beta_0018.img 
-%        1                0              -1               4        ..\beta_0025.img 
-%        1                0               1               4        ..\beta_0026.img 
-%        1                0              -1               5        ..\beta_0033.img 
-%        1                0               1               5        ..\beta_0034.img 
-%        0                1              -1               6        ..\beta_0041.img 
-%        0                1               1               6        ..\beta_0042.img 
+% cfg.design.train cfg.design.test cfg.design.label cfg.files.chunk  cfg.files.name
+%        1                0              -1               1         ..\beta_0001.img
+%        1                0               1               1         ..\beta_0002.img
+%        1                0              -1               2         ..\beta_0009.img 
+%        1                0               1               2         ..\beta_0010.img 
+%        1                0              -1               3         ..\beta_0017.img 
+%        1                0               1               3         ..\beta_0018.img 
+%        1                0              -1               4         ..\beta_0025.img 
+%        1                0               1               4         ..\beta_0026.img 
+%        1                0              -1               5         ..\beta_0033.img 
+%        1                0               1               5         ..\beta_0034.img 
+%        0                1              -1               6         ..\beta_0041.img 
+%        0                1               1               6         ..\beta_0042.img 
 
 % Again, a design can be created automatically (with a design function) or
 % manually. If you use a design more often, then it makes sense to create

@@ -32,7 +32,7 @@ decoding_defaults; % use cfg = decoding_defaults to set the defaults, too
 cfg.analysis = 'searchlight';
 
 % Specify where the results should be saved, e.g. 'c:\exp\results\buttonpress'
-cfg.results.dir = 
+cfg.results.dir = FILLTHISOUT;
 
 %% Second, get the file names, labels and run number of each brain image
 %% file to use for decoding.
@@ -52,32 +52,32 @@ cfg.results.dir =
 
 % Specify the directory to your SPM.mat and all related beta images,
 % e.g. 'c:\exp\glm\model_buttonpress'
-beta_dir = 
+beta_dir = FILLTHISOUT;
 % Specify the label names that you gave your regressors of interest in the 
 % SPM analysis (e.g. 'button left' and 'button right').
 % Case sensitive!
-labelname1 = 
-labelname2 = 
+labelname1 = FILLTHISOUT;
+labelname2 = FILLTHISOUT;
 
 % Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
 % Alternatively, you can specify (multiple) ROI masks as a cell or string 
 % matrix).
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
-cfg.files.mask = 
+cfg.files.mask = FILLTHISOUT;
 
 % The following function extracts all beta names and corresponding run
-% numbers from the SPM.mat. Adds 'bin 1' to 'bin m', if multiple
-% regressors were used for each condition within a run, e.g. when using
-% time derivatives or an FIR design.
+% numbers from the SPM.mat. The function appends ' bin 1' to ' bin m' to
+% the beta names if multiple regressors have been used for each condition 
+% within a run, e.g. when using time derivatives or an FIR design.
 regressor_names = design_from_spm(beta_dir);
 
 % Now with the names of the labels, we can extract the filenames and the 
-% run numbers of each label. The labels will be -1 and 1.
+% run numbers of each label. The labels will be 1 and -1.
 % Important: You have to make sure to get the label names correct and that
 % they have been uniquely assigned, so please check them in regressor_names
 % or with decoding_plot_regressor_names(beta_dir)
-cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir);
 %
 % Other examples:
 % For a cross classification, it would look something like this:
@@ -90,45 +90,47 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % If you have used "Automatic Preparation", you can skip this step.
 % Alternatively to the automatic extraction of relevant information for 
 % your decoding, you can also manually prepare the "files" field.
-% For this, you have to load all images and labels you want to use 
+% For this, you have to load all image names and labels you want to use 
 % separately, e.g. with spm_select. This is not part of this example, but 
 % if you do it later, you should end up with the following fields:
 %   cfg.files.name: a 1xn cell array of file names
-%   cfg.files.step: a nx1 vector to indicate what data you want to chunk together (e.g. run numbers)
+%   cfg.files.chunk: a nx1 vector to indicate what data you want to keep 
+%       together for cross-validation (typically runs, so enter run numbers)
 %   cfg.files.label: a nx1 vector of labels (for decoding, you can choose 
-%       any two numbers as class labels, normally we use -1 and 1)
+%       any two numbers as class labels, but normally we use 1 and -1)
 
 %% Third, create your design for the decoding analysis
 
 % In a design, there are several matrices, one for training, one for test,
 % and one for the labels that are used (there is also a set vector which we
 % don't need right now). In each matrix, a column represents one decoding 
-% step (e.g. cross-validation run) while a row represents one sample (i.e.
-% brain image). The decoding analysis will later iterate over the columns 
-% of this design matrix. For example, you might start off with training on 
-% the first 5 runs and leaving out the 6th run. Then the columns of the 
-% design matrix will look as follows (we also add the run numbers and file
-% names to make it clearer):
-% cfg.design.train cfg.design.test cfg.design.label cfg.files.step cfg.files.name
-%        1                0              -1               1        ..\beta_0001.img
-%        1                0               1               1        ..\beta_0002.img
-%        1                0              -1               2        ..\beta_0009.img 
-%        1                0               1               2        ..\beta_0010.img 
-%        1                0              -1               3        ..\beta_0017.img 
-%        1                0               1               3        ..\beta_0018.img 
-%        1                0              -1               4        ..\beta_0025.img 
-%        1                0               1               4        ..\beta_0026.img 
-%        1                0              -1               5        ..\beta_0033.img 
-%        1                0               1               5        ..\beta_0034.img 
-%        0                1              -1               6        ..\beta_0041.img 
-%        0                1               1               6        ..\beta_0042.img 
+% step (i.e. train-test-cycle, e.g. cross-validation run) while a row 
+% represents one sample (i.e. brain image). The decoding analysis will 
+% later iterate over the columns (i.e. "steps") of this design matrix. For 
+% example, you might start off with training on the first 5 runs and 
+% leaving out the 6th run. Then the columns of the design matrix will 
+% look as follows (we also add the run numbers and file names to make it 
+% clearer):
+% cfg.design.train cfg.design.test cfg.design.label cfg.files.chunk cfg.files.name
+%        1                0              -1               1         ..\beta_0001.img
+%        1                0               1               1         ..\beta_0002.img
+%        1                0              -1               2         ..\beta_0009.img 
+%        1                0               1               2         ..\beta_0010.img 
+%        1                0              -1               3         ..\beta_0017.img 
+%        1                0               1               3         ..\beta_0018.img 
+%        1                0              -1               4         ..\beta_0025.img 
+%        1                0               1               4         ..\beta_0026.img 
+%        1                0              -1               5         ..\beta_0033.img 
+%        1                0               1               5         ..\beta_0034.img 
+%        0                1              -1               6         ..\beta_0041.img 
+%        0                1               1               6         ..\beta_0042.img 
 
 % Again, a design can be created automatically (with a design function) or
 % manually. If you use a design more often, then it makes sense to create
 % your own design function.
 %
-% If you are a bit confused what the three matrices (train, test & label)
-% mean, have a look at them in cfg.design after you executed the next step.
+% If you are a bit confused what the three matrices mean (train, test & label), 
+% have a look at them in cfg.design after you executed the next step.
 % This should make it easier to understand.
 
 % === Automatic Creation ===

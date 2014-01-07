@@ -19,20 +19,14 @@ condition.
 Question: Then again  what happens with unbalanced test data (which is 
 valid).
 
-B6: When warnings appear while the searchlight counter is running, then 
-the warning may be truncated.
-
 B7: When disconnected data are used with the online plotting function, 
 they are not plotted correctly
 
 B8: In the online plotting function, no brain is shown when ROI is used 
 rather than searchlight
 
-B9: When plot_design is shown the second time, the starttime is 
-overwritten, rather than the endtime used.
-
 B10: Combination of scaling and parameter selection doesn't work, 
 see run_nest in decoding_parameter_selection
 
-B11: make_design_boot_cv.m does not work for one step only. Need to check 
+B12: make_design_boot_cv.m does not work for one chunk only. Need to check 
 if it can be adapted or if a new function is needed.

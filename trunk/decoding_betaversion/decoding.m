@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %
-% Decoding Toolbox, Version: 2.5 beta, by Martin Hebart & Kai Goergen
+% Decoding Toolbox, Version: 2.6 beta, by Martin Hebart & Kai Goergen
 %
 % This is the main function of the decoding toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -14,10 +14,6 @@
 % To get started, type "help decoding_example" and run that function
 % to perform a standard decoding analysis (searchlight, ROI, or wholebrain)
 % on your specified data.
-%
-% REMARK: We are currently working on implementing FEATURE SELECTION.
-% This is currently in an experimental stage.
-%
 %
 % REQUIRED INPUT:
 %   cfg: Structure containing all necessary configuration information
@@ -129,7 +125,7 @@
 %       searchlight) will be calculated
 %
 % Explanation of important variables:
-%   n_steps: Number of decoding steps, e.g. cross-validation steps.
+%   n_steps: Number of decoding steps, e.g. cross-validation iterations.
 %       Essentially the number of times a train/test cycle is performed to
 %       achieve one results.
 %   n_decodings: Number of decoding analyses that are performed, e.g.
@@ -154,7 +150,9 @@
 %              that corresponds to the voxels that are selected in
 %              .mask_index.
 %       .mask_index: indices of those voxels that were selected by the
-%                    mask minus those that are NaN in the input data.
+%                    mask minus those that are NaN in the input data. When
+%                    spatial information is not important, a  vector of 
+%                    1:nVoxels is sufficient.
 %                    These are only the voxels of the input data that  were 
 %                    masked, NOT ROI masks. See .masks.mask_data{} below 
 %                    on how to pass ROI masks.
@@ -177,12 +175,19 @@
 %                           the same data as loaded from a maskfile.
 
 
+% TODO: for further slight speed-up, replace the repeating strcmpi's with
+% fixed values.
 % TODO: add check to basic checks that chosen software can perform
 %   classification, regression or correlation (see also next)
 % TODO: better: check that current software can deliver the requested
 %   output
 
 % HISTORY
+% 2014-07-01 Martin
+%   Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
+%   iterations, e.g. cross-validation steps) can be different from chunks
+%   (i.e. data that should be kept together when cross-validation is
+%   performed)
 % 2013-09-05 Kai
 %   Added passed_data.masks.mask_data{} to provide ROI data.
 % 2013-09-05 Kai
@@ -214,12 +219,12 @@ cfg.progress.starttime = datestr(now);
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 
 global verbose % MH: don't worry, Kai, this is the only case where global is better than passing!! ;)
-global reports % and this is the second only case...
+global reports % and this is the second only case (there actually is a third somewhere else)...
 verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = [mfilename ', Martin Hebart & Kai Goergen, v2013/06/19 2.5 beta'];
+ver = [mfilename ', Martin Hebart & Kai Goergen, v2014/01/07 2.6 beta'];
 cfg.info.ver = ver;
 dispv(1,ver)
 
@@ -247,7 +252,7 @@ end
 try display_design(cfg); catch, warningv('DECODING:PrintDesignFailed', 'Failed to print design to screen'), end
 
 %% Basic checks
-[cfg, n_files, n_steps] = basic_checks(cfg,nargout);
+[cfg, n_files, n_steps] = decoding_basic_checks(cfg,nargout);
 
 %% open file to write all filenames that we load
 if cfg.results.write == 1
@@ -291,6 +296,9 @@ n_outputs = length(cfg.results.output);
 n_sets = length(unique(cfg.design.set));
 n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
 results = {};
+
+% Set kernel method if used
+use_kernel = cfg.decoding.use_kernel;
 
 % Prepare searchlight template (if needed, sl_template will be empty for other methods)
 [cfg,sl_template] = decoding_prepare_searchlight(cfg);
@@ -364,22 +372,12 @@ elseif cfg.verbose == 2
     'If you want to weight all decoding steps equally, please use cfg.results.setwise=1 and cfg.design.set = 1:length(cfg.design.set) and average over the resulting output images']))
 end
 
-% Check if kernel method is used
-use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
-cfg.decoding.use_kernel = use_kernel;
-if use_kernel
-    dispv(1, 'Using a "_kernel" decoding method.')
-    dispv(2, sprintf('\nThis means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nparameters to be selected'))
-else
-    dispv(2, 'Using normal method')    
-end
-
 lasttime = now; % for updating figures
 
 % Start
 for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
 
-    curr_decoding = decoding_subindex(i_decoding);
+    curr_decoding = decoding_subindex(i_decoding); % if cfg.searchlight.subset wasn't called, then curr_decoding is identical to i_decoding
 
     % Display status info (i.e. how far is the analysis?)
     if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
@@ -407,6 +405,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
     previous_trainlabels = []; % init
+    previous_fs_data = []; % init
     % clear model variable from the previous decoding
     clear model;
     
@@ -454,7 +453,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % labels are identical to previous iteration (saves time)
         % never skip on first decoding step
         skip_training = i_step~=1 & isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
-
+                
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -466,34 +465,24 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Feature selection %
         %%%%%%%%%%%%%%%%%%%%%
 
-        % TODO: feature selection should give vector of selected voxels as
-        % output, then vectors_test can be adjusted later on
         if ~strcmpi(cfg.feature_selection.method,'none')
-            if use_kernel, error('Features selection does not work with the kernel option at the moment, use non-kernel method'), end
             if ~skip_training
-                % pack
-                if cfg.feature_selection.useall
-                    fs_data.i_train = find(cfg.design.train(:, i_step) > 0 | cfg.design.test(:, i_step) > 0);
-                else
-                    fs_data.i_train = i_train;
+                % Step 1: Pack
+                [fs_data, skip_feature_selection] = pack_fs_data(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data);
+                % Step 2: Perform feature selection method
+                if ~skip_feature_selection
+                    [fs_index,fs_results,previous_fs_data] = decoding_feature_selection(cfg,fs_data);
                 end
-                fs_data.vectors_train = data(fs_data.i_train, indexindex);
-                fs_data.labels_train = cfg.design.label(i_train, i_step);
-                fs_data.i_step = i_step;
-                fs_data.external.position_index = mask_index(indexindex); % absolute position of currently selected voxels in decoding (for external masks)
-                [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data);
-                if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
-                    if i_step == 1
-                        fs_results.curr_decoding = curr_decoding;
-                        results.feature_selection(i_decoding) = fs_results;
-                    end
-                else
-                    results.feature_selection(i_decoding).n_vox_selected(i_step) = fs_results.n_vox_selected;
-                    results.feature_selection(i_decoding).curr_decoding = curr_decoding;
-                end
+                results.feature_selection(i_decoding).n_vox_selected(i_step) = fs_results.n_vox_selected;
+                results.feature_selection(i_decoding).n_vox_steps{i_step} = fs_results.n_vox_steps;
+                results.feature_selection(i_decoding).output{i_step} = fs_results.output;
+                results.feature_selection(i_decoding).curr_decoding = curr_decoding;
             end
-            data_train = data_train(:,fs_index);
-            data_test = data_test(:,fs_index);
+            % Step 3: Select features (unless 'useall' is selected which would be double dipping)
+            if ~cfg.feature_selection.useall
+                data_train = data_train(:,fs_index);
+                data_test = data_test(:,fs_index);
+            end
         end
 
 
@@ -509,7 +498,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Do scaling on training set if requested
         if ~skip_training && strcmpi(cfg.scale.estimation,'across')
-            if use_kernel, error('Scaling of data on training set only does not work with kernel method at the moment, use non-kernel method'), end
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [data_train,scaleparams] = decoding_scale_data(cfg,data_train);
         end
@@ -523,7 +511,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             model(i_step) = model(i_step-1);
         else
             % e.g. when software is libsvm, then:
-%             model(i_step) = libsvm_train(labels_train,data_train,cfg);
+            % model(i_step) = libsvm_train(labels_train,data_train,cfg);
             model(i_step) = cfg.decoding.fhandle_train(labels_train,data_train,cfg);
         end
 
@@ -539,7 +527,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Do scaling on test data if requested
         if strcmpi(cfg.scale.estimation,'across')
-            if use_kernel, error('Cant use scaling method ''across'' for "_kernel" methods. It does not make sense, because a kernel must be calculated in this case in every step anyway (this is what the normal methods do)'), end
             data_test = decoding_scale_data(cfg,data_test,scaleparams);
         end
 
@@ -597,7 +584,7 @@ if numel(cfg.results.output)>1
     end
 end
 
-%% plot & save design again at the end (to show that job is finished
+%% plot & save design again at the end (to show that job is finished)
 % Endtime shows user that job is over
 try
     if cfg.plot_design
@@ -612,325 +599,63 @@ end
 
 %% Subfunctions
 
-%%%%%%%%%%%%%%%%%%%%%
-% Run basic checks  %
-%%%%%%%%%%%%%%%%%%%%%
-function [cfg, n_files, n_steps] = basic_checks(cfg,output_arguments)
 
-% Display image access software that is used
-dispv(1, 'Image access with: %s',cfg.software);
+%% Pack feature selection data (moved to subfunction for better readability)
+function [fs_data,skip_feature_selection] = pack_fs_data(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data)
 
-% File check here not necessary anymore.
-% Moved the check to when a file function is used for the first time.
-% - Kai
-% check_software(cfg);
-
-% TODO: make sure that the chosen program can perform
-% the chosen algorithm (e.g. can libsvm perform SVR)
-
-% check if design exists, and create if it doesn't
-field_names = {'label','train','test','set'};
-missing = [1 1 1 1];
-for i_field = 1:length(field_names)
-    if isfield(cfg.design,field_names{i_field})
-        missing(i_field) = 0;
-    end
+% Should feature selection be executed at all?
+if strcmpi(cfg.feature_selection.method,'none') % Skip feature selection if method is 'none'
+    fs_data = [];
+    skip_feature_selection = 1;
+    return
 end
 
-if any(missing) % if only some or no fields for a design exist
-    if isfield(cfg.design,'function') % create design with passed method
-        if ~all(missing) % throw warning if some fields exist, but others not
-            warningv('BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function)
+skip_feature_selection = 0; % init
+
+% If requested load external data for feature selection (do only once!)
+try
+    fs_data.external = previous_fs_data.external;
+catch
+    for i = 1:length(cfg.feature_selection.external_fname)
+        ranks_hdr = read_header(cfg.software,cfg.feature_selection.external_fname{i});
+        if any(ranks_hdr.dim(1:3) ~= cfg.datainfo.dim)
+            error('Size of external image(s) for feature selection does not match size of original images!');
         end
-        fhandle = str2func(cfg.design);
-        cfg.design = feval(fhandle,cfg);
-    else % throw error if no method has been passed and design incomplete
-        error('Design is missing or incomplete. Either create design in advance or pass method to create design (see ''help decoding'')');
+        ranks_image = read_image(cfg.software,ranks_hdr); % get image
+        fs_data.external.ranks_image{i} = ranks_image; % add image to fs_data
     end
 end
 
-% Set function handle for classifier here (saves time to do only once)
-if ~isfield(cfg.decoding,'fhandle_train') && ~isfield(cfg.decoding,'fhandle_test')
-        cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
-        cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
-else
-    % Run quick test that method is the same for both:
-    if ~strcmpi(func2str(cfg.decoding.fhandle_train),[cfg.decoding.software '_train']) || ...
-       ~strcmpi(func2str(cfg.decoding.fhandle_test),[cfg.decoding.software '_test'])
-       warningv('decoding_basic_checks:decoding_fhandle_name_mismatch', 'Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!')
-       cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
-       cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
+% Pack values in fs_data
+fs_data.i_train = i_train;
+if cfg.feature_selection.useall, fs_data.i_train = i_train | i_test; end
+fs_data.labels_train = cfg.design.label(i_train, i_step);
+
+if i_step ~= 1
+    % Also skip when data which the selection is based on is identical to the previous step
+    if isequal(previous_fs_data.i_train, fs_data.i_train) && isequal(previous_fs_data.labels_train, fs_data.labels_train)
+        skip_feature_selection = 1;
     end
-end
-
-% Set function handle for classifier in parameter_selection
-if ~strcmpi(cfg.parameter_selection.method,'none') && (~isfield(cfg.parameter_selection.decoding,'fhandle_train') || ~isfield(cfg.parameter_selection.decoding,'fhandle_test'))
-    cfg.parameter_selection.decoding.fhandle_train = str2func([cfg.parameter_selection.decoding.software '_train']); % this format allows variable input
-    cfg.parameter_selection.decoding.fhandle_test = str2func([cfg.parameter_selection.decoding.software '_test']); % this format allows variable input
-end
-
-% Set function handle for classifier in feature_selection
-if ~strcmpi(cfg.feature_selection.method,'none') && (~isfield(cfg.feature_selection.decoding,'fhandle_train') || ~isfield(cfg.feature_selection.decoding,'fhandle_test'))
-    cfg.feature_selection.decoding.fhandle_train = str2func([cfg.feature_selection.decoding.software '_train']); % this format allows variable input
-    cfg.feature_selection.decoding.fhandle_test = str2func([cfg.feature_selection.decoding.software '_test']); % this format allows variable input
-end
-
-% try the most simple decoding possible (only if libsvm is used)
-if strcmpi(cfg.decoding.software,'libsvm')
-    [working, libsvm_path] = check_libsvm(cfg);
-    if ~working
-        error('libsvm does not seem to work with the current parameters (Path: %s)', libsvm_path)
-    else
-        dispv(2, 'Checked that libsvm works with the current parameters')
-        dispv(2, 'Using libsvm in: %s', libsvm_path)
+    % with the exception (when multiple external images are used the data may be identical, but the selection criteria can change)
+    if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
+        if length(cfg.feature_selection.external_fname)>1
+        skip_feature_selection = 0;
+        % if however only one external image is used (which is fulfilled by the elseif) and all data is used, then feature selection 
+        % can be skipped, too (because in that case all selection steps are identical)
+        elseif cfg.feature_selection.useall
+            skip_feature_selection = 1;
+        end
     end
-end
-
-% Using a precomputed kernel doesn't work for scaling across
-if ~isempty(strfind(cfg.decoding.method, '_kernel')) && strcmpi(cfg.scale.estimation,'across')
-    error('Decoding method %s cannot be used together with scaling method %s',cfg.decoding.method,cfg.scale.estimation);
-end
-
-% Using feature selection in the main function with a kernel method doesn't make sense
-if ~isempty(strfind(cfg.decoding.method, '_kernel')) && ~strcmpi(cfg.feature_selection.method,'none')
-    newmethod = strrep(cfg.decoding.method,'_kernel','');
-    str = sprintf(['Use of feature selection and decoding method ''%s'' in the main function makes processing slower. ',...
-                   'Method is now reverted to ''%s''.'],cfg.decoding.method,newmethod);
-    warningv('BASIC_CHECKS:KernelAndFeatureSelection',str)
-    cfg.decoding.method = newmethod;
-end
-
-if ~strcmpi(cfg.feature_selection.method,'none')
-    warningv('BASIC_CHECKS:FeatureSelectionIsTestmode','Feature selection has not been fully debugged. Running in test mode!')
-end
-
-[n_files, n_steps] = size(cfg.design.train);
-
-dispv(1,'Performing %i decoding steps for %i files', n_steps, n_files)
-
-% check that number of files = number of rows in cfg.design
-if n_files ~= size(cfg.design.train, 1)
-    error('Number of files in cfg.files (%i) does not correspond to number of rows in cfg.design.train', n_files, size(cfg.design.train, 1))
-end
-
-if n_files ~= size(cfg.design.test, 1)
-    error('Number of files in cfg.files (%i) does not correspond to number of rows in cfg.design.test', n_files, size(cfg.design.train, 1))
-end
-
-if ~isequal(size(cfg.design.train), size(cfg.design.test))
-    error('Size mismatch: ~isequal(size(cfg.design.train), size(cfg.design.test))')
-end
-
-problem = 0;
-for i_step = 1:n_steps
-    curr_train = cfg.design.train(:,i_step);
-    curr_test = cfg.design.test(:,i_step);
-    curr_label = cfg.design.label(:,i_step);
-    if length(unique(curr_label(logical(curr_train)))) == 1
-        error('Training data in decoding step %i contains only one label, but needs at least two.',i_step)
-    end
-    if length(unique(curr_label(logical(curr_test)))) == 1
-        problem = problem+1;
-    end
-end
-if problem && n_steps == 1
-    warningv('BASIC_CHECKS:TestDataOnlyOneLabel',...
-        ['Test data in %i steps contains only one label and there is only ',...
-         'one decoding step. This might be a problem when using correlation, ',...
-         'AUC, sensitivity, specificity and similar measures!'],problem)
 end
     
-if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
-    warningv('BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
-end
+if skip_feature_selection, return, end
 
-if ischar(cfg.results.output)
-    cfg.results.output = num2cell(cfg.results.output,2);
-end
+% Continue with assigning values
+fs_data.vectors_train = data(fs_data.i_train, indexindex);
+fs_data.i_step = i_step;
+fs_data.external.position_index = mask_index(indexindex); % absolute position of currently selected voxels in decoding (for external masks)
 
-% check if masks exist, and maybe correct it. Otherwise set it to "auto"
-
-if isfield(cfg.files, 'mask')
-    if ischar(cfg.files.mask)
-        cfg.files.mask = num2cell(cfg.files.mask,2);
-    end
-else % mask does not exist, set it to auto
-    dispv(1, 'No mask file detected, using all voxels')
-    cfg.files.mask = {'all voxels'}; % will generate a mask later (using all voxels)
-end
-
-results_out_flag = output_arguments >= 1; % flag showing whether the results are returned from the function
-
-if cfg.results.write == 0 && ~results_out_flag
-    error('''Write results'' set to 0, but results are not returned either. Change ''write results'' to 1 or return results as output')
-end
-
-if strcmpi(cfg.parameter_selection.method,'none') && isfield(cfg.parameter_selection,'parameters')
-    error('Field ''cfg.parameter_selection.parameters'' exists, but ''cfg.parameter_selection.method = ''none''!')
-end
-
-% Checking for independence of training and test data
-if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
-    disp('Positions of Entries in Training- & Testset:')
-    disp(cfg.design.train ~= 0 & cfg.design.test ~= 0)
-    error('Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!')
-else
-    dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
-end
-
-% Check if training data is balanced (test data does not matter)
-check_imbalance(cfg);
-
-if ischar(cfg.files.name)
-    cfg.files.name = num2cell(cfg.files.name,2);
-    warningv('BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
-end
-
-if length(cfg.files.name) ~= length(unique(cfg.files.name))
-    if isfield(cfg, 'basic_checks') && isfield(cfg.basic_checks, 'DoubleFilenameEntriesOk') && cfg.basic_checks.DoubleFilenameEntriesOk ~= 1
-        error('BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!! Set cfg.basic_checks.DoubleFilenameEntriesOk = 1 to allow double file names.')
-    else
-        warningv('BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!')
-    end
-else
-    dispv(2,'  Check for double names in cfg.files.name: No double entries found.')
-end
-
-if ~strcmpi(cfg.scale.method,'none') && numel(cfg.scale.cutoff) ~= 2
-    error('Wrong number of entries for field ''cfg.scale.cutoff''.')
-end
-
-if length(unique(cfg.design.set)) == 1
-    cfg.results.setwise = 0;
-end
-
-
-if cfg.results.write
-
-    dir_output = cfg.results.dir; % results directory
-    if ~exist(dir_output, 'dir'), mkdir(dir_output); end
-
-    n_outputs = length(cfg.results.output);
-    if ~isfield(cfg.results,'resultsname')
-        for i_output = 1:n_outputs
-            outputname = cfg.results.output{i_output};
-            cfg.results.resultsname(i_output) = { sprintf('%s_%s',cfg.results.filestart,outputname) };
-        end
-    end
-
-    for i_output = 1:n_outputs
-
-        % TODO: should we also introduce this check for each set if sets
-        % are written?
-
-        % Check if it is ok to overwrite existing files
-
-        ext = {'.img','.hdr'};
-        for ext_ind = 1:length(ext)
-            output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
-            if exist(output_fname,'file')
-                if ~cfg.results.overwrite
-                    error(['Resultfile %s already exists. Change filename or ',...
-                        'set cfg.results.overwrite = 1'],output_fname)
-                else
-                    warningv('BASIC_CHECKS:OverwritingExistingResultsfile',sprintf('Resultfile %s already existed. Overwriting...',output_fname))
-                end
-            end
-
-            % Check if it is possible to write
-            temp = fopen(output_fname, 'w');
-            fclose(temp);
-            delete(output_fname);
-        end
-    end
-end
-
-
-%% CHECK subfunctions
-
-% Check for unbalanced training data
-function check_imbalance(cfg)
-dispv(2, 'Checking for imbalances in cfg.design.train')
-for decoding_step = 1:size(cfg.design.train, 2)
-    curr_labels = cfg.design.label(:, decoding_step);
-    curr_training_labels = curr_labels(cfg.design.train(:, decoding_step) == 1);
-    unique_labels = unique(curr_training_labels);
-    n_each_label = zeros(length(unique_labels),1);
-    for label_ind = 1:length(unique_labels)
-        n_each_label(label_ind) = sum(curr_training_labels == unique_labels(label_ind));
-    end
-    if any(diff(n_each_label) ~= 0)
-        message_str = sprintf('Unbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
-        if isfield(cfg.design, 'unbalanced_data') && strcmp(cfg.design.unbalanced_data, 'ok')
-            warningv('DECODING:CheckUnbalancedDataOk', [message_str, ' You decided this is ok, because cfg.design.unbalanced_data = ''ok''']);
-        else
-            error('DECODING:CheckUnbalancedDataOk', [message_str, ' If this is ok, set cfg.design.unbalanced_data = ''ok'''])
-        end
-    end
-end
-
-%% REPORT USED FILES
-
-% This function prints file names for a certain decoding to the screen and
-% writes them to a given file if requested
-
-function report_files(cfg,n_steps,inputfilenames_fid)
-
-if ~cfg.results.write
-    inputfilenames_fid = ''; % this will prevent writing
-end
-
-% Find common string in all files to print this only once
-fnames = cfg.files.name;
-fnames_char = char(fnames);
-n_str = size(fnames_char,2); % maximum string length
-for i_str = 1:n_str
-    match = strncmp(fnames{1},fnames(2:end),i_str);
-    if ~all(match)
-        n_match = i_str-1;
-        break
-    end
-end
-filestart = fnames_char(1,1:n_match); % common file start
-filerest =  fnames_char(:, n_match+1:end); % get not common part
-
-for i_step = 1:n_steps
-
-    % Get indices for training
-    i_train = find(cfg.design.train(:, i_step) > 0);
-    % Get indices for testing
-    i_test = find(cfg.design.test(:, i_step) > 0);
-
-    if isfield(cfg, 'sn')
-        text = sprintf('Subject %i, Decoding Nr %i', cfg.sn, i_step);
-    else
-        text = sprintf('Decoding Nr %i', i_step);
-    end
-    dispv(2, '%s', text)
-    fprintf(inputfilenames_fid, '%s\n', text);
-
-    if n_match > 0
-        cont = '...';
-        text = sprintf('  File Start: %s%s\n', filestart, cont);
-        dispv(2, '%s', text)
-        fprintf(inputfilenames_fid, '%s\n', text);
-    else
-        cont = '';
-    end
-
-    for curr_i_train = i_train'
-        text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, filerest(curr_i_train,:));
-        dispv(2, '%s', text)
-        fprintf(inputfilenames_fid, '%s\n', text);
-    end
-    fprintf(inputfilenames_fid, '\n');
-
-
-    for curr_i_test = i_test'
-        text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, filerest(curr_i_test,:));
-        dispv(2, '%s', text)
-        fprintf(inputfilenames_fid, '%s\n', text);
-    end
-    fprintf(inputfilenames_fid, '\n');
-
+if cfg.feature_selection.useall == 1
+    warningv('PACK_FS_DATA:Nonindependence',['Training and test data are both used for feature selection. ',...
+    'Feature selection results will not be applied to main decoding, but can be used for illustrative purposes!'])
 end

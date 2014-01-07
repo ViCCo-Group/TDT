@@ -1,7 +1,7 @@
 % This script is a template that can be used for a decoding analysis on 
 % brain image data. It is for people who don't have betas available to do
 % their classification and who need to enter their image names, labels and
-% decoding steps (e.g. run numbers) separately.
+% decoding chunks (e.g. run numbers) separately.
 
 % Set defaults
 cfg = decoding_defaults;
@@ -21,9 +21,12 @@ cfg.files.mask =
 % File names (1xn cell array)
 cfg.files.name =  
 % and the other two fields if you use a make_design function (e.g. make_design_cv)
-% a nx1 vector to indicate what data you want to chunk together (e.g. run numbers) 
-cfg.files.step =
-% any numbers as class labels, normally we use -1 and 1. Each file gets a
+%
+% (1) a nx1 vector to indicate what data you want to keep together for 
+% cross-validation (typically runs, so enter run numbers)
+cfg.files.chunk =
+%
+% (2) any numbers as class labels, normally we use 1 and -1. Each file gets a
 % label number (i.e. a nx1 vector)
 cfg.files.label = 
 

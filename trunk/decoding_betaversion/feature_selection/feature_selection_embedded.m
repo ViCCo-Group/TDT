@@ -51,7 +51,7 @@ try
         cfg.feature_selection.design.function = cfg.design.function;
     end
     cfg.feature_selection.files.mask = cfg.files.mask;
-    cfg.feature_selection.files.step = cfg.files.step(i_train);
+    cfg.feature_selection.files.chunk = cfg.files.chunk(i_train);
     cfg.feature_selection.files.label = cfg.files.label(i_train);
     cfg.feature_selection.files.name = cfg.files.name(i_train);
     fhandle = str2func(cfg.feature_selection.design.function.name);
@@ -136,43 +136,15 @@ all_results = vertcat(results.(cfg.feature_selection.results.output{1}).output);
 [i,reduce_ind] = intersect(nested_n_vox,n_vox);
 all_results = all_results(reduce_ind);
 
+if strcmpi(cfg.feature_selection.optimization_criterion,'select_peak')
 n_vox_selected = select_peak(n_vox,all_results); % this function selects the peak and for several peaks the most stable one
-
-% OLD VERSION!!
-% s_ind = find(all_results == max(all_results));
-% 
-% 
-% % if several indices, use the most stable value (indicated by a combination
-% % of cluster center, accuracy of surrounding values, and for large clusters
-% % a tendency towards a larger number of voxels)
-% n_s_ind = length(s_ind);
-% if n_s_ind>1
-%     neighbors = 0;
-%     while 1
-%         neighbors = neighbors + 1;
-%         temp_acc = zeros(1,n_s_ind);
-%         for i_s_ind = s_ind
-%             temp_s_ind = i_s_ind-neighbors:i_s_ind+neighbors;
-%             temp_s_ind = temp_s_ind(temp_s_ind<=length(all_results)&temp_s_ind>0);
-%             temp_acc(s_ind==i_s_ind) = mean(all_results(temp_s_ind));
-%         end
-%         temp_ind = temp_acc == max(temp_acc);
-%         s_ind = s_ind(temp_ind);
-%         if length(s_ind) == 1 || neighbors > 5, break, else n_s_ind = length(s_ind); end
-%         % to make sure it doesn't prefer extremes, remove extremes after i neighbors
-%         s_ind = s_ind(s_ind<length(all_results)-neighbors+1);
-%         if length(s_ind) == 1, break, else s_ind = s_ind(s_ind>neighbors); end
-%         if length(s_ind) == 1, break, end
-%     end
-% end
-% 
-% % result is quite stable when more than 5 neighbors are the same, so if still not clear just pick more voxels rather than less
-% n_vox_selected = n_vox(s_ind(1)); 
-% output = all_results;
-
-% below reduces number of times warning messages are displayed to a minimum
-if ~isempty(msg_id)
-    warning('off',msg_id)
-elseif i_step == 1 && isempty(msg_id)
-%     warning('on',msg_id)
+else
+    fhandle = str2func(cfg.feature_selection.optimization_criterion);
+    n_vox_selected = fhandle(all_results);
+    if isempty(n_vox_selected)
+        error('Function %s yielded an empty matrix for feature selection. Please use a different function.',cfg.feature_selection.optimization_criterion)
+    end
 end
+n_vox_selected = n_vox_selected(end);
+output = all_results;
+

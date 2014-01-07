@@ -5,13 +5,13 @@ CONTENTS
 1. GENERAL
 2. ADVANTAGES OF THE TOOLBOX
 3. FUNCTIONALITY OF THE TOOLBOX AND BASICS
-4. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
+4. INSTALLING THE TOOLBOX
+5. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
 
 
-
-=======
-GENERAL
-=======
+==========
+1. GENERAL
+==========
 
 The Decoding Toolbox has been created for classification of structural and 
 functional brain images. It is currently optimized for SPM2, SPM5, and 
@@ -35,9 +35,9 @@ Please report any bugs to
 martin.hebart@bccn-berlin.de or
 kai.goergen@bccn-berlin.de
 
-=========================
-Advantages of the toolbox
-=========================
+============================
+2. ADVANTAGES OF THE TOOLBOX
+============================
 
 The advantages of it are:
 
@@ -70,9 +70,9 @@ uncompiled code) and uses custom-made functions to speed up processing
 a custom-made correlation function which is up to 20x faster than that
 provided by Matlab).
 
-=======================================
-Functionality of the toolbox and basics
-=======================================
+==========================================
+3. FUNCTIONALITY OF THE TOOLBOX AND BASICS
+==========================================
 
 Typically, in brain image analyses you would like to know whether some 
 regional brain activity pattern is significantly activated. In brain 
@@ -102,9 +102,25 @@ which provides you with a separate output for each cross-validation step.
 Then, average over the resulting output images. Alternatively, write your
 own routine (see HOWTOEXTEND.txt) 
 
-=========================================
-Compiling libsvm (getting libsvm to work)
-=========================================
+=========================
+4. INSTALLING THE TOOLBOX
+=========================
+
+1. ADD IMAGE PROCESSING SOFTWARE (Default: SPM8)
+By default, download & "install" SPM8 (i.e. extract it and add it to your 
+matlab path). By default, SPM8 is used to read & write brain images.
+Alternatively, you can also use SPM2 & SPM5, or another toolbox, in case 
+it is implemented. See HOWTOEXTEND.txt on how to do this.
+
+2. THE TOOLBOX
+Simply extract the toolbox add it to your matlab path.
+
+3. RUN & ENJOY :)
+
+
+============================================
+5. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
+============================================
 
 Some people experience problems with the mex-files of libsvm that we 
 provided. Libsvm uses code that was created in the C programming language 

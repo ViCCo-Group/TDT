@@ -48,7 +48,8 @@
 %   Full usable cfg, including all missing entries of cfg from cfg.defaults
 %   and especially information about the input files:
 %         cfg.files.name: name of each file
-%         cfg.files.step: run/session number of each file
+%         cfg.files.chunk: run/session number of each file; can be used to
+%           keep runs separate for later cross-validation in decoding
 %         cfg.files.label: label for each file
 %         cfg.files.set: set number for each file
 %         cfg.files.xclass: cross-class information for each file (only
@@ -74,7 +75,7 @@ function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta
 cfg = decoding_defaults(cfg);
 
 cfg.files.name = [];
-cfg.files.step = [];
+cfg.files.chunk = [];
 cfg.files.label = [];
 cfg.files.set = [];
 cfg.files.xclass = [];
@@ -133,7 +134,7 @@ for i_input = 1:n_inputs
         error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',orig_labelnames{i_input})
     end
     cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
-    cfg.files.step = [cfg.files.step cell2mat(regressor_names(2,label_index))];
+    cfg.files.chunk = [cfg.files.chunk cell2mat(regressor_names(2,label_index))];
     cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
     if exist('xclass','var')
         cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
@@ -152,7 +153,7 @@ for i_input = 1:n_inputs
 end
 
 if ischar(cfg.files.name), cfg.files.name = num2cell(cfg.files.name,2); end
-cfg.files.step = cfg.files.step';
+cfg.files.chunk = cfg.files.chunk';
 cfg.files.label = cfg.files.label';
 cfg.files.set = cfg.files.set';
 cfg.files.xclass = cfg.files.xclass';

@@ -2,7 +2,7 @@ function [fs_index,fs_data,n_vox_steps,output] = feature_selection_filter(cfg,fs
 
 output = []; % init
 % Rank features for feature selection
-[ranks,ind,fs_data.external] = rank_features(cfg,fs_data.external,labels,data_scaled,i_step);
+[ranks,ind] = rank_features(cfg,fs_data.external,labels,data_scaled,i_step);
 
 if ~ischar(n_vox)
     
@@ -11,7 +11,7 @@ if ~ischar(n_vox)
         n_vox_selected = n_vox;
         % If a range of numbers of features to be selected is entered
     elseif length(n_vox) > 1
-        [n_vox_selected,output,fs_data.external] = run_nest(cfg,data_scaled,fs_data.external,i_step,i_train,n_vox); % Run nested CV to find optimal number of voxels
+        [n_vox_selected,output] = run_nest(cfg,data_scaled,fs_data.external,i_step,i_train,n_vox); % Run nested CV to find optimal number of voxels
     else
         error('Variable ''n_vox'' has wrong size. n_vox = %s', num2str(n_vox) )
     end
@@ -21,7 +21,7 @@ elseif ischar(n_vox)
     % If the number of feature should be selected automatically
     if strcmp(n_vox,'automatic')
         n_vox = 1:size(data_scaled,2);
-        [n_vox_selected,output,fs_data.external] = run_nest(cfg,data_scaled,fs_data.external,i_step,i_train,n_vox); % determine optimal number of features
+        [n_vox_selected,output] = run_nest(cfg,data_scaled,fs_data.external,i_step,i_train,n_vox); % determine optimal number of features
     else
         error('Unknown method %s for field ''n_vox''.',n_vox)
     end
@@ -37,7 +37,7 @@ fs_index = ranks(1:n_vox_selected);
 %% Subfunctions
 
 %% Nested cross validation to determine optimal number of features
-function [n_vox_selected,output,external] = run_nest(cfg,data,external,i_step,i_train,n_vox)
+function [n_vox_selected,output] = run_nest(cfg,data,external,i_step,i_train,n_vox)
 
 % Create design for nested CV
 try
@@ -47,7 +47,7 @@ try
         cfg.feature_selection.design.function = cfg.design.function;
     end
     cfg.feature_selection.files.mask = cfg.files.mask;
-    cfg.feature_selection.files.step = cfg.files.step(i_train);
+    cfg.feature_selection.files.chunk = cfg.files.chunk(i_train);
     cfg.feature_selection.files.label = cfg.files.label(i_train);
     cfg.feature_selection.files.name = cfg.files.name(i_train);
     fhandle = str2func(cfg.feature_selection.design.function.name);
@@ -83,8 +83,8 @@ for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
     labels_train = cfg.feature_selection.design.label(itrain, j_step);
     labels_test = cfg.feature_selection.design.label(itest, j_step);
     
-    % Rank features in nested training data, only
-    [ranks,ind,external] = rank_features(cfg,external,labels_train,vectors_train,j_step);
+    % Rank features in nested training data, only (i_step should be used, not j_step)
+    [ranks,ind] = rank_features(cfg,external,labels_train,vectors_train,i_step);
     
     % Perform nested CV for each step (these iterations are within the loop
     % to save time for loading data)
@@ -118,44 +118,22 @@ end
 % Get number of features where output is highest
 all_results = vertcat(results.(cfg.feature_selection.results.output{1}).output);
 
+if strcmpi(cfg.feature_selection.optimization_criterion,'select_peak')
 n_vox_selected = select_peak(n_vox,all_results); % this function selects the peak and for several peaks the most stable one
-
-% OLD VERSION!
-% % if several indices, use the most stable value (indicated by a combination
-% % of cluster center, accuracy of surrounding values, and for large clusters
-% % a tendency towards a larger number of voxels)
-% n_s_ind = length(s_ind);
-% if n_s_ind == length(all_results)
-%     s_ind = length(all_results);
-% elseif n_s_ind>1
-%     neighbors = 0;
-%     while 1
-%         neighbors = neighbors + 1;
-%         temp_acc = zeros(1,n_s_ind);
-%         for i_s_ind = s_ind
-%             temp_s_ind = i_s_ind-neighbors:i_s_ind+neighbors;
-%             temp_s_ind = temp_s_ind(temp_s_ind<=length(all_results)&temp_s_ind>0);
-%             temp_acc(s_ind==i_s_ind) = mean(all_results(temp_s_ind));
-%         end
-%         temp_ind = temp_acc == max(temp_acc);
-%         s_ind = s_ind(temp_ind);
-%         if length(s_ind) == 1 || neighbors > 5, break, else n_s_ind = length(s_ind); end
-%         % to make sure it doesn't prefer extremes, remove extremes after i neighbors
-%         s_ind = s_ind(s_ind<length(all_results)-neighbors+1);
-%         if length(s_ind) == 1, break, else s_ind = s_ind(s_ind>neighbors); end
-%         if length(s_ind) == 1, break, end
-%     end
-% end
-% 
-% % result is quite stable when more than 5 neighbors are the same, so if still not clear just pick more voxels rather than less
-% n_vox_selected = n_vox(s_ind(1)); 
-
+else
+    fhandle = str2func(cfg.feature_selection.optimization_criterion);
+    [optimal_value,n_vox_selected] = fhandle(all_results);
+    if isempty(n_vox_selected)
+        error('Function %s yielded an empty matrix for feature selection. Please use a different function.',cfg.feature_selection.optimization_criterion)
+    end
+end
+n_vox_selected = n_vox_selected(end);
 output = all_results;
 
 
 
 %% Feature ranks
-function [ranks,ind,external] = rank_features(cfg,external,labels_train,vectors_train,i_step)
+function [ranks,ind] = rank_features(cfg,external,labels_train,vectors_train,i_step)
 
 switch lower(cfg.feature_selection.filter)
     case 'f'
@@ -167,7 +145,7 @@ switch lower(cfg.feature_selection.filter)
     case 'w'
         [ranks,ind] = wget(labels_train,vectors_train,cfg);
     case 'external'
-        [ranks,ind,external] = eget(cfg,external,i_step);
+        [ranks,ind] = eget(cfg,external,i_step);
     otherwise
         error('Unknown ranking method %s',cfg.feature_selection.method)
 end

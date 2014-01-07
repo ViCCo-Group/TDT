@@ -4,7 +4,8 @@
 % integral part of the decoding toolbox. This function is called from 
 % decoding.m and should not be called directly. Currently there are two 
 % forms of feature selection implemented: filter methods and embedded 
-% methods (see Guyon et al, 2002, for what sorts of feature selection exist).
+% methods (see Guyon et al, 2002, for a classification of feature 
+% selection methods).
 %
 % INPUT
 % cfg: structure passed from decoding.m with at least the following fields:
@@ -38,52 +39,68 @@
 %                           subset n with the lowest weight until criterion
 %                           is reached (see Guyon et al., 2002).
 %
-%       n_vox:       Determines number of to be selected voxels or range in
-%                    which the number of to be selected voxels should be
-%                    searched.
-%                    When a range of numbers is entered, the optimal number
-%                    of voxels is determined from this range (input as
-%                    percentage between 0 and 1 or as total number of
-%                    voxels). The optimum is determined by nested CV. When
-%                    the string 'automatic' is entered, all voxels will be
-%                    used for selection and the optimal number will be
-%                    determined automatically.
+%       n_vox:
+%            Determines number of to be selected voxels or range in which 
+%            the number of to be selected voxels should be searched. When a
+%            range of numbers is entered, the optimal number of voxels is
+%            determined from this range (input as percentage between 0 and
+%            1 or as total number of voxels). The optimum is determined by
+%            nested CV. When the string 'automatic' is entered, all voxels
+%            will be used for selection and the optimal number will be
+%            determined automatically.
 %
-%       nested_n_vox:Optional input for method 'embedded.RFE'. Determines
-%                    how many voxels are initially picked for RFE and how
-%                    many are eliminated in each step.
-%                    Permitted input is the same as in 'n_vox', except that
-%                    'automatic' leaves out sqrt(n) features per step
-%                    Example: [50 60 80 100] will start with 100 voxels,
-%                    then will leave in 80, then 60, etc. and will
-%                    terminate at n_vox. When n_vox is larger than a 
-%                    value in nested_n_vox, this value in nested_n_vox will
-%                    be discarded.
+%       nested_n_vox:
+%            Optional input for method 'embedded.RFE'. Determines how many
+%            voxels are initially picked for RFE and how many are
+%            eliminated in each step. Permitted input is the same as in
+%            'n_vox', except that 'automatic' leaves out sqrt(n) features
+%            per step Example: [50 60 80 100] will start with 100 voxels,
+%            then will leave in 80, then 60, etc. and will terminate at
+%            n_vox. When n_vox is larger than a value in nested_n_vox, this
+%            value in nested_n_vox will be discarded.
 %
-%       external_fname: Optional input for method 'filter.external'. 1 x n
-%                    cell matrix of file names. Provides full path to files
-%                    used as external ranking input (e.g. previously
-%                    computed F-contrasts). Can be one image (when contrast
-%                    is independent of labels) or one per decoding step
-%                    (e.g. one per run).
+%       external_fname:
+%            Optional input for method 'filter.external'. 1 x n cell matrix
+%            of file names. Provides full path to files used as external
+%            ranking input (e.g. previously computed F-contrasts). Can be
+%            one image (when contrast is independent of labels) or one per
+%            decoding step (e.g. one per run). If one per decoding step,
+%            remember that a search for the optimal number of features
+%            might not be sensible if the input image is based on all
+%            training data (e.g. an F-contrast).
 %
-%       useall:      Uses both training and test data for feature selection.
-%                    Useful if selection criterion is independent of data
-%                    (e.g. when best features are selected on an
-%                    independent t-map that does not carry information
-%                    about the category which is decoded). Also, the output
-%                    generated in results.feature_selection can be used to
-%                    draw plots of information depending on the number of
-%                    features selected. Nested feature selection searches 
-%                    are not permitted and will lead to the same results as
-%                    a standard analysis to prevent unintentional misuse.
+%       optimization_criterion:
+%            When the optimal number of features is determined
+%            automatically, then an optimization criterion can be entered
+%            as a string. Any Matlab functions with one a vector as input
+%            and the resulting index as second output can be used. 
+%            Usually, 'max' is used when accuracy is the criterion 
+%            (default value). Please note that when a draw happens (which 
+%            also occurs by chance for small samples) the larger number of
+%            features will be kept to be rather conservative. Additionally,
+%            'select_peak' can be chosen which picks a combination of
+%            maximum value and stability (e.g. the center value in a big
+%            cluster of positive accuracies). Finally, users can create
+%            their own function as long as the second output reflects the
+%            selection index.
+%
+%       useall:
+%            Uses both training and test data for feature selection. Useful
+%            if selection criterion is independent of data (e.g. when best
+%            features are selected on an independent t-map that does not
+%            carry information about the category which is decoded). Also,
+%            the output generated in results.feature_selection can be used
+%            to draw plots of information depending on the number of
+%            features selected. Nested feature selection searches are not
+%            permitted and will lead to the same results as a standard
+%            analysis to prevent unintentional misuse.
 %
 %   files.label: n_steps x 1 vector, specifying the label for each file
-%   files.step:  n_steps x 1 vector, specifying the decoding step of each label
+%   files.chunk:  n_steps x 1 vector, used to specify the decoding step of each label
 %   scale: Needed if different scaling than main experiment is wanted
 %        scale.method: 'z', 'min0max1', or 'none', see decoding_scale_data.m
 %        scale.estimation: 'all', 'all_used', 'traintest', 'none'. All
-%           values other than 'none' will be treated as 'all'.
+%            values other than 'none' will be treated as 'all'.
 %
 % fs_data: struct containing data for feature selection
 % fields:
@@ -122,33 +139,13 @@
 
 function [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data)
 
-if isfield(cfg.feature_selection,'method') && strcmpi(cfg.feature_selection.method,'none')
-    return
-end
+%% Step 1: Prepare Feature Selection
 
-if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external') && length(cfg.feature_selection.external_fname)>1
-   % do nothing
-elseif isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall && fs_data.i_step ~= 1
-    fs_index = 1:size(fs_data.vectors_train,2);
-    fs_results = [];
-%     fs_results = results.feature_selection(i_decoding);
-    return % in this case only do FS once, because all others will be identical
-end
-    
 % Unpack data
-% if isfield(results,'feature_selection') && length(results.feature_selection)>=i_decoding
-%     fs_results = results.feature_selection;
-% end
 data = fs_data.vectors_train;
 labels = fs_data.labels_train;
 i_step = fs_data.i_step;
 i_train = fs_data.i_train;
-
-if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall == 1
-    warningv('DECODING_FEATURE_SELECTION:Nonindependence',['Training and test data are both used for feature selection. ',...
-        'Feature selection results will not be applied to main decoding, but ',...
-        'can be used for illustrative purposes!'])
-end
 
 % Run basic checks
 [cfg,n_vox,nested_n_vox] = basic_checks(cfg,size(data,2),i_step);
@@ -156,25 +153,21 @@ end
 % Scale features first
 data_scaled = decoding_scale_data(cfg.feature_selection,data); % because training data are balanced, currently the default for scaling is 'all' or 'none'
 
-%% Run feature selection as filter
+%% Step 2: Perform Feature Selection
+
+% Run feature selection as filter
 if strcmpi(cfg.feature_selection.method,'filter')
 
 [fs_index,fs_data,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train);
     
-%% Run feature selection as embedded method (currently only RFE)
-
+% Run feature selection as embedded method (currently only RFE)
 elseif strcmpi(cfg.feature_selection.method,'embedded')
     
-    if ~strcmpi(cfg.feature_selection.embedded,'RFE')
-        error(['Currently, for embedded feature selection methods, only recursive ',...
-               'feature elimination is implemented. Please set cfg.feature_selection.embedded = ''RFE'''])
-    end
-
 [fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,data_scaled,n_vox,nested_n_vox,i_step,i_train);
 
 end
 
-%% Generate ouput
+%% Step 3: Generate ouput
 
 fs_results.n_vox_steps = n_vox_steps;
 fs_results.output = output;
@@ -183,6 +176,11 @@ fs_results.n_vox_selected = length(fs_index);
 if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
     fs_index = 1:size(data,2); % do not change decoding for next step when all data is used
 end
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Feature selection subfunctions %
@@ -249,6 +247,11 @@ if strcmpi(cfg.feature_selection.method,'filter')
 
 elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for embedded methods
 
+    if ~strcmpi(cfg.feature_selection.embedded,'RFE')
+        error(['Currently, for embedded feature selection methods, only recursive ',...
+               'feature elimination is implemented. Please set cfg.feature_selection.embedded = ''RFE'''])
+    end
+    
     if isfield(cfg.feature_selection,'nested_n_vox')
         nested_n_vox = cfg.feature_selection.nested_n_vox;
     else

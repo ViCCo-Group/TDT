@@ -5,22 +5,24 @@
 % to separate training and test data (e.g. which pair should be left out) 
 % or if there is unbalanced data (i.e. more datapoints belonging to one 
 % class than to the other). For each cross-validation iteration, a subset 
-% of samples are drawn from each step (without replacement). In other 
-% words, this design uses a leave-one-step-out crossvalidation procedure, 
+% of samples are drawn from each chunk (without replacement). In other 
+% words, this design uses a leave-one-chunk-out crossvalidation procedure, 
 % but creates balanced training and (if requested) balanced test data.
-% This function only is useful if there are several separate decoding steps. 
+% This function only is useful if there are several separate decoding chunks. 
 %
-% If there is only one step, use make_design_boot.
+% If there is only one chunk, use make_design_boot.
 %
 % INPUT
-%   cfg.files.step: a vector, one step (e.g. run) number for each file in
-%       cfg.files.name
+%   cfg.files.chunk: a vector, one chunk number for each file in
+%       cfg.files.name. Chunks can be used to keep data together in 
+%       decoding iterations, e.g. when cross-validation should be 
+%       performed across runs.
 %   cfg.files.label: a vector, one label number for each file in
 %       cfg.files.name
 %   cfg.files.set (optional): currently only one set is possible in this 
 %       function.
 %   n_boot: Number of bootstrap samples to be drawn (final number will be
-%       n_boot * number of steps, e.g. if n_boot = 10 and n_runs = 3, then 
+%       n_boot * number of chunks, e.g. if n_boot = 10 and n_runs = 3, then 
 %       the final number will be 30)
 %   balance_test (optional if n_pick not needed): Set to 1 if also the 
 %       test data should be balanced. This might make sense if you want all
@@ -45,7 +47,7 @@
 
 % TODO: allow multiple sets to be used
 % TODO: introduce warning when all data is used (n_choose = n_train)
-% and data is balanced across all steps. Then using this function doesn't 
+% and data is balanced across all chunks. Then using this function doesn't 
 % make much sense.
 
 % caveat: the maximum number of available test data points are chosen
@@ -63,16 +65,29 @@ function design = make_design_boot_cv(cfg,n_boot,balance_test,n_train)
 %% generate design matrix
 
 design.function.name = mfilename;
-design.function.ver = 'v20130908';
+design.function.ver = 'v20140107';
 
 if ~exist('balance_test','var'), balance_test = 0; end
 
+% Downward compatibility (cfg.files.chunk used to be called cfg.files.step)
+if isfield(cfg.files,'step')
+    if isfield(cfg.files,'chunk') 
+        if any(cfg.files.step-cfg.files.chunk)
+        error('Both cfg.files.step and cfg.files.chunk were passed. Not sure which one to use, because both are different')
+        end
+    else
+        cfg.files.chunk = cfg.files.step;
+        cfg.files = rmfield(cfg.files,'step');
+    end
+    warningv('MAKE_DESIGN_BOOT_CV:deprec','Use of cfg.files.step is deprecated. Please change your scripts to cfg.files.chunk.')
+end
+    
 % Internal function to check prerequisites (see bottom)
 cfg = basic_checks(cfg);
 
-n_files = length(cfg.files.step);
-step_numbers = unique(cfg.files.step);
-n_steps = length(step_numbers);
+n_files = length(cfg.files.chunk);
+chunk_numbers = unique(cfg.files.chunk);
+n_steps = length(chunk_numbers);
 
 % Set labels and set
 design.label = repmat(cfg.files.label, 1, n_steps * n_boot);
@@ -89,7 +104,7 @@ samples_ind = cell(n_steps,length(labels));
 samples_per_step = zeros(n_steps,length(labels));
 
 for i_step = 1:n_steps
-    step_filter = cfg.files.step == step_numbers(i_step);
+    step_filter = cfg.files.chunk == chunk_numbers(i_step);
     for i_label = 1:length(labels)
         samples_ind{i_step,i_label} = find(cfg.files.label == labels(i_label) & step_filter);
         samples_per_step(i_step,i_label) = length(samples_ind{i_step,i_label});
@@ -98,16 +113,16 @@ end
 n_choose = min(samples_per_step,[],2);
 
 if any(n_choose<1)
-    fprintf('Number of available entries per step:\n')
+    fprintf('Number of available entries per chunk:\n')
     disp(n_choose)
-    error(['At least one decoding step has not a single sample per category.\n',...
-           'Remove this decoding step and run function again.']);
+    error(['At least one decoding chunk has not a single sample per category.\n',...
+           'Remove this decoding chunk and run function again.']);
 end
 
 % compare with n_train
 if exist('n_train','var')
     if any(n_choose<n_train)
-        warning(['In some steps, less test samples are available than requested.\n',...
+        warning(['In some chunks, less test samples are available than requested.\n',...
                  'Minimum number will be %d'],min(n_choose))
         n_choose(n_choose>n_train) = n_train;
     else
@@ -138,7 +153,7 @@ for i_step = 1:n_steps
         
         % set all training entries
         train_filter = subset_filter;
-        train_filter(cfg.files.step == step_numbers(i_step)) = 0;
+        train_filter(cfg.files.chunk == chunk_numbers(i_step)) = 0;
         design.train(logical(train_filter), curr_ind) = 1;
         
         if balance_test
@@ -146,7 +161,7 @@ for i_step = 1:n_steps
         else
             test_filter = ones(length(cfg.files.label),1);
         end
-        test_filter(cfg.files.step ~= step_numbers(i_step)) = 0;
+        test_filter(cfg.files.chunk ~= chunk_numbers(i_step)) = 0;
         design.test(logical(test_filter), curr_ind) = 1;
         
     end
@@ -173,16 +188,16 @@ elseif length(unique(cfg.files.set))>1
         'set number afterwards.'])
 end
 
-if unique(cfg.files.step) == 1
-    error(['cfg.files.step contains only one entry. This function is ',...
+if unique(cfg.files.chunk) == 1
+    error(['cfg.files.chunk contains only one entry. This function is ',...
            'designed for several entries. Please use make_design_boot instead ',...
            'or create your design manually.'])
 end
 
 % Make sure that input has the right orientation
-if size(cfg.files.step,1) == 1
-    warningv('MAKE_DESIGN:ORIENTATION_STEP','cfg.files.step has the wrong orientation. Flipping.');
-    cfg.files.step = cfg.files.step';
+if size(cfg.files.chunk,1) == 1
+    warningv('MAKE_DESIGN:ORIENTATION_CHUNK','cfg.files.chunk has the wrong orientation. Flipping.');
+    cfg.files.chunk = cfg.files.chunk';
 end
 if size(cfg.files.label,1) == 1
     warningv('MAKE_DESIGN:ORIENTATION_LABEL','cfg.files.label has the wrong orientation. Flipping.');

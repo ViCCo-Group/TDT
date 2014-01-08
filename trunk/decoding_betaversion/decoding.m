@@ -554,36 +554,37 @@ dispv(1,'All %s steps finished successfully!',cfg.analysis)
 
 % TODO: when results are not written, all results are still returned as
 % indices, not volumes. Is that desirable?
-if ~cfg.results.write
-    return
+if cfg.results.write
+    % Close txt files to store filenames
+    dispv(1,['Closing file to store filenames ' inputfilenames_fname])
+    fclose(inputfilenames_fid);
+    dispv(1,'done!')
+
+    % Write results
+    dispv(1,'Writing results to disk...')
+    decoding_write_results(cfg,results)
+    dispv(1,'done!')
 end
 
-% Close txt files to store filenames
-dispv(1,['Closing file to store filenames ' inputfilenames_fname])
-fclose(inputfilenames_fid);
-dispv(1,'done!')
-
-% Write results
-dispv(1,'Writing results to disk...')
-decoding_write_results(cfg,results)
-dispv(1,'done!')
-
+% save end time
 cfg.progress.endtime = datestr(now);
 
 % Save cfg
-cfg_fname = [cfg.results.filestart '_' cfg.results.output{1} '_cfg.mat'];
-cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
-dispv(1,['Saving cfg to ' cfg_fname])
-save(cfg_fpath, 'cfg');
+if cfg.results.write
+    cfg_fname = [cfg.results.filestart '_' cfg.results.output{1} '_cfg.mat'];
+    cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
+    dispv(1,['Saving cfg to ' cfg_fname])
+    save(cfg_fpath, 'cfg');
 
-% Create copy of txt files and cfg for each decoding output (e.g. 'accuracy', 'AUC', ...)
-if numel(cfg.results.output)>1
-    for i_out = 2:numel(cfg.results.output)
-        tmp = copyfile(inputfilenames_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_filedetails.txt']); %#ok<NASGU>
-        tmp = copyfile(cfg_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_cfg.mat']); %#ok<NASGU>
+    % Create copy of txt files and cfg for each decoding output (e.g. 'accuracy', 'AUC', ...)
+    if numel(cfg.results.output)>1
+        for i_out = 2:numel(cfg.results.output)
+            tmp = copyfile(inputfilenames_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_filedetails.txt']); %#ok<NASGU>
+            tmp = copyfile(cfg_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_cfg.mat']); %#ok<NASGU>
+        end
     end
 end
-
+    
 %% plot & save design again at the end (to show that job is finished)
 % Endtime shows user that job is over
 try
@@ -596,6 +597,9 @@ try
 catch %#ok<*CTCH>
     warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
 end
+
+%% END OF MAIN FUNCTION
+
 
 %% Subfunctions
 

@@ -1,9 +1,9 @@
-function n_vox_selected = select_peak(n_vox,all_results)
+function select_ind = select_peak(n_vox,all_results)
 
-% This function selects a peak, but if several peaks exist it picks the
-% most stable. The function has a tendency to select values at the extremes
-% which is slightly corrected by switching a correction on. A major
-% drawback is the slow speed.
+% This function selects the index of n_vox which is the largest (same as max), 
+% but if several peaks exist it picks the most stable. The function has a 
+% tendency to select values at the extremes which is slightly corrected 
+% by switching a correction on. A major drawback is the slow speed.
 
 % step one: check for maximum
 select_ind = find(all_results == max(all_results));
@@ -43,7 +43,7 @@ if n_select_ind ~= 1 % if more than one maximum
     if any(ismember(select_ind,k))
         k = intersect(select_ind,k);
     end
-    n_vox_selected = n_vox(k(1));
+    select_ind = k(end);
         
 %     figure, plot(n_vox,all_results,'x'); hold all; plot(n_vox_interp,all_results_interp); 
 %     plot(n_vox_selected,all_results(select_ind),'o')
@@ -53,6 +53,4 @@ if n_select_ind ~= 1 % if more than one maximum
 %     pause
 %     close
     
-else
-    n_vox_selected = n_vox(select_ind);
 end

@@ -20,8 +20,6 @@ function warningv(msg_id,msg,varargin)
 
 global warningv_active
 
-warningv_active = 1; % makes sure that in display_progress.m the message will not be truncated
-
 if ~isempty(varargin)
     msg = sprintf(msg, varargin{:});
 end
@@ -62,8 +60,9 @@ field_id = [field_id '.' msg_id_short];
 
 try % try adding one to the field
     eval([field_id '=' field_id '+1;'])
-    eval(['if ' field_id ' == 2, fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg. dbstack stored in global reports, reports.warnstc\n''), end'])
+    eval(['if ' field_id ' == 2, fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg. dbstack stored in global reports, reports.warnstc\n''); warningv_active = 1; end'])
 catch %#ok if not possible, create field and plot warning message
+    warningv_active = 1; % makes sure that in display_progress.m the message will not be truncated
     eval([field_id '= 1;']);
     warning(msg_id,'%s',msg) % this format prevents a problem when pathnames are passed
     % also save stack

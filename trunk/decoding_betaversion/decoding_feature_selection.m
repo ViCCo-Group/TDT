@@ -49,15 +49,25 @@
 %            will be used for selection and the optimal number will be
 %            determined automatically.
 %
+%       direction:
+%            Required input for method 'embedded'. Possible values:
+%            'forward' or 'backward'. Determines if forward selection or
+%            backward elimination should be performed. Make sure that the
+%            right method is selected. For example, RFE is a backward
+%            elimination method.
+%
 %       nested_n_vox:
-%            Optional input for method 'embedded.RFE'. Determines how many
-%            voxels are initially picked for RFE and how many are
+%            Required input for method 'embedded'. If 'none', embedded
+%            method is carried out without nested cross-validation.
+%            For forward selection, determines how many features are added
+%            in each step. For backward elimination, determines how many are
 %            eliminated in each step. Permitted input is the same as in
-%            'n_vox', except that 'automatic' leaves out sqrt(n) features
-%            per step Example: [50 60 80 100] will start with 100 voxels,
-%            then will leave in 80, then 60, etc. and will terminate at
-%            n_vox. When n_vox is larger than a value in nested_n_vox, this
-%            value in nested_n_vox will be discarded.
+%            'n_vox', except that 'automatic' leaves out (or includes)
+%            sqrt(n) features per step.
+%            Example: [50 60 80 100] in backward elimination will start
+%            with 100 voxels, then will leave in 80, then 60, etc. and will
+%            terminate at n_vox. When n_vox is larger than a value in
+%            nested_n_vox, this value in nested_n_vox will be discarded.
 %
 %       external_fname:
 %            Optional input for method 'filter.external'. 1 x n cell matrix
@@ -148,7 +158,7 @@ i_step = fs_data.i_step;
 i_train = fs_data.i_train;
 
 % Run basic checks
-[cfg,n_vox,nested_n_vox] = basic_checks(cfg,size(data,2),i_step);
+[cfg,n_vox,nested_n_vox] = basic_checks(cfg,size(data,2)); % TODO: run only relevant part of basic checks on each iteration
 
 % Scale features first
 data_scaled = decoding_scale_data(cfg.feature_selection,data); % because training data are balanced, currently the default for scaling is 'all' or 'none'
@@ -158,12 +168,12 @@ data_scaled = decoding_scale_data(cfg.feature_selection,data); % because trainin
 % Run feature selection as filter
 if strcmpi(cfg.feature_selection.method,'filter')
 
-[fs_index,fs_data,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train);
+[fs_index,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train);
     
-% Run feature selection as embedded method (currently only RFE)
+% Run feature selection as embedded method (currently only RFE is hardcoded, but you can add your own algorithm)
 elseif strcmpi(cfg.feature_selection.method,'embedded')
     
-[fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,data_scaled,n_vox,nested_n_vox,i_step,i_train);
+[fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,data_scaled,n_vox,nested_n_vox,i_train);
 
 end
 
@@ -190,7 +200,7 @@ end
 
 %---------------------------------------------------
 % Set n_vox and nested_n_vox and run basic checks to prevent wrong use of n_vox and nested_n_vox
-function [cfg,n_vox,nested_n_vox] = basic_checks(cfg,n_features,i_step)
+function [cfg,n_vox,nested_n_vox] = basic_checks(cfg,n_features)
 
 if ~strcmpi(cfg.feature_selection.method,'none') && ~strcmpi(cfg.feature_selection.method,'filter') && ~strcmpi(cfg.feature_selection.method,'embedded')
     warningv('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
@@ -200,6 +210,8 @@ end
 if ~isfield(cfg.feature_selection,'n_vox')
     error(['Missing field ''nvox'' in cfg.feature_selection. You need to specify the range ',...
                 'in which to search. Type ''help feature_selection'' for details.'])
+else
+    n_vox = cfg.feature_selection.n_vox;
 end
 
 if ~isempty(strfind(cfg.feature_selection.decoding.method, '_kernel'))
@@ -211,15 +223,6 @@ if ~isempty(strfind(cfg.feature_selection.decoding.method, '_kernel'))
     cfg.feature_selection.decoding.method = newmethod;
 end
 
-if ~isfield(cfg.feature_selection,'n_vox')
-    if i_step == 1
-        warningv('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
-        	'No field ''n_vox'' in cfg.feature_selection.\n']);
-    end
-else
-    n_vox = cfg.feature_selection.n_vox;
-end
-    
 if ischar(n_vox)
     if ~strcmp(n_vox,'automatic')
         error('Unknown input %s in field ''n_vox''. Use any number, allowed strings, or do not specify.',n_vox)
@@ -245,12 +248,31 @@ end
 if strcmpi(cfg.feature_selection.method,'filter')
     nested_n_vox = n_vox; % for filtering, give nested_n_vox as output because output is requested % TODO: try giving [] as output
 
+    if ~isfield(cfg.feature_selection,'filter')
+        error('In addition to cfg.feature_selection.method = ''filter'', you need to add cfg.feature_selection.filter = ''...'' (for available methods, see help decoding_feature_selection).');
+    end
+    
 elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for embedded methods
 
-    if ~strcmpi(cfg.feature_selection.embedded,'RFE')
-        error(['Currently, for embedded feature selection methods, only recursive ',...
-               'feature elimination is implemented. Please set cfg.feature_selection.embedded = ''RFE'''])
+    if ~isfield(cfg.feature_selection,'embedded')
+        error('In addition to cfg.feature_selection.method = ''embedded'', you need to add cfg.feature_selection.embedded = ''...'' (for available methods, see help decoding_feature_selection).');
     end
+    
+    if ~isfield(cfg.feature_selection,'embedded_func')
+        cfg.feature_selection.embedded_func = str2func(cfg.feature_selection.embedded);
+    end
+    
+    if ~isfield(cfg.feature_selection,'direction')
+        if strcmpi(cfg.feature_selection.embedded,'RFE')
+            warningv('DECODING_FEATURE_SELECTION:ForgotDirection',['No direction was specified for feature selection.',...
+                ' Since RFE is used, the direction is automatically set to cfg.feature_selection.direction = ''backward''']);
+            cfg.feature_selection.direction = 'backward';
+        else
+            error(['No direction was specified for feature selection.',...
+                ' Please specify by setting parameter cfg.feature_selection.direction to either ''backward'' or ''forward''']);
+        end
+    end
+        
     
     if isfield(cfg.feature_selection,'nested_n_vox')
         nested_n_vox = cfg.feature_selection.nested_n_vox;
@@ -260,16 +282,28 @@ elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for 
     end
     
     if ischar(nested_n_vox)
-        if ~strcmp(nested_n_vox,'automatic')
-            error('Unknown input in field ''n_vox''. Use any number, allowed strings, or do not specify.')
-        end
-        
-        % automatic: uses sqrt(n)-RFE 
-        nested_n_vox = n_features;
-        i = nested_n_vox;
-        while i > 1
-            i = nested_n_vox(end)-floor(sqrt(nested_n_vox(end)));
-            nested_n_vox = [nested_n_vox i]; %#ok<AGROW>
+        switch lower(nested_n_vox)
+            case 'automatic'
+                
+                % automatic: use steps of sqrt(n) that are left out or increased (embedded)
+                nested_n_vox = n_features;
+                i = nested_n_vox;
+                while i > 1
+                    i = nested_n_vox(end)-floor(sqrt(nested_n_vox(end)));
+                    nested_n_vox = [nested_n_vox i]; %#ok<AGROW>
+                end
+                if nested_n_vox(end) ~= 1
+                    nested_n_vox(end+1) = 1;
+                end
+                
+            case 'none'
+                % do nothing, but run check
+                if strcmpi(n_vox,'automatic')
+                    error(['The combination of nested_n_vox = ''none'' and n_vox = ''automatic'' doesn''t work, because when no nested cross validation is performed,',...
+                    ' the number of to be selected features cannot be specified automatically. Specify a range to be selected using the embedded method'])
+                end
+            otherwise
+                error('Unknown input in field ''n_vox''. Use any number, allowed strings, or do not specify.')
         end
         
     elseif length(nested_n_vox)>1 % if range of voxels is entered
@@ -288,7 +322,7 @@ elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for 
         nested_n_vox = nested_n_vox(nested_n_vox>0);        
     end
     
-    if any(nested_n_vox > n_features)
+    if ~ischar(nested_n_vox) && any(nested_n_vox > n_features)
         error('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
             'Number of specified features to be selected is larger than number of existing features.']);
     end

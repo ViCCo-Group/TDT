@@ -175,8 +175,6 @@
 %                           the same data as loaded from a maskfile.
 
 
-% TODO: for further slight speed-up, replace the repeating strcmpi's with
-% fixed values.
 % TODO: add check to basic checks that chosen software can perform
 %   classification, regression or correlation (see also next)
 % TODO: better: check that current software can deliver the requested
@@ -188,6 +186,8 @@
 %   iterations, e.g. cross-validation steps) can be different from chunks
 %   (i.e. data that should be kept together when cross-validation is
 %   performed)
+%   Externalized basic_checks to decoding_basic_checks and report_results
+%   Improved readability and speed of feature_selection
 % 2013-09-05 Kai
 %   Added passed_data.masks.mask_data{} to provide ROI data.
 % 2013-09-05 Kai
@@ -352,6 +352,12 @@ start_time = now;
 
 % Preloading
 msg_length = [];
+previous_fs_data = []; % init
+
+% init states of parameter_selection, feature_selection, and scaling
+parameter_selection_on = ~strcmpi(cfg.parameter_selection.method,'none');
+feature_selection_on = ~strcmpi(cfg.feature_selection.method,'none');
+scaling_across_on = strcmpi(cfg.scale.estimation,'across');
 
 % Warn if test mode
 if cfg.testmode
@@ -405,7 +411,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
     previous_trainlabels = []; % init
-    previous_fs_data = []; % init
     % clear model variable from the previous decoding
     clear model;
     
@@ -457,7 +462,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if ~strcmpi(cfg.parameter_selection.method,'none') && ~skip_training
+        if parameter_selection_on && ~skip_training
             cfg = decoding_parameter_selection(cfg,data_train,i_train);
         end
 
@@ -465,7 +470,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Feature selection %
         %%%%%%%%%%%%%%%%%%%%%
 
-        if ~strcmpi(cfg.feature_selection.method,'none')
+        if feature_selection_on
             if ~skip_training
                 % Step 1: Pack
                 [fs_data, skip_feature_selection] = pack_fs_data(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data);
@@ -497,7 +502,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % TODO: include variable set here and rename to scaling within set
 
         % Do scaling on training set if requested
-        if ~skip_training && strcmpi(cfg.scale.estimation,'across')
+        if ~skip_training && scaling_across_on
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [data_train,scaleparams] = decoding_scale_data(cfg,data_train);
         end
@@ -526,7 +531,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % TODO: introduce column scaling (mean removal, zscore, etc.)
 
         % Do scaling on test data if requested
-        if strcmpi(cfg.scale.estimation,'across')
+        if scaling_across_on
             data_test = decoding_scale_data(cfg,data_test,scaleparams);
         end
 
@@ -607,26 +612,21 @@ end
 %% Pack feature selection data (moved to subfunction for better readability)
 function [fs_data,skip_feature_selection] = pack_fs_data(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data)
 
-% Should feature selection be executed at all?
-if strcmpi(cfg.feature_selection.method,'none') % Skip feature selection if method is 'none'
-    fs_data = [];
-    skip_feature_selection = 1;
-    return
-end
-
 skip_feature_selection = 0; % init
 
 % If requested load external data for feature selection (do only once!)
-try
-    fs_data.external = previous_fs_data.external;
-catch
-    for i = 1:length(cfg.feature_selection.external_fname)
-        ranks_hdr = read_header(cfg.software,cfg.feature_selection.external_fname{i});
-        if any(ranks_hdr.dim(1:3) ~= cfg.datainfo.dim)
-            error('Size of external image(s) for feature selection does not match size of original images!');
+if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
+    try
+        fs_data.external = previous_fs_data.external;
+    catch
+        for i = 1:length(cfg.feature_selection.external_fname)
+            ranks_hdr = read_header(cfg.software,cfg.feature_selection.external_fname{i});
+            if any(ranks_hdr.dim(1:3) ~= cfg.datainfo.dim)
+                error('Size of external image(s) for feature selection does not match size of original images!');
+            end
+            ranks_image = read_image(cfg.software,ranks_hdr); % get image
+            fs_data.external.ranks_image{i} = ranks_image; % add image to fs_data
         end
-        ranks_image = read_image(cfg.software,ranks_hdr); % get image
-        fs_data.external.ranks_image{i} = ranks_image; % add image to fs_data
     end
 end
 

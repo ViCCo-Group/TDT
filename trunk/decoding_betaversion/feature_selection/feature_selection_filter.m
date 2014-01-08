@@ -1,4 +1,4 @@
-function [fs_index,fs_data,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train)
+function [fs_index,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train)
 
 output = []; % init
 % Rank features for feature selection
@@ -119,15 +119,19 @@ end
 all_results = vertcat(results.(cfg.feature_selection.results.output{1}).output);
 
 if strcmpi(cfg.feature_selection.optimization_criterion,'select_peak')
-n_vox_selected = select_peak(n_vox,all_results); % this function selects the peak and for several peaks the most stable one
+    select_ind = select_peak(n_vox,all_results); % this function selects the peak and for several peaks the most stable one
 else
     fhandle = str2func(cfg.feature_selection.optimization_criterion);
-    [optimal_value,n_vox_selected] = fhandle(all_results);
-    if isempty(n_vox_selected)
-        error('Function %s yielded an empty matrix for feature selection. Please use a different function.',cfg.feature_selection.optimization_criterion)
-    end
+    [optimal_value,select_ind] = fhandle(all_results);
 end
-n_vox_selected = n_vox_selected(end);
+n_vox_selected = n_vox(select_ind);
+
+try 
+    n_vox_selected = max(n_vox_selected); % if several optima, rather keep more features
+catch %#ok<CTCH>
+    error('Function %s yielded an empty matrix for feature selection. Please use a different function.',cfg.feature_selection.optimization_criterion)
+end
+
 output = all_results;
 
 

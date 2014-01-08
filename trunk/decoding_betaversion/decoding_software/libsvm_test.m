@@ -34,7 +34,8 @@ try
     
 % end of normal function
 
-catch e
+catch %#ok<CTCH>
+    [e.message,e.identifier] = lasterr; % for downward compatibility keep separate from catch
     if strcmp(e.identifier, 'MATLAB:nonStrucReference') && ~isfield(data_test, 'kernel')
         error('Using Kernel method, but data was not passed as data_test.kernel. More infos below this error')
         %           You most likely

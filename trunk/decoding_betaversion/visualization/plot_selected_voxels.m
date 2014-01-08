@@ -61,9 +61,9 @@ end
 %% select the ROI figure for plotting
 try
     set(0,'CurrentFigure',fighdl)
-catch e
-    e
-    warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure is close. Creating a new one')
+catch %#ok<CTCH>
+    disp(lasterr)
+    warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
     fighdl = figure('name', 'Online ROI');
 end
 %%

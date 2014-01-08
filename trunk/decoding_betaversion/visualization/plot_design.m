@@ -199,7 +199,7 @@ set(gca,'YTickLabel', fnames_char)
 %% set xaxis training
 set(gca,'XTick', 1:length(xstr))
 set(gca,'XTickLabel', xstr)
-xlabel('Training - Chunk [Set] nr')
+xlabel('Training - Step [Set] nr')
 
 %% same for testset
 
@@ -244,7 +244,7 @@ if isfield(cfg.files, 'descr')
 end
 
 %% set xaxis test
-xlabel('Test - Chunk [Set] nr')
+xlabel('Test - Step [Set] nr')
 set(gca,'XTick', 1:length(xstr))
 set(gca,'XTickLabel', xstr)
 

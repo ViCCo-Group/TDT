@@ -33,11 +33,11 @@ for i_field = 1:length(field_names)
 end
 
 if any(missing) % if only some or no fields for a design exist
-    if isfield(cfg.design,'function') % create design with passed method
+    if isfield(cfg.design,'function') && isfield(cfg.design.function,'name') % create design with passed method
         if ~all(missing) % throw warning if some fields exist, but others not
-            warningv('DECODING_BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function)
+            warningv('DECODING_BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function.name)
         end
-        fhandle = str2func(cfg.design);
+        fhandle = str2func(cfg.design.function.name); % create design
         cfg.design = feval(fhandle,cfg);
     else % throw error if no method has been passed and design incomplete
         error('Design is missing or incomplete. Either create design in advance or pass method to create design (see ''help decoding'')');
@@ -131,6 +131,22 @@ end
 if ~isequal(size(cfg.design.train), size(cfg.design.test))
     error('Size mismatch: ~isequal(size(cfg.design.train), size(cfg.design.test))')
 end
+
+% get number of conditions present in decoding
+cfg.design.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
+
+% get number of used conditions (i.e. labels) for each run separately
+n_unique_labels = zeros(1,n_steps);
+for i_step = 1:n_steps
+    n_unique_labels(i_step) = length(unique(cfg.design.label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step))));
+end
+% at the same time make sure that the number is always the same (it is possible that
+% different labels are used as long as the number of labels remains the
+% same)
+if ~all(n_unique_labels == n_unique_labels(1))
+    error('Number of used labels varies across decoding steps which prevents comparing results across steps. If multiple sets are used, run them separately.')
+end
+cfg.design.n_cond_per_step = n_unique_labels(1);
 
 problem = 0;
 for i_step = 1:n_steps
@@ -257,7 +273,7 @@ if cfg.results.write
 end
 
 
-% Check for unbalanced training data
+%% Subfunction: Check for unbalanced training data
 function check_imbalance(cfg)
 dispv(2, 'Checking for imbalances in cfg.design.train')
 for decoding_step = 1:size(cfg.design.train, 2)

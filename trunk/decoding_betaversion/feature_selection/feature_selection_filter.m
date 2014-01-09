@@ -104,7 +104,8 @@ for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
     
 end
 
-results.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % init
+results.n_cond = cfg.design.n_cond; % init
+results.n_cond_per_step = cfg.design.n_cond_per_step;
 
 % transform decoding_out to result format that is requested
 for iteration = 1:length(n_vox)

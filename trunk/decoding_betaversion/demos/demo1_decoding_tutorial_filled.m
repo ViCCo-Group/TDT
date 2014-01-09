@@ -130,7 +130,7 @@ cfg.design = make_design_cv(cfg);
 % === Automatic Creation - alternative ===
 % Alternatively, you can create the design during runtim of the decoding 
 % function, by specifying the following parameter:
-% cfg.design.function = 'make_design_cv';
+% cfg.design.function.name = 'make_design_cv';
 % For the current example, this is not helpful, because you can already
 % create the design now. However, you might run into cases in which you
 % can't create the design at this stage (e.g. if your design depends on the

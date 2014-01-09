@@ -38,7 +38,7 @@
 %               decoding_step independently (see cfg.results.setwise).
 %       Alternatively, you can create the design in this function by
 %       providing the following field:
-%           design.function: string named after the design creation
+%           design.function.name: string named after the design creation
 %               function that should be used (e.g. 'make_design_cv'). Check
 %               the folder 'design' for all options.
 %
@@ -125,16 +125,18 @@
 %       searchlight) will be calculated
 %
 % Explanation of important variables:
+%   n_decodings: Number of decoding analyses that are performed, e.g.
+%       number of ROIs or number of searchlight voxels.
 %   n_steps: Number of decoding steps, e.g. cross-validation iterations.
 %       Essentially the number of times a train/test cycle is performed to
 %       achieve one results.
-%   n_decodings: Number of decoding analyses that are performed, e.g.
-%       number of ROIs or number of searchlight voxels.
-%   n_sets: Number of decoding sets which are performed. Several decodings
-%       with different outputs may be performed interleaved (e.g. when
-%       doing cross-classification with different test data in each set).
-%       These could of course be called in different analyses, but it saves
-%       time to do them all together.
+%   n_sets: Number of decoding sets which are performed. Essentially a
+%       chunking scheme for decoding steps. Several decodings with
+%       different outputs may be performed interleaved (e.g. when doing
+%       cross-classification with different test data in each set). These
+%       could of course be called in different analyses, but it saves
+%       time to do them all together, e.g. when they rely on the same
+%       training data.
 %
 %
 % PASSING DATA (optional):
@@ -145,15 +147,15 @@
 %   passed_data: struct with all data that is necessary to do the decodings
 %                as provided by decoding_load_data.
 %       Required fields:
-%       .data: nSamples x nVoxels matrix of data that is used for decoding.
-%              This is not all data from the data files, but only the data
-%              that corresponds to the voxels that are selected in
-%              .mask_index.
-%       .mask_index: indices of those voxels that were selected by the
+%       .data: nSamples x nFeatures (e.g. voxels) matrix of data that is
+%              used for decoding. This is not all data from the data files,
+%              but only the data that corresponds to the voxels that are
+%              selected in .mask_index.
+%       .mask_index: indices of those features that were selected by the
 %                    mask minus those that are NaN in the input data. When
 %                    spatial information is not important, a  vector of 
-%                    1:nVoxels is sufficient.
-%                    These are only the voxels of the input data that  were 
+%                    1:nFeatures is sufficient.
+%                    These are only the features of the input data that were 
 %                    masked, NOT ROI masks. See .masks.mask_data{} below 
 %                    on how to pass ROI masks.
 %       .files: Contains file information as in cfg.files, especially
@@ -162,8 +164,7 @@
 %       .hdr: a header from either a mask or a data file (if
 %             cfg.files.mask{1} == 'all voxels'). '' is ok if no hdr is
 %             needed for writing results.
-%       .dim: 1x3 vector containing the dimension of original
-%             dimensionality of the data.
+%       .dim: 1x3 vector containing the original dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
 %                   calculated)
 %       Optional fields (passed_data):
@@ -175,10 +176,9 @@
 %                           the same data as loaded from a maskfile.
 
 
-% TODO: add check to basic checks that chosen software can perform
-%   classification, regression or correlation (see also next)
-% TODO: better: check that current software can deliver the requested
-%   output
+% TODO: check that current software can deliver the requested output
+% TODO: make passing data more general purpose (to allow e.g. the use of
+%   EEG data)
 
 % HISTORY
 % 2014-07-01 Martin
@@ -294,7 +294,6 @@ end
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
 n_sets = length(unique(cfg.design.set));
-n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
 results = {};
 
 % Set kernel method if used
@@ -304,7 +303,8 @@ use_kernel = cfg.decoding.use_kernel;
 [cfg,sl_template] = decoding_prepare_searchlight(cfg);
 
 % Save number of conditions (e.g. to get the chancelevel later)
-results.n_cond = n_cond;
+results.n_cond = cfg.design.n_cond;
+results.n_cond_per_step = cfg.design.n_cond_per_step;
 % Save mask_index
 results.mask_index = mask_index;
 % Save all mask indices separately if several masks are provided

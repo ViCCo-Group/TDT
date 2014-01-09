@@ -41,7 +41,7 @@ for i_output = 1:n_outputs
 %         results.(outname).chancelevel = 0;
 %     end
 
-    chancelevel = 1/results.n_cond * 100; % chancelevel in percent    
+    chancelevel = 1/results.n_cond_per_step * 100; % chancelevel in percent    
 
     if strcmpi(outname, 'accuracy') || strcmpi(outname, 'accuracy_minus_chance') || ...
             strcmpi(outname, 'sensitivity') || strcmpi(outname, 'sensitivity_minus_chance') || ...

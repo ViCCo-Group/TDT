@@ -58,16 +58,23 @@
 %
 %       nested_n_vox:
 %            Required input for method 'embedded'. If 'none', embedded
-%            method is carried out without nested cross-validation.
-%            For forward selection, determines how many features are added
-%            in each step. For backward elimination, determines how many are
-%            eliminated in each step. Permitted input is the same as in
-%            'n_vox', except that 'automatic' leaves out (or includes)
-%            sqrt(n) features per step.
+%            method is carried out without nested cross-validation. Nested
+%            cross-validation can be used to define a stopping criterion
+%            for the embedded method. nested_n_vox defines the steps along
+%            which we search. Since we are dealing with an embedded method,
+%            nested_n_vox also determines the path along which we search
+%            for the stopping criterion, so ideally it should be identical
+%            to n_vox unless you only want to select specific sizes.
+%            For forward selection, nested_n_vox determines how many
+%            features are added in each step. For backward elimination,
+%            determines how many are eliminated in each step. Permitted
+%            input is the same as in 'n_vox', except that 'automatic'
+%            leaves out (or includes) sqrt(n) features per step.
 %            Example: [50 60 80 100] in backward elimination will start
 %            with 100 voxels, then will leave in 80, then 60, etc. and will
-%            terminate at n_vox. When n_vox is larger than a value in
-%            nested_n_vox, this value in nested_n_vox will be discarded.
+%            terminate at the smallest value of n_vox. Irrelevant values -
+%            even if provided - will not be computed, and there is no
+%            warning.
 %
 %       external_fname:
 %            Optional input for method 'filter.external'. 1 x n cell matrix
@@ -81,18 +88,19 @@
 %
 %       optimization_criterion:
 %            When the optimal number of features is determined
-%            automatically, then an optimization criterion can be entered
-%            as a string. Any Matlab functions with one a vector as input
-%            and the resulting index as second output can be used. 
+%            automatically, then an optimization criterion along which to
+%            choose the optimal number can be entered as a string. Any
+%            Matlab functions with one a vector as input and the resulting
+%            index as second output can be used. 
 %            Usually, 'max' is used when accuracy is the criterion 
 %            (default value). Please note that when a draw happens (which 
 %            also occurs by chance for small samples) the larger number of
-%            features will be kept to be rather conservative. Additionally,
-%            'select_peak' can be chosen which picks a combination of
-%            maximum value and stability (e.g. the center value in a big
-%            cluster of positive accuracies). Finally, users can create
-%            their own function as long as the second output reflects the
-%            selection index.
+%            features will be chosen to be rather conservative. Additionally,
+%            'select_peak' has been implemented as a method which picks a
+%            combination of maximum value and stability (e.g. the center
+%            value in a big cluster of positive accuracies). Finally, users
+%            can create their own function as long as the second output
+%            reflects the selection index.
 %
 %       useall:
 %            Uses both training and test data for feature selection. Useful
@@ -101,9 +109,7 @@
 %            carry information about the category which is decoded). Also,
 %            the output generated in results.feature_selection can be used
 %            to draw plots of information depending on the number of
-%            features selected. Nested feature selection searches are not
-%            permitted and will lead to the same results as a standard
-%            analysis to prevent unintentional misuse.
+%            features selected (only for illustrative purposes!).
 %
 %   files.label: n_steps x 1 vector, specifying the label for each file
 %   files.chunk:  n_steps x 1 vector, used to specify the decoding step of each label

@@ -1,0 +1,7 @@
+This is an (incomplete) list of dependencies if later new methods are introduced:
+1. Many classification-related methods still allow only two labels. When 
+   multiclass decoding is introduced this needs to be taken into account.
+2. Feature selection and parameter selection use scaling. Scaling all data 
+   can be dangerous, but at the moment it is assumed that training data 
+   are balanced. When imbalances are allowed, this needs to be taken care 
+   of.

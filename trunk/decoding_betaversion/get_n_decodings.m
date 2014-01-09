@@ -28,7 +28,8 @@ if strcmpi(cfg.analysis,'searchlight')
         if subset_sz(2)~=3
             decoding_subindex = cfg.searchlight.subset;
             if any(decoding_subindex>length(mask_index))
-                error('Some indices in cfg.searchlight.subset are larger than the number of decodings which are %i. Please check!',length(mask_index))
+                warning('Some indices in cfg.searchlight.subset are larger than the number of decodings which are %i. Removing all larger values!',length(mask_index))
+                decoding_subindex(decoding_subindex>length(mask_index)) = [];
             end
 
             % if provided as matrix

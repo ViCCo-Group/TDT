@@ -212,9 +212,7 @@ end
 passed_data.files = cfg.files;
 passed_data.data = data;
 passed_data.mask_index = mask_index;
-if size(vol,4) > 1
-    passed_data.mask_index_separate = mask_index_separate;
-end
+passed_data.mask_index_separate = mask_index_separate;
 passed_data.hdr = mask_hdr;
 passed_data.dim = sz;
 

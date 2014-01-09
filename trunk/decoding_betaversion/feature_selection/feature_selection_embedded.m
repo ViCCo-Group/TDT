@@ -1,15 +1,24 @@
 function [fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,data_scaled,n_vox,nested_n_vox,i_train)
 
-output = []; % init
+% Sorry for the somewhat convoluted code (mainly caused by forward and
+% backward selection and several ways in which nested_n_vox and n_vox can
+% be entered). I just think it would not be much easier even if we split
+% the code up.
+%
 
-% TODO: set nested_n_vox here if it is a string (make sure it's not a
-% single number, otherwise there won't be any range searched!)
+% latest version: 2014/08/01 Martin
 
-% remark: why can nested_n_vox be larger than n_vox although such values
-% are not used later? Because later steps depend on earlier steps, i.e. if
-% we started off with a smaller number of voxels, we might end up with
-% different voxels than when we started off with a larger number
+% TODO: make sure nested_n_vox is not a single number, otherwise there won't be any range searched!)
 
+% remark for programmers: why can nested_n_vox be larger than n_vox 
+% although such values are not used later? Because for embedded and wrapper
+% methods, later steps depend on earlier steps, i.e. if we started off with
+% a smaller number of voxels, we might end up with different voxels than
+% when we started off with a larger number
+
+output = []; % init (not used, but for consistency with feature_selection_filter)
+
+% to ease readability, set variables here
 if strcmpi(cfg.feature_selection.direction,'forward')
     forward = 1;
     sortstr = 'ascend';
@@ -18,18 +27,24 @@ else
     sortstr = 'descend';
 end
 
+
+%% STEP 1: RUN NESTED CROSS VALIDATION IF REQUESTED TO FIND OPTIMAL
+%% STOPPING CRITERION FOR EMBEDDED METHOD
+
 if ischar(nested_n_vox) && strcmpi(nested_n_vox,'none') % when none is selected, then no nested-cv is performed
     % Set final_n_vox to run embedded method on
     final_n_vox = sort(n_vox,sortstr);
     
-else
-% always make sure that number is descending
-if length(n_vox) == 1
+else % perform nested cross validation unless length(n_vox) == 1
+    
+% always make sure that number is ascending for forward and descending for backward
+
+if length(n_vox) == 1 % if number of to be selected voxels is fixed to 1
     n_vox_selected = n_vox;
-elseif strcmp(n_vox,'automatic')
+elseif strcmp(n_vox,'automatic') % if number should be determined automatically
     n_vox = sort(nested_n_vox,sortstr); % nested_n_vox are the only steps we check, so n_vox can be made identical to nested_n_vox
     [n_vox_selected,output,cfg.feature_selection.design.msg] = run_nest(cfg,data_scaled,i_train,n_vox,nested_n_vox); % determine optimal number of features
-elseif length(n_vox) > 1
+elseif length(n_vox) > 1 % if a prespecified range of numbers should be searched
     n_vox = sort(n_vox,sortstr);
     if forward
         nested_n_vox = nested_n_vox(nested_n_vox<=max(n_vox)); % because a maximum of n_vox will be selected later, so it doesn't make sense to continue increasing further
@@ -41,6 +56,9 @@ elseif length(n_vox) > 1
 else
     error('Variable ''n_vox'' has wrong size. n_vox = %s', num2str(n_vox) )
 end
+
+%% STEP 2: APPLY RESULTS OF NESTED CROSS VALIDATION (OR ORIGINAL VALUE IF
+%% NO CV WAS PERFORMED) TO EMBEDDED METHOD
 
 % Create final_n_vox as a combination of nested_n_vox and to stop at
 % n_vox_selected (we still need nested_n_vox to repeat the same scheme used in the nested cross-validation)
@@ -125,7 +143,8 @@ for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
     
 end
 
-results.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % init
+results.n_cond = cfg.design.n_cond; % init
+results.n_cond_per_step = cfg.design.n_cond_per_step;
 
 % transform decoding_out to result format that is requested
 for iteration = 1:length(nested_n_vox)

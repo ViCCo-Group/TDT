@@ -73,13 +73,20 @@ defaults.scale.method = 'none';
 defaults.scale.estimation = 'none';
 defaults.scale.cutoff = [-inf inf];
 
+% Specification of feature transformation
+defaults.feature_transformation.method = 'none';
+defaults.feature_transformation.estimation = 'none';
+
 % Specification of feature selection
 defaults.feature_selection.method = 'none';
+defaults.feature_selection.estimation = 'across'; % i.e. carry out only on training data and apply to test data
 defaults.feature_selection.optimization_criterion = 'max';
-defaults.feature_selection.useall = 0;
 
 % Specification of parameter selection
 defaults.parameter_selection.method = 'none';
+defaults.parameter_selection.format.name = 'string_number';
+defaults.parameter_selection.format.separator = ' ';
+defaults.parameter_selection.optimization_criterion = 'max';
 
 % Searchlight specific defaults
 defaults.searchlight.unit = 'voxels'; % searchlight unit ('mm' or 'voxels')

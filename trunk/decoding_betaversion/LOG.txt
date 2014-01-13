@@ -1,3 +1,16 @@
+* beta 2.7 - 2014/01/14
+- results stored in .mat now always reported as struct
+- introduced feature_transformation as additional step that can be carried 
+ out (e.g. for dimensionality reduction or other approaches)
+- allow several levels of feature selection in one decoding (e.g. first 
+ filter and then recursive feature elimination
+- made parameter selection general purpose. Caveat: No downwards 
+ compatibility for existing scripts (now enter '-c' instead of 'c' for 
+ selecting parameters). Downwards compatibility not useful!
+- replaced 'useall'-option in feature selection with 'estimation' (default 
+in other methods, better comparability
+- debugged feature selection
+
 * beta 2.6 - 2014/01/07
 - Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
 iterations, e.g. cross-validation steps) can be different from chunks

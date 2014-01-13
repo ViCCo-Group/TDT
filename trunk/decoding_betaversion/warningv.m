@@ -18,7 +18,7 @@
 
 function warningv(msg_id,msg,varargin)
 
-global warningv_active
+global warningv_active % used as indicator if warning message appeared (to prevent that progress messages are cut)
 
 if ~isempty(varargin)
     msg = sprintf(msg, varargin{:});
@@ -33,7 +33,7 @@ field_id_init = 'reports.warning'; % to save flags for warning
 stack_id_init = 'reports.warnstc'; % to save full dbstack
 
 if ~exist('msg','var')
-    error('warningv needs two inputs: messageID and message!')
+    error('warningv needs at least two inputs: messageID and message!')
 end
 
 callers = dbstack;
@@ -64,7 +64,9 @@ try % try adding one to the field
 catch %#ok if not possible, create field and plot warning message
     warningv_active = 1; % makes sure that in display_progress.m the message will not be truncated
     eval([field_id '= 1;']);
+    fprintf('\n') % make message more salient
     warning(msg_id,'%s',msg) % this format prevents a problem when pathnames are passed
+    fprintf('\n')
     % also save stack
     stack_field_id = [stack_id_init field_id(length(field_id_init)+1:end)];
     eval([stack_field_id '= dbstack;']);

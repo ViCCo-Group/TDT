@@ -1,4 +1,4 @@
-% function [ranks,ind,external] = eget(cfg,external,i_step)
+% function [ranks,ind] = eget(cfg,external,i_step)
 
 % Feature selection subfunction using external ranking scheme. For example,
 % features can be weighted based on an independent localizer run and the
@@ -6,7 +6,7 @@
 % training set independently, in that way selecting features independently,
 % but optimized for voxels which are maximally activated.
 
-function [ranks,ind,external] = eget(cfg,external,i_step)
+function [ranks,ind] = eget(cfg,external,i_step)
 
 % TODO: introduce checks that wrong input will generate appropriate error
 % messages

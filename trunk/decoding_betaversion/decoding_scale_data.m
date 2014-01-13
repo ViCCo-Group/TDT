@@ -27,9 +27,11 @@
 %                          on the training data only, and are then applied 
 %                          to both training and test data separately 
 %                         (slower). Remark: Because no class information is 
-%                         used to estimate the scaling parameters, we do
-%                         not believe that this can lead to any "double
-%                         dipping".
+%                          used to estimate the scaling parameters, we
+%                          currently believe that this does not lead to any
+%                          "double dipping". However, it is the responsi-
+%                          bility of the user to ensure independence of
+%                          training and test data.
 %    [cfg.scale.cutoff]  : optional input for outlier reduction, 1x2 vector
 %                         ([lower bound upper bound])
 %    data                : contains samples to be scaled

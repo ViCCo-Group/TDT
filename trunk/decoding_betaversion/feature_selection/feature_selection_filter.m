@@ -63,11 +63,7 @@ end
 
 n_steps = size(cfg.feature_selection.design.train,2);
 
-if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
-    data = decoding_scale_data(cfg.feature_selection,data);
-else
-    data = decoding_scale_data(cfg.feature_selection,data);
-end
+data = decoding_scale_data(cfg.feature_selection,data);
 
 decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
 
@@ -123,7 +119,8 @@ if strcmpi(cfg.feature_selection.optimization_criterion,'select_peak')
     select_ind = select_peak(n_vox,all_results); % this function selects the peak and for several peaks the most stable one
 else
     fhandle = str2func(cfg.feature_selection.optimization_criterion);
-    [optimal_value,select_ind] = fhandle(all_results);
+    optimal_value = fhandle(all_results);
+    select_ind = find(all_results==optimal_value);
 end
 n_vox_selected = n_vox(select_ind);
 

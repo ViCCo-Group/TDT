@@ -30,18 +30,9 @@ function decoding_write_results(cfg,results)
 
 global reports
 
-% Unpack results and set output variables
+% Unpack results
 mask_index = results.mask_index;
-chancelevel = 1/results.n_cond_per_step * 100; %#ok<NASGU> % chancelevel in percent    
-output_variables = {'output','mask_index','resultdim','chancelevel'};
-if strcmpi(cfg.analysis,'searchlight') && isfield(results,'decoding_subindex')
-    decoding_subindex = results.decoding_subindex; %#ok<NASGU>
-    output_variables = [output_variables {'decoding_subindex'}];
-end
-if isfield(results,'mask_index_separate')
-    mask_index_separate = results.mask_index_separate;
-    output_variables = [output_variables {'mask_index_separate'}];
-end
+results.analysis = cfg.analysis;
 
 % Save warning messages
 if ~isempty(reports) % if any warnings were present
@@ -66,9 +57,6 @@ if strcmpi(cfg.analysis,'searchlight')
     end
     
     for i_output = 1:n_outputs
-        
-        %     results.(outputname).output = zeros(n_decodings,1); %#ok
-        %     results.(outputname).set(i_set).output = zeros(n_decodings,1); %#ok
         
         outputname = cfg.results.output{i_output};
         
@@ -137,14 +125,24 @@ if strcmpi(cfg.analysis,'ROI') && isfield(cfg,'files') && isfield(cfg.files,'mas
     for i_mask = 1:length(cfg.files.mask)
         [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<NASGU>
     end
-    output_variables = [output_variables,{'roi_names'}];
+    results.roi_names = roi_names;
 end
 
+% first remove all output fields and store separately
+for i_output = 1:n_outputs
+    outputname = cfg.results.output{i_output};
+    results_outputonly.(outputname) = results.(outputname);
+    results = rmfield(results,outputname);
+end
+results_nooutput = results;   
+
+% Now loop over all outputs to store results separately
 for i_output = 1:n_outputs
     
-    % TODO: add input roinames to cfg to be able to apply names later.
-    
+    % and add results again for each iteration
     outputname = cfg.results.output{i_output};
+    results = results_nooutput;
+    results.(outputname) = results_outputonly.(outputname);
     
     % Save overall results and save to returning variable
     fdir = cfg.results.dir;
@@ -173,24 +171,26 @@ for i_output = 1:n_outputs
     
     dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
     
-    output = results.(outputname).output; %#ok<NASGU>
-    resultdim = cfg.datainfo.dim; %#ok<NASGU>
+    results.resultdim = cfg.datainfo.dim;
     
-    save(fname,output_variables{:});
+    save(fname,'results');
     
     results.(outputname).fname = fname;
     
     % Save set results (should each set be saved separately?)
     if cfg.results.setwise
         n_sets = length(results.(outputname).set);
+        results_all = results;
         for i_set = 1:n_sets
             fname = fullfile(fdir,sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id));
             dispv(2,'Saving results for set %i to %s', i_set, fname)
-            output = results.(outputname).set(i_set).output; %#ok<NASGU>
-            
-            save(fname,output_variables{:})
-            
+            results.(outputname).output = results.(outputname).set(i_set).output;
+            results.(outputname) = rmfield(results.(outputname),'set');
             results.(outputname).set(i_set).fname = fname;
+            
+            save(fname,'results');
+            
+            results = results_all; % reset
         end
     end
 end

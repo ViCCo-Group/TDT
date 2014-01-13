@@ -41,7 +41,7 @@
 % measure as output.
 %
 % IN
-%   method: desired method name as string (s. above)
+%   method: desired method name as string (see above)
 %   decoding_out: struct with result from last decoding step
 %   cfg: the standard decoding cfg struct that was used for the last
 %        decoding

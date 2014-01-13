@@ -4,7 +4,7 @@
 % integral part of the decoding toolbox. This function is called from 
 % decoding.m and should not be called directly. Currently there are two 
 % forms of feature selection implemented: filter methods and embedded 
-% methods (see Guyon et al, 2002, for a classification of feature 
+% methods (see Guyon et al, 2003, for a classification of feature 
 % selection methods).
 %
 % INPUT
@@ -102,8 +102,10 @@
 %            can create their own function as long as the second output
 %            reflects the selection index.
 %
-%       useall:
-%            Uses both training and test data for feature selection. Useful
+%       estimation:
+%            Defaults to 'across' where estimation of optimal features is
+%            done on training data, only. When 'all' is selected, both
+%            training and test data are used for feature selection. Useful
 %            if selection criterion is independent of data (e.g. when best
 %            features are selected on an independent t-map that does not
 %            carry information about the category which is decoded). Also,
@@ -155,6 +157,19 @@
 
 function [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data)
 
+%% Step 0: If requested, run nested level of feature selection first (for a first independent preselection step)
+
+nested_feature_selection_on = ~strcmpi(cfg.feature_selection.feature_selection.method,'none');
+if nested_feature_selection_on
+    nested_cfg = cfg;
+    nested_cfg.feature_selection = cfg.feature_selection.feature_selection; % otherwise endless loop
+    nested_cfg.feature_selection = decoding_defaults(nested_cfg.feature_selection);
+    [nested_fs_index,nested_fs_results,fs_data] = decoding_feature_selection(nested_cfg,fs_data);
+    fs_results.nested = nested_fs_results;
+    fs_data.vectors_train = fs_data.vectors_train(:,nested_fs_index);
+end
+
+
 %% Step 1: Prepare Feature Selection
 
 % Unpack data
@@ -176,7 +191,7 @@ if strcmpi(cfg.feature_selection.method,'filter')
 
 [fs_index,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train);
     
-% Run feature selection as embedded method (currently only RFE is hardcoded, but you can add your own algorithm)
+% Run feature selection as embedded method (currently only RFE is hardcoded, and only forward and backward searches are allowed, but you can add your own algorithm)
 elseif strcmpi(cfg.feature_selection.method,'embedded')
     
 [fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,data_scaled,n_vox,nested_n_vox,i_train);
@@ -189,11 +204,13 @@ fs_results.n_vox_steps = n_vox_steps;
 fs_results.output = output;
 fs_results.n_vox_selected = length(fs_index);
 
-if isfield(cfg.feature_selection,'useall') && cfg.feature_selection.useall
+if strcmpi(cfg.feature_selection.estimation,'all')
     fs_index = 1:size(data,2); % do not change decoding for next step when all data is used
 end
 
-
+if nested_feature_selection_on
+    fs_index = nested_fs_index(fs_index); % to return original index
+end
 
 
 

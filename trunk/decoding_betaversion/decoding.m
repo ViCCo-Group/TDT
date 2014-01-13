@@ -102,6 +102,8 @@
 % Other optional input includes:
 %   cfg.scale: Perform scaling on data (may improve decoding performance)
 %       See function 'decoding_scale_data' for details
+%   cfg.feature_transformation: Rearranges features and possibly reduces
+%       number of dimensions (e.g. PCA)
 %   cfg.parameter_selection: Optimize parameters for decoding in nested CV
 %       See function 'decoding_parameter_selection' for details
 %   cfg.feature_selection: Select most important features (voxels) for
@@ -211,6 +213,7 @@ function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %% Prepare decoding analysis
 
 cfg = decoding_defaults(cfg); % set defaults
+cfg.feature_transformation = decoding_defaults(cfg.feature_transformation);
 cfg.parameter_selection = decoding_defaults(cfg.parameter_selection);
 cfg.feature_selection = decoding_defaults(cfg.feature_selection);
 
@@ -224,7 +227,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = [mfilename ', Martin Hebart & Kai Goergen, v2014/01/07 2.6 beta'];
+ver = [mfilename ', Martin Hebart & Kai Goergen, v2014/01/14 2.7 beta'];
 cfg.info.ver = ver;
 dispv(1,ver)
 
@@ -311,6 +314,8 @@ results.mask_index = mask_index;
 if isfield(passed_data,'mask_index_separate')
     results.mask_index_separate = passed_data.mask_index_separate;
 end
+% Save number of decodings that could be performed
+results.n_decodings = n_decodings;
 % Save subindices if they are provided
 if isfield(cfg.searchlight,'subset')
     results.decoding_subindex = decoding_subindex;
@@ -355,6 +360,8 @@ msg_length = [];
 previous_fs_data = []; % init
 
 % init states of parameter_selection, feature_selection, and scaling
+feature_transformation_all_on = strcmpi(cfg.feature_transformation.estimation,'all');
+feature_transformation_across_on = strcmpi(cfg.feature_transformation.estimation,'across');
 parameter_selection_on = ~strcmpi(cfg.parameter_selection.method,'none');
 feature_selection_on = ~strcmpi(cfg.feature_selection.method,'none');
 scaling_across_on = strcmpi(cfg.scale.estimation,'across');
@@ -394,7 +401,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template,passed_data);
-
+    current_data = data(:,indexindex);
+    
     if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
         if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')
             cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI');
@@ -407,6 +415,11 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         end
     end
 
+    % Data transformation (e.g. PCA) if requested
+    if feature_transformation_all_on
+        [cfg,current_data] = decoding_feature_transformation(cfg,current_data);
+    end
+    
     % init variables that are used to check whether the previous training
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
@@ -420,7 +433,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % part of the kernel is in most cases faster than calculating
         % a kernel in every step. As default, a linear kernel is used
         % (@(X,Y) X*Y' ; see decoding_defaults);
-        kernel = cfg.decoding.kernel.function(data(:,indexindex),data(:,indexindex));
+        kernel = cfg.decoding.kernel.function(current_data,current_data);
     end
 
     % Loop over design columns (e.g. cross-validation runs)
@@ -442,13 +455,13 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             data_test.kernel = kernel(i_test, i_train);
             % additionally pass original data vectors, if selected
             if cfg.decoding.kernel.pass_vectors
-                data_train.vectors = data(i_train, indexindex);
-                data_test.vectors = data(i_test, indexindex);
+                data_train.vectors = current_data(i_train, :);
+                data_test.vectors = current_data(i_test, :);
             end
         else
             % no kernel used, set the training vectors as training data
-            data_train = data(i_train, indexindex);
-            data_test = data(i_test, indexindex);
+            data_train = current_data(i_train, :);
+            data_test = current_data(i_test, :);
         end
   
         labels_train = cfg.design.label(i_train, i_step);
@@ -458,7 +471,12 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % labels are identical to previous iteration (saves time)
         % never skip on first decoding step
         skip_training = i_step~=1 & isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
-                
+        
+        % Data transformation (e.g. PCA) applied to training data and extended to test data if requested
+        if feature_transformation_across_on
+            [cfg,data_train,data_test] = decoding_feature_transformation(cfg,data_train,data_test);
+        end
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Parameter selection (e.g. optimize C for SVM) %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -469,11 +487,11 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         %%%%%%%%%%%%%%%%%%%%%
         % Feature selection %
         %%%%%%%%%%%%%%%%%%%%%
-
         if feature_selection_on
             if ~skip_training
                 % Step 1: Pack
-                [fs_data, skip_feature_selection] = pack_fs_data(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data);
+                [fs_data, skip_feature_selection] = ...
+                    decoding_prepare_feature_selection(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data);
                 % Step 2: Perform feature selection method
                 if ~skip_feature_selection
                     [fs_index,fs_results,previous_fs_data] = decoding_feature_selection(cfg,fs_data);
@@ -483,8 +501,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
                 results.feature_selection(i_decoding).output{i_step} = fs_results.output;
                 results.feature_selection(i_decoding).curr_decoding = curr_decoding;
             end
-            % Step 3: Select features (unless 'useall' is selected which would be double dipping)
-            if ~cfg.feature_selection.useall
+            % Step 3: Select features (unless 'all' is selected which would be double dipping)
+            if ~strcmpi(cfg.feature_selection.estimation,'all')
                 data_train = data_train(:,fs_index);
                 data_test = data_test(:,fs_index);
             end
@@ -604,62 +622,3 @@ catch %#ok<*CTCH>
 end
 
 %% END OF MAIN FUNCTION
-
-
-%% Subfunctions
-
-
-%% Pack feature selection data (moved to subfunction for better readability)
-function [fs_data,skip_feature_selection] = pack_fs_data(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data)
-
-skip_feature_selection = 0; % init
-
-% If requested load external data for feature selection (do only once!)
-if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
-    try
-        fs_data.external = previous_fs_data.external;
-    catch
-        for i = 1:length(cfg.feature_selection.external_fname)
-            ranks_hdr = read_header(cfg.software,cfg.feature_selection.external_fname{i});
-            if any(ranks_hdr.dim(1:3) ~= cfg.datainfo.dim)
-                error('Size of external image(s) for feature selection does not match size of original images!');
-            end
-            ranks_image = read_image(cfg.software,ranks_hdr); % get image
-            fs_data.external.ranks_image{i} = ranks_image; % add image to fs_data
-        end
-    end
-end
-
-% Pack values in fs_data
-fs_data.i_train = i_train;
-if cfg.feature_selection.useall, fs_data.i_train = i_train | i_test; end
-fs_data.labels_train = cfg.design.label(i_train, i_step);
-
-if i_step ~= 1
-    % Also skip when data which the selection is based on is identical to the previous step
-    if isequal(previous_fs_data.i_train, fs_data.i_train) && isequal(previous_fs_data.labels_train, fs_data.labels_train)
-        skip_feature_selection = 1;
-    end
-    % with the exception (when multiple external images are used the data may be identical, but the selection criteria can change)
-    if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
-        if length(cfg.feature_selection.external_fname)>1
-        skip_feature_selection = 0;
-        % if however only one external image is used (which is fulfilled by the elseif) and all data is used, then feature selection 
-        % can be skipped, too (because in that case all selection steps are identical)
-        elseif cfg.feature_selection.useall
-            skip_feature_selection = 1;
-        end
-    end
-end
-    
-if skip_feature_selection, return, end
-
-% Continue with assigning values
-fs_data.vectors_train = data(fs_data.i_train, indexindex);
-fs_data.i_step = i_step;
-fs_data.external.position_index = mask_index(indexindex); % absolute position of currently selected voxels in decoding (for external masks)
-
-if cfg.feature_selection.useall == 1
-    warningv('PACK_FS_DATA:Nonindependence',['Training and test data are both used for feature selection. ',...
-    'Feature selection results will not be applied to main decoding, but can be used for illustrative purposes!'])
-end

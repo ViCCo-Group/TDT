@@ -81,6 +81,10 @@ if strcmpi(cfg.decoding.software,'libsvm')
     end
 end
 
+% For feature transformation, only one of these fields can be entered, not both
+if isfield(cfg.feature_transformation,'n_vox') && isfield(cfg.feature_transformation,'critical_value')
+    error('It is only possible to provide either the field cfg.feature_transformation.n_vox or the field cfg.feature_transformation.critical_value, but not both')
+end
 
 % Check if kernel method is used
 use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
@@ -94,25 +98,30 @@ end
 
 % Using a precomputed kernel doesn't work for scaling across
 if use_kernel && strcmpi(cfg.scale.estimation,'across')
-    error('Cant use scaling method ''across'' for "_kernel" methods. It does not make sense, because a kernel must be calculated in this case in every step anyway (which is the same what normal methods do, but slower)');
+    error('Cannot use scaling method ''across'' for "_kernel" methods. It does not make sense, because a kernel must be calculated in this case in every step anyway (which is the same what normal methods do, but slower). Manually set cfg.decoding.method = ''classification'' (if classification is performed).');
 end
 
-% Using feature selection with the kernel method doesn't work.
-if use_kernel && ~strcmpi(cfg.feature_selection.method,'none')
-    error('Features selection does not work with the kernel option at the moment, use non-kernel method instead');
+if use_kernel && strcmpi(cfg.feature_transformation.estimation,'across')
+    newmethod = strrep(cfg.decoding.method,'_kernel','');
+    str = sprintf(['Use of cfg.feature_transformation.estimation = ''across'' and decoding method ''%s'' is not possible at the moment. ',...
+                   'Method is now reverted to ''%s'' (which might be slower).'],cfg.decoding.method,newmethod);
+    warningv('DECODING_BASIC_CHECKS:KernelAndFeatureTransformation',str)
+    cfg.decoding.method = newmethod;
+    cfg.decoding.use_kernel = 0;
 end
 
 % Using feature selection in the main function with a kernel method doesn't make sense
-if ~isempty(strfind(cfg.decoding.method, '_kernel')) && ~strcmpi(cfg.feature_selection.method,'none')
+if use_kernel && ~strcmpi(cfg.feature_selection.method,'none')
     newmethod = strrep(cfg.decoding.method,'_kernel','');
     str = sprintf(['Use of feature selection and decoding method ''%s'' in the main function makes processing slower. ',...
                    'Method is now reverted to ''%s''.'],cfg.decoding.method,newmethod);
     warningv('DECODING_BASIC_CHECKS:KernelAndFeatureSelection',str)
     cfg.decoding.method = newmethod;
+    cfg.decoding.use_kernel = 0;
 end
 
 if ~strcmpi(cfg.feature_selection.method,'none')
-    warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsTestmode','Feature selection has not been fully debugged. Running in test mode!')
+    warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsBeta','Feature selection has not been fully debugged. Running in beta stage!')
 end
 
 [n_files, n_steps] = size(cfg.design.train);
@@ -137,14 +146,22 @@ cfg.design.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design
 
 % get number of used conditions (i.e. labels) for each run separately
 n_unique_labels = zeros(1,n_steps);
+unique_labels = cell(1,n_steps);
 for i_step = 1:n_steps
-    n_unique_labels(i_step) = length(unique(cfg.design.label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step))));
+    unique_labels{i_step} = unique(cfg.design.label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step)));
+    n_unique_labels(i_step) = length(unique_labels{i_step});
 end
 % at the same time make sure that the number is always the same (it is possible that
 % different labels are used as long as the number of labels remains the
 % same)
 if ~all(n_unique_labels == n_unique_labels(1))
     error('Number of used labels varies across decoding steps which prevents comparing results across steps. If multiple sets are used, run them separately.')
+else
+    diff_unique_labels = diff([unique_labels{:}],1,2);
+    if any(diff_unique_labels(:)) % if any run contains different labels
+        warningv('DECODING_BASIC_CHECKS:more_than_two_labels',...
+            'More than two labels are used, but not all labels are used in each run (e.g. in run 1 labels A and B and in run 2 labels A and C). Make sure this has been intended!')
+    end
 end
 cfg.design.n_cond_per_step = n_unique_labels(1);
 

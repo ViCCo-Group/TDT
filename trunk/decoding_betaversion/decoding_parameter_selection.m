@@ -270,7 +270,7 @@ for iteration = 1:size(all_combinations,2)
         error(['More than one output selected in nested CV for parameter selection.\n',...
             'Change field ''cfg.parameter_selection.results.output'' to one entry. only.'])
     end
-   results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration)); 
+   results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration),data_train,data_test); 
 end
 
 % Use parameters where output is highest

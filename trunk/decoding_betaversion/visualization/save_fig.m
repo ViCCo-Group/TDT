@@ -23,6 +23,10 @@ function save_fig(filename, cfg)
         cfg = [];
     end
 
+    if isfield(cfg,'results') && isfield(cfg.results,'write') && cfg.results.write == 0
+        return
+    end
+    
     if isfield(cfg, 'plot_design_formats')
         if iscell(cfg.plot_design) && ischar(cfg.plot_design{1})
             formats = cfg.plot_design_formats;

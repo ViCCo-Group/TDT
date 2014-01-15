@@ -10,6 +10,13 @@
 - replaced 'useall'-option in feature selection with 'estimation' (default 
 in other methods, better comparability
 - debugged feature selection
+- completely rewrote decoding_write_results to allow writing any results 
+  as image and writing searchlight results as .mat (plus fixed a few bugs on the way)
+- filedetails.txt and cfg.mat: now not named after first output, but just named res_
+- allow to pass flag that training and test data can be non-independent (e.g. for illustrative results of weights)
+- added possibility to calculate patterns
+- added balanced_accuracy
+
 
 * beta 2.6 - 2014/01/07
 - Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding

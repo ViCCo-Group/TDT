@@ -1,4 +1,4 @@
-% function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model)
+% function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model,data)
 % 
 % This function calls all decoding_transform_results for all entries in
 % cfg.results.output and saves the returning outputs at results.(outname).
@@ -15,7 +15,7 @@
 % Kai, 2013/04/19
 
 
-function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model)
+function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model,data)
 
 n_outputs = length(cfg.results.output);
 
@@ -46,7 +46,8 @@ for i_output = 1:n_outputs
     if strcmpi(outname, 'accuracy') || strcmpi(outname, 'accuracy_minus_chance') || ...
             strcmpi(outname, 'sensitivity') || strcmpi(outname, 'sensitivity_minus_chance') || ...
             strcmpi(outname, 'specificity') || strcmpi(outname, 'specificity_minus_chance') || ...
-            strcmpi(outname, 'AUC') || strcmpi(outname, 'AUC_minus_chance')
+            strcmpi(outname, 'balanced_accuracy') || strcmpi(outname, 'balanced_accuracy_minus_chance') || ...
+            strcmpi(outname, 'AUC') || strcmpi(outname, 'AUC_minus_chance') 
         results.(outname).chancelevel = chancelevel;
     else
         % dont save it as chancelevel 
@@ -54,7 +55,7 @@ for i_output = 1:n_outputs
 %             return an (optional) chancelevels if asked?
     end
     
-    output = decoding_transform_results(curr_output,decoding_out,chancelevel,cfg,model);
+    output = decoding_transform_results(curr_output,decoding_out,chancelevel,cfg,model,data);
 
     % This is a lazy initialization (Martin would call it workaround) for
     % the case in which the output has more than one element (e.g. weights
@@ -75,7 +76,7 @@ for i_output = 1:n_outputs
     if cfg.results.setwise
         for i_set = 1:n_sets
             current_set = unique_sets(i_set);
-            output = decoding_transform_results(curr_output,decoding_out(cfg.design.set == current_set),chancelevel,cfg,model);
+            output = decoding_transform_results(curr_output,decoding_out(cfg.design.set == current_set),chancelevel,cfg,model,data);
 
             % This is a lazy initialization (Martin would call it workaround) for
             % the case in which the output has more than one element (e.g. weights

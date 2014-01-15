@@ -85,7 +85,8 @@
 %       that the external software needs for training [set for libsvm classification]
 %   cfg.decoding.test.classification.model_parameters: Model parameter that the external
 %       software needs for testing [default = '']
-%   cfg.results.write: Should results be written to hard disk [default = 1]
+%   cfg.results.write: Should results be written to hard disk
+%       (0 = no, 1 = .mat-file, 2 = .mat-file and image) [default = 2]
 %   cfg.results.output: 1xn cell array specifying which output should be
 %       generated, with possible fields specified in function
 %       decoding_transform_results.m  [default = {'accuracy'}]
@@ -227,25 +228,24 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = [mfilename ', Martin Hebart & Kai Goergen, v2014/01/14 2.7 beta'];
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/01/14 2.7 beta';
 cfg.info.ver = ver;
 dispv(1,ver)
 
-%% try show design to user and save to result dir
-% plot design if required
+%% Basic checks
+
+[cfg, n_files, n_steps] = decoding_basic_checks(cfg,nargout);
+
+%% Plot and save design as graphics if requested
+
 try
     if cfg.plot_design == 1 % plot + save fig, save hdl
         cfg.fighandles.plot_design = plot_design(cfg);
-        if cfg.results.write
-            if ~isdir(cfg.results.dir), mkdir(cfg.results.dir), end
-            save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
-        end
+        save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
         drawnow;
     elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
         fighdl = plot_design(cfg, 0); 
-        if cfg.results.write
-            save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
-        end
+        save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
         close(fighdl); clear fighdl
     end
 catch
@@ -254,13 +254,11 @@ end
 % show design as text
 try display_design(cfg); catch, warningv('DECODING:PrintDesignFailed', 'Failed to print design to screen'), end
 
-%% Basic checks
-[cfg, n_files, n_steps] = decoding_basic_checks(cfg,nargout);
+%% Open file to write all filenames that we load
 
-%% open file to write all filenames that we load
-if cfg.results.write == 1
+if cfg.results.write
     % Open filename to save details for each decoding step
-    inputfilenames_fname = [cfg.results.filestart '_' cfg.results.output{1} '_filedetails.txt'];
+    inputfilenames_fname = [cfg.results.filestart '_filedetails.txt'];
     inputfilenames_fpath = fullfile(cfg.results.dir,inputfilenames_fname);
     dispv(1,'Writing input filenames for each decoding iteration to %s', inputfilenames_fpath)
     inputfilenames_fid = fopen(inputfilenames_fpath, 'wt');
@@ -395,7 +393,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % Display status info (i.e. how far is the analysis?)
     if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
     % update display every 500ms
-    if cfg.plot_design == 1 && (now - lasttime)*24*60*60 > .5
+    if cfg.plot_design && (now - lasttime)*24*60*60 > .5
         drawnow; lasttime = now;
     end
     
@@ -566,7 +564,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
-    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model);
+    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model,data);
 
 end % End decoding iterations (e.g. voxel)
 
@@ -592,22 +590,7 @@ end
 % save end time
 cfg.progress.endtime = datestr(now);
 
-% Save cfg
-if cfg.results.write
-    cfg_fname = [cfg.results.filestart '_' cfg.results.output{1} '_cfg.mat'];
-    cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
-    dispv(1,['Saving cfg to ' cfg_fname])
-    save(cfg_fpath, 'cfg');
-
-    % Create copy of txt files and cfg for each decoding output (e.g. 'accuracy', 'AUC', ...)
-    if numel(cfg.results.output)>1
-        for i_out = 2:numel(cfg.results.output)
-            tmp = copyfile(inputfilenames_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_filedetails.txt']); %#ok<NASGU>
-            tmp = copyfile(cfg_fname,[cfg.results.filestart '_' cfg.results.output{i_out} '_cfg.mat']); %#ok<NASGU>
-        end
-    end
-end
-    
+   
 %% plot & save design again at the end (to show that job is finished)
 % Endtime shows user that job is over
 try

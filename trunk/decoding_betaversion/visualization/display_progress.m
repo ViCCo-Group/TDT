@@ -42,7 +42,11 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
 
     % print message and delete old message
     if ~isempty(msg_length) && cnt ~=1 && ~warningv_active
+        if cnt == 10 || cnt == 100 || cnt == 1000 || cnt == 10000 || cnt == 100000
+        reverse_str = sprintf(repmat('\b', 1, msg_length + 2)); % delete old text    
+        else
         reverse_str = sprintf(repmat('\b', 1, msg_length + 3)); % delete old text
+        end
     else
         reverse_str = [];
     end

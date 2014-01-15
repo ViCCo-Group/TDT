@@ -1,4 +1,4 @@
-% output = transres_model_parameters(decoding_out, chancelevel, cfg, model)
+% output = transres_model_parameters(decoding_out, chancelevel, cfg, model, varargin)
 % 
 % This function returns the raw model parameters for the last decodings
 %
@@ -8,7 +8,7 @@
 %
 % Kai, 2012-03-12
 
-function output = transres_model_parameters(decoding_out, chancelevel, cfg, model)
+function output = transres_model_parameters(decoding_out, chancelevel, cfg, model, varargin)
 
 % return the model only
 output.model = model;

@@ -1,18 +1,22 @@
-% output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model)
+% output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model, varargin)
 % 
 % Calculates the weights in source space (primal problem), if a linear SVM 
 % was used (otherwise no weights can be calculated for the primal problem).
+% Use this function if you want to plot results or do other calculations
+% that require the bias. If you want to plot results, the decoding toolbox
+% cannot automate this for you, because a struct is passed as output. In
+% that case, use transres_primal_SVM_weights_nobias.
 %
 % To use it, use
 %
 %   cfg.results.output = {'primal_SVM_weights'}
 %
 % OUTPUT
-%   struct array for each output.weights(step), containing for each step
+%   1x1 cell array of cell arrays for each output(step), containing a
+%   struct for each step with
 %   
 %     .w: weights for each primal dimension
 %     .b: bias
-%     .model: full dual model (as saved by libSVM)
 
 % If you want to draw the lines separating hyperplane & the margins, use
 %
@@ -40,11 +44,14 @@
 % Kai, 2012-03-12
 
 % History
+% 2014-01-15
+%   Adjusted to simpler output (rather than struct>cell>struct now only
+%   cell>struct)
 % 2012-11-30
 %   Added more efficient method to calculate primal weights.
 %   This method can be extended to multiclass. Link to howto below. 
 
-function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model)
+function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model, varargin)
 
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment
@@ -70,7 +77,9 @@ end
 %% new version (using alphas and SVs)
 % see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804
 
-for i_model = 1:length(model)
+n_models = length(model);
+output{1} = cell(n_models,1);
+for i_model = 1:n_models
     m = model(i_model);
     if strcmpi(cfg.decoding.method, 'classification') && length(unique(m.Label)) > 2
         error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
@@ -78,13 +87,13 @@ for i_model = 1:length(model)
     
     weights.w = m.SVs' * m.sv_coef;    
     weights.b = -m.rho;
-    output.weights{i_model} = weights;
+    output{1}{i_model} = weights;
 end
 
 
 % %% old version
 % The old version works for smaller problems, but not for e.g. wholebrain
-% decoding. So I replaced it by a one that should works.
+% decoding. So I replaced it by a one that should work.
 % % get the size of the current primal source space
 % [nSVs, primal_dim] = size(model(1).SVs);
 % 

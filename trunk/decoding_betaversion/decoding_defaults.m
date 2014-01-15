@@ -114,7 +114,6 @@ defaults.decoding.test.regression.model_parameters = '-q';
 % for Newton SVM
 % defaults.decoding.train.classification.model_parameters = -1; % should Nu be calculated the easy or the hard way (easy = -1, hard = 0)
 
-
 % unbalanced data
 %     If you have unbalanced training data, and 
 %       IF YOU THOUGHT ABOUT HOW TO DEAL WITH IT!
@@ -126,7 +125,7 @@ defaults.decoding.test.regression.model_parameters = '-q';
 
 % Results specific defaults
 defaults.results.output = {'accuracy_minus_chance'};
-defaults.results.write = 1; % write results
+defaults.results.write = 2; % write results both as .mat and as image
 defaults.results.overwrite = 0; % don't overwrite existing results
 defaults.results.setwise = 1; % return results of each decoding set separately
 defaults.results.filestart = 'res';

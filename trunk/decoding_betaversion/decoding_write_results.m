@@ -6,12 +6,12 @@
 % for ROI analyses, containing a structure with fields for each ROI.
 % The function can also be run separately to save previously processed data.
 %
-% Remark: if cfg.results.overwrite = 1 and if result files with the same 
+% Remark: if cfg.results.overwrite = 1 and if result files with the same
 % name exist, the result files (.hdr & .img) will be copied.
-% However this is very unlikely to occur, because decoding.m checks 
-% whether the result files exist already when it is starts, and aborts 
+% However this is very unlikely to occur, because decoding.m checks
+% whether the result files exist already when it is starts, and aborts
 % operation already then if the result files should not be overwritten.
-% Copying will only occur in the unlikely event that result files with 
+% Copying will only occur in the unlikely event that result files with
 % the same name are created between this initial check in decoding.m and
 % when they should be saved here.
 
@@ -39,15 +39,44 @@ if ~isempty(reports) % if any warnings were present
     fdir = cfg.results.dir;
     fname = fullfile(fdir,sprintf('%s_warnings.mat',cfg.results.filestart));
     save(fname,'reports');
-    dispv(1,'Saving warnings that occurred during the execution.')
+    dispv(1,'Saving warnings that occurred during execution.')
 end
 
 n_outputs = length(cfg.results.output);
 
+% Save cfg
+cfg_fname = [cfg.results.filestart '_cfg.mat'];
+cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
+save(cfg_fpath, 'cfg');
+
+% Get roi names and number of rois from masks and unpack mask_index_separate
+if strcmpi(cfg.analysis,'roi')
+    
+    if isfield(cfg,'files') && isfield(cfg.files,'mask')
+        for i_mask = 1:length(cfg.files.mask)
+            [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<*AGROW>
+        end
+    else
+        for i_mask = 1:numel(results.mask_index_separate)
+            roi_names{i_mask} = sprintf('roi%03d',i_mask);
+        end
+    end
+    results.roi_names = roi_names;
+    n_rois = length(roi_names);
+    
+    mask_index_separate = results.mask_index_separate;
+end
+
+% Do same for wholebrain, so we can use the same code for both
+if strcmpi(cfg.analysis,'wholebrain')
+    roi_names = {'wholebrain'};
+    n_rois = 1;
+    mask_index_separate = {results.mask_index};
+end
 
 %% WRITE SEARCHLIGHT RESULTS AS IMAGE
 
-if strcmpi(cfg.analysis,'searchlight')
+if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
     
     try
         resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
@@ -60,9 +89,12 @@ if strcmpi(cfg.analysis,'searchlight')
         
         outputname = cfg.results.output{i_output};
         
-        %%%%%%%%%%%%%%%%%%%%%
-        % WRITE AS IMG-FILE %
-        %%%%%%%%%%%%%%%%%%%%%
+        if ~isnumeric(results.(outputname).output)
+            warning('DECODING_WRITE_RESULTS:no_writing_possible',...
+                'Result %s cannot be written to an image, because the format is not numeric and thus assumes there are several entries per voxel. Writing only as .mat file.',outputname)
+            continue
+        end
+        
         % write searchlight results as img-file if the output allows it
         if ~fallback
             
@@ -89,7 +121,7 @@ if strcmpi(cfg.analysis,'searchlight')
                         source = [old_fname, fext{1}];
                         target = [backup_fname, fext{1}];
                         dispv(1, 'Copying %s to %s', source, target)
-                        r = copyfile(source, target); % output needed for linux bug
+                        tmp = copyfile(source, target); %#ok<*NASGU> % output needed for linux bug
                     end
                 end
             end
@@ -97,7 +129,7 @@ if strcmpi(cfg.analysis,'searchlight')
             dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsvol_hdr.fname)
             
             write_image(cfg.software,resultsvol_hdr,resultsvol);
-                        
+            
             results.(outputname).(outputname).fname = resultsvol_hdr.fname;
             
             % Save set results (i.e.: should each set be saved separately?)
@@ -117,16 +149,87 @@ if strcmpi(cfg.analysis,'searchlight')
         end
     end
 end
+
+%% WRITE ROI OR WHOLEBRAIN RESULTS AS .IMG IF REQUESTED
+
+if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysis,'wholebrain'))
     
-%% WRITE SEARCHLIGHT, ROI OR WHOLEBRAIN RESULTS AS .MAT FILE
-    
-% Get roi names from masks
-if strcmpi(cfg.analysis,'ROI') && isfield(cfg,'files') && isfield(cfg.files,'mask')
-    for i_mask = 1:length(cfg.files.mask)
-        [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<NASGU>
+    for i_roi = 1:n_rois % loop over ROIs and write results separately
+        
+        try
+            resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
+            fallback = 0; % if results cannot be written as .img, save as mat
+        catch %#ok<CTCH>
+            fallback = 1;
+        end
+        
+        for i_output = 1:n_outputs
+            
+            outputname = cfg.results.output{i_output};
+            
+            % write searchlight results as img-file if the output allows it
+            if fallback, continue, end
+            
+            % Save overall results and save to returning variable
+            
+            fname = sprintf('%s_%s.img',cfg.results.resultsname{i_output},roi_names{i_roi});
+            resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
+            resultsvol_hdr.descrip = sprintf('%s decoding map on ROI %s',outputname,roi_names{i_roi});
+            curr_output = results.(outputname).output(i_roi);
+            
+            [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_separate,i_roi);
+            if continueflag == 1,
+                str = sprintf('Results for output %s and roi %s cannot be written, because the format is wrong.',outputname,roi_names{i_roi});
+                warningv('DECODING_WRITE_RESULTS:cannot_write',str)
+                continue
+            end
+            
+            if exist(resultsvol_hdr.fname,'file')
+                if cfg.results.overwrite
+                    % simply overwrite the file
+                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',resultsvol_hdr.fname)
+                else
+                    % dont overwrite file, copy it
+                    [old_results_path, old_results_file, dummy_fext] = fileparts(resultsvol_hdr.fname);
+                    old_fname = fullfile(old_results_path, old_results_file);
+                    backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
+                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
+                    
+                    for fext = {'.hdr', '.img'}
+                        source = [old_fname, fext{1}];
+                        target = [backup_fname, fext{1}];
+                        dispv(1, 'Copying %s to %s', source, target)
+                        tmp = copyfile(source, target); % output needed for linux bug
+                    end
+                end
+            end
+            
+            dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsvol_hdr.fname)
+            
+            write_image(cfg.software,resultsvol_hdr,resultsvol);
+            
+            results.(outputname).(outputname).fname = resultsvol_hdr.fname;
+            
+            % Save set results (i.e.: should each set be saved separately?)
+            if cfg.results.setwise
+                n_sets = length(results.(outputname).set);
+                for i_set = 1:n_sets
+                    fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
+                    resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
+                    resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
+                    resultsvol_set = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
+                    resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
+                    dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
+                    write_image(cfg.software,resultsvol_hdr,resultsvol_set);
+                    results.(outputname).set(i_set).fname = resultsvol_hdr.fname;
+                end
+            end
+        end
     end
-    results.roi_names = roi_names;
 end
+
+
+%% WRITE SEARCHLIGHT, ROI OR WHOLEBRAIN RESULTS AS .MAT FILE
 
 % first remove all output fields and store separately
 for i_output = 1:n_outputs
@@ -134,7 +237,7 @@ for i_output = 1:n_outputs
     results_outputonly.(outputname) = results.(outputname);
     results = rmfield(results,outputname);
 end
-results_nooutput = results;   
+results_nooutput = results;
 
 % Now loop over all outputs to store results separately
 for i_output = 1:n_outputs
@@ -165,7 +268,7 @@ for i_output = 1:n_outputs
             source = [old_fname, fext];
             target = [backup_fname, fext];
             dispv(1, 'Copying %s to %s', source, target)
-            r = copyfile(source, target);
+            tmp = copyfile(source, target);
         end
     end
     
@@ -193,4 +296,47 @@ for i_output = 1:n_outputs
             results = results_all; % reset
         end
     end
+    
 end
+
+
+
+%% SUBFUNCTIONS
+
+function [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_separate,i_roi)
+
+% numeric output can be written as image when it matches mask_index_separate or is scalar.
+% cell output can be written as image if we can find a unique and
+% meaningful way to convert it to numeric (e.g. if cell array is 1x1 and
+% contains numeric)
+
+continueflag = 0;
+resultsvol = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
+
+% cell case
+if iscell(curr_output)
+    curr_output = curr_output{1}; % must be the case
+    if iscell(curr_output)
+        if numel(curr_output)==1
+            curr_output = curr_output{1};
+        else % cannot work with multiple cell entries
+            continueflag = 1;
+            return
+        end
+    end
+end
+
+% numeric case
+if isnumeric(curr_output)
+    try
+        resultsvol(mask_index_separate{i_roi}) = curr_output;
+        return
+    catch %#ok<CTCH>
+        continueflag = 1;
+        return
+    end
+end
+
+% in all other cases return, because results cannot be written
+continueflag = 1;
+return

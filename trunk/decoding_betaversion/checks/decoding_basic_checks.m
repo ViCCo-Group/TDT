@@ -15,6 +15,16 @@ function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
 % Display image access software that is used
 dispv(1, 'Image access with: %s',cfg.software);
 
+% Display what data is saved
+switch cfg.results.write
+    case 0
+        dispv(1,'Results are not saved to harddisk.')
+    case 1
+        dispv(1,'Results are saved as .mat-file to %s',cfg.results.dir)
+    otherwise
+        dispv(1,'Results are saved as .mat-files and as brain volumes to %s',cfg.results.dir)
+end
+
 % File check here not necessary anymore.
 % Moved the check to when a file function is used for the first time.
 % - Kai
@@ -206,7 +216,7 @@ end
 results_out_flag = output_arguments >= 1; % flag showing whether the results are returned from the function
 
 if cfg.results.write == 0 && ~results_out_flag
-    error('''Write results'' set to 0, but results are not returned either. Change ''write results'' to 1 or return results as output')
+    error('''Write results'' set to 0, but results are not returned either. Change ''write results'' to >0 or return results as output')
 end
 
 if strcmpi(cfg.parameter_selection.method,'none') && isfield(cfg.parameter_selection,'parameters')
@@ -217,7 +227,12 @@ end
 if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
     disp('Positions of Entries in Training- & Testset:')
     disp(cfg.design.train ~= 0 & cfg.design.test ~= 0)
-    error('Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!')
+    if isfield(cfg.design,'nonindependence') && strcmpi(cfg.design.nonindependence,'ok')
+        warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. Classification results cannot be interpreted!');
+    else
+        error(['Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!',...
+            ' If you really know what you are doing, set cfg.design.nonindependence = ''ok'' in your script.'])
+    end
 else
     dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
 end
@@ -269,7 +284,8 @@ if cfg.results.write
 
         % Check if it is ok to overwrite existing files
 
-        ext = {'.img','.hdr'};
+        ext = {'.img','.hdr','.mat'};
+        if cfg.results.write == 1, ext = {'.mat'}; end
         for ext_ind = 1:length(ext)
             output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
             if exist(output_fname,'file')
@@ -303,7 +319,7 @@ for decoding_step = 1:size(cfg.design.train, 2)
     end
     if any(diff(n_each_label) ~= 0)
         message_str = sprintf('Unbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
-        if isfield(cfg.design, 'unbalanced_data') && strcmp(cfg.design.unbalanced_data, 'ok')
+        if isfield(cfg.design, 'unbalanced_data') && strcmpi(cfg.design.unbalanced_data, 'ok')
             warningv('DECODING:CheckUnbalancedDataOk', [message_str, ' You decided this is ok, because cfg.design.unbalanced_data = ''ok''']);
         else
             error('DECODING:CheckUnbalancedDataOk', [message_str, ' If this is ok, set cfg.design.unbalanced_data = ''ok'''])

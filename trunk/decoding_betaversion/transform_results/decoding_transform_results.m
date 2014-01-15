@@ -1,4 +1,4 @@
-% function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
+% function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model,data)
 %
 % This function caculates a lot of different result measures defined by
 % METHOD.
@@ -20,6 +20,9 @@
 % sensitivity_minus_chance: sensitivity minus chance level
 % specificity: accuracy of second label
 % specificity_minus_chance: specificity minus chance level
+% balanced_accuracy: mean accuracy, calculated for all labels separately
+%   (useful when bias present)
+% balanced_accuracy_minus_chance: balanced_accuracy minus chance level
 % dprime: z(hit rate) - z(false alarm rate)
 % loglikelihood: measure of bias to one label: -1/2*(zHIT_rate^2 - zFA_rate^2)
 % AUC: Area under the ROC (Receiver Operator Characteristics) Curve times 
@@ -32,13 +35,13 @@
 % The function also allows adding new result transformation functions by 
 % calling
 %
-%   output = transres_METHOD(decoding_out,chancelevel);
+%   output = transres_METHOD(decoding_out,chancelevel,cfg,model,data);
 %
 % where METHOD will be replaced by the provided method name.
 % E.g., if you want to write your own result transformation function
-% "yourmethod", the method shall be named "transres_yourmethod", take
-% decoding_out and chancelevel as input, and provide your desired output
-% measure as output.
+% "yourmethod", the method should be named "transres_yourmethod", take
+% the above inputs as input (or better varargin), and provide your desired
+% output measure as output.
 %
 % IN
 %   method: desired method name as string (see above)
@@ -60,7 +63,7 @@
 % TODO: Remove chancelevel here as explicit input, should be returned by 
 % each method (also for each decoding step separately).
 
-function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model)
+function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model,data)
 
 %% If method is a string
 if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
@@ -105,6 +108,26 @@ elseif strcmpi(method, 'specificity') || strcmpi(method, 'specificity_minus_chan
     labelfilt = true_labels == labels(end); % use last label (only works with two labels)
     output = 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
     if strcmpi(method, 'specificity_minus_chance')
+        output = output - chancelevel; % subtract chancelevel from all output entries
+    end
+    
+elseif strcmpi(method, 'balanced_accuracy') || strcmpi(method, 'balanced_accuracy_minus_chance')
+    predicted_labels =  vertcat(decoding_out.predicted_labels);
+    true_labels = vertcat(decoding_out.true_labels);
+    
+    labels = unique(true_labels);
+    n_labels = size(labels,1);
+    for i_label = 1:n_labels
+        labelfilt = true_labels == labels(i_label);
+        if i_label == 1
+            output = 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
+        else
+            output = output + 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
+        end
+        output = output/n_labels;
+    end
+    
+    if strcmpi(method, 'balanced_accuracy_minus_chance')
         output = output - chancelevel; % subtract chancelevel from all output entries
     end
     
@@ -159,13 +182,13 @@ elseif strcmpi(method, 'zcorr')
 elseif ischar(method) % all other methods
     
     fhandle = str2func(['transres_' method]);
-    output = feval(fhandle,decoding_out,chancelevel,cfg,model);
+    output = feval(fhandle,decoding_out,chancelevel,cfg,model,data);
     % e.g. if method = 'yourmethod', this calls:
-    %  output = transres_yourmethod(decoding_out,chancelevel,cfg,model);
+    %  output = transres_yourmethod(decoding_out,chancelevel,cfg,model,data);
     
 elseif isobject(method)
     % use passed handle directly and return
-    output = method.apply(decoding_out,chancelevel,cfg,model);
+    output = method.apply(decoding_out,chancelevel,cfg,model,data);
     
 else
     error('Dont know how to handle method %s', method)

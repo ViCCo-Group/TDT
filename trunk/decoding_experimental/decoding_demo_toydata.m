@@ -124,7 +124,10 @@ cfg.design.test = [design1_1.test design1_2.test design1_3.test design1_4.test];
 cfg.design.label = [design1_1.label design1_2.label design1_3.label design1_4.label];
 cfg.design.set = ones(1, size(cfg.design.train, 2));
 
+if n_rep == 1
 display_design(cfg)
+plot_design(cfg,1);
+end
 
 %% Prepare data for passing
 passed_data.data = data;
@@ -144,6 +147,7 @@ cfg.results.output = {'accuracy', 'binomial_probability', 'model_parameters'};
 % Set the output directory where data will be saved
 % cfg.results.dir = ''; fullfile(pwd, 'toyresults');
 
+cfg.plot_design = 0;
 cfg.verbose = 2; % you want all information to be printed on screen
 
 %% Play around with the decoding parameters
@@ -187,15 +191,15 @@ cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0';
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 0.01 -b 0';
 
 
-
 %% Run decoding
 [results, cfg] = decoding(cfg, passed_data)
-acc(n_rep) =  results.accuracy
+acc(n_rep) =  results.accuracy.output
 
 %% end rep
 end
 
 %% predict some values to create a meshgrid
+figure
 if size(data, 2) == 2
 
     hold on

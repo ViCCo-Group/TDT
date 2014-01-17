@@ -5,7 +5,7 @@
 % for n_rep = 1:50
 
 fpath = fileparts(fileparts(mfilename('fullpath')));
-addpath(fpath)
+addpath(fpath) %#ok<MCAP>
 
 %% output dir
 % cfg.results.dir = 'toyexample' % set cfg.results.write = 1 if wanted
@@ -75,7 +75,7 @@ cfg.files.mask = '';
 %% plot the data (if 2d)
 
 if size(data, 2) == 2
-    figure('name', 'data')
+    fhandle = figure('name', 'data');
 
     hold all
 
@@ -178,13 +178,13 @@ cfg.verbose = 2; % you want all information to be printed on screen
 % The k in the -g option means the number of attributes in the input data.
 
 % default: cost = 1
-% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0';
+cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q';
 
 % very high costs: points lie on the boundary
-cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1000 -b 0';
+% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1000 -b 0 -q';
 
 % very low costs: points lie far away from the boundary
-% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 0.01 -b 0';
+% cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 0.01 -b 0 -q';
 
 
 
@@ -196,6 +196,7 @@ cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1000 -b 0';
 % end % end for n_rep
 
 %% predict some values to create a meshgrid
+figure
 if size(data, 2) == 2
 
     hold on

@@ -110,7 +110,7 @@ for iteration = 1:length(n_vox)
         error(['More than one output selected in nested CV for feature selection.\n',...
             'Change field ''cfg.feature_selection.results.output'' to one entry. only.'])
     end
-   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration),vectors_train(:,ranks_index),vectors_test(:,ranks_index)); 
+   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration),data(:,ranks_index)); 
 end
 
 % Get number of features where output is highest

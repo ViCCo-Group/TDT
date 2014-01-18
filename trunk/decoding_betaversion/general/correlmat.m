@@ -1,0 +1,71 @@
+% function r = correlmat(x,y)
+%
+% Custom made correlation function, faster than Matlab versions, but less
+% general (e.g. cannot deal with complex data). Returns correlation
+% matrices of either one input matrix or of several input matrices
+% (columnwise). If you don't have bsxfun (prior to Matlab 7.4), please
+% uncomment the code below the current code and comment the current code.
+% Even the old version is only really slower than the current version for 
+% many, many correlations.
+
+% adapted from http://stackoverflow.com/questions/9262933/what-is-a-fast-way-to-compute-column-by-column-correlation-in-matlab
+
+function r = correlmat(x,y)
+
+sz = size(x,1);
+mx0 = sum(x,1)/sz;
+x0 = bsxfun(@minus,x,mx0); % here sum is faster than mean
+
+if nargin == 1
+    
+    r = x0'*x0;
+    normx = sqrt(diag(r)); % here diag(r) can be used (faster)
+    r = bsxfun(@rdivide,r,normx');
+    r = bsxfun(@rdivide,r,normx);
+    
+else
+    
+    my0 = sum(y,1)/sz;
+    y0 = bsxfun(@minus,y,my0);
+    
+    r = x0'*y0;
+    normx = sqrt(sum(x0.^2,1)); % L2-norm
+    normy = sqrt(sum(y0.^2,1));
+    r = bsxfun(@rdivide,r,normx');
+    r = bsxfun(@rdivide,r,normy);
+    
+end
+
+ind = abs(r)>1;
+r(ind) = r(ind)./abs(r(ind));
+
+% Version for Matlab < 7.4 (comment all above and uncomment below if your version is that old)
+% [sz,sx] = size(x);
+% mx0 = sum(x,1)/sz;
+% x0 = x - repmat(mx0,sz,1);
+% 
+% if nargin == 1
+%     
+%     r = x0'*x0;
+%     normx = sqrt(diag(r)); % here diag(r) can be used (faster than sum(x.^2)
+%     d = repmat(normx,1,sx);
+%     r = r./d';
+%     r = r./d;
+%     
+% else
+%     
+%     sy = size(y,2);
+%     my0 = sum(y,1)/sz;
+%     y0 = y - repmat(my0,sz,1);
+% 
+%     
+%     r = x0'*y0;
+%     normx = sqrt(sum(x0.^2,1));
+%     normy = sqrt(sum(y0.^2,1));
+%     r = r./repmat(normx,sy,1)';
+%     r = r./repmat(normy,sx,1);
+%     
+% end
+% 
+% ind = abs(r)>1;
+% r(ind) = r(ind)./abs(r(ind));

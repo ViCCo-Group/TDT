@@ -49,9 +49,10 @@ if strcmpi(cfg.analysis,'searchlight')
 
 elseif strcmpi(cfg.analysis,'ROI')
 
-    % as noted above, not very efficient to load masks again, but better
+    % it is not very efficient to load the masks again, but allows better
     % readability (and probably doesn't matter much, because most of the
-    % time only a few ROIs are loaded)
+    % time only a few ROIs are loaded). we might change this in the future
+    % which would simplify passing data...
 
     mask_names = cfg.files.mask;
 

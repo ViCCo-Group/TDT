@@ -13,7 +13,7 @@ try
 
         case 'classification'
             if isstruct(data_test), error('Classification wiithout kernel needs the data in vector format'), end
-            [predicted_labels accuracy decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.classification.model_parameters);
+            [predicted_labels accuracy decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.classification.model_parameters); %#ok<*ASGLU>
         
         case 'classification_kernel'
             % libsvm needs labels for each input, if a kernel is given, thus we

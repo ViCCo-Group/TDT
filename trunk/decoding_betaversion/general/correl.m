@@ -1,23 +1,21 @@
 % function r = correl(x,y)
 % 
 % Custom made correlation function, faster than Matlab versions, but less 
-% general (e.g. only for 1D x and y)
+% general (e.g. only for 1D x and y). If you want another 2-6x or more
+% speed-up, download and compile fastcorr from file exchange and replace
+% this function with a direct call to fastcorr
 
 function r = correl(x,y)
 
-sx = size(x);
-sy = size(y);
+sz = size(x);
+% we are assuming that size(x) and size(y) are the same, otherwise it
+% doesn't make sense to correlate
 
-if sx(2) ~= 1
+if sz(2) ~= 1
     x = x';
-    sx(1) = sx(2);
-end
-
-if sy(2) ~= 1
     y = y';
-    sy(1) = sy(2);
 end
 
-x0 = x - sum(x,1)/sx(1); % here sum is faster than mean
-y0 = y - sum(y,1)/sy(1);
+x0 = x - sum(x,1)/sz(1); % here sum is faster than mean
+y0 = y - sum(y,1)/sz(1);
 r = (x0./norm(x0))' * (y0./norm(y0));

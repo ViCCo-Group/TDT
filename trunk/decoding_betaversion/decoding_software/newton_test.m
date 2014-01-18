@@ -5,7 +5,7 @@ if isstruct(data_test), error('This method requires training vectors in data_tra
 switch lower(cfg.decoding.method)
 
     case 'classification'
-        [predicted_labels accuracy decision_values] = nsvm_test(labels_test,data_test,model);
+        [predicted_labels decision_values] = nsvm_test(labels_test,data_test,model);
     case 'classification_kernel'
         % Develop: If you implement this, adapt error at the beginning
         error('nsvm_test doesn''t work with passed kernels at the moment - please use libsvm or another method instead (or edit nsvm so that it takes kernels and send it to the development team ;).')        

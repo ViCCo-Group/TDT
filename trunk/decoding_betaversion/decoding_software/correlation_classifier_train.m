@@ -6,7 +6,7 @@ switch lower(cfg.decoding.method)
     
     case 'classification'
         % essentially, this is the model
-        model.vectors_train = data_train;
+        model.data_train = data_train;
         model.labels_train = labels_train;
         
     case 'classification_kernel'

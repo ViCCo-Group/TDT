@@ -3,7 +3,7 @@
 % Custom made correlation function, faster than Matlab versions, but less 
 % general (e.g. only for 1D x and y). If you want another 2-6x or more
 % speed-up, download and compile fastcorr from file exchange and replace
-% this function with a direct call to fastcorr
+% the content of this function with a direct call to fastcorr(x,y)
 
 function r = correl(x,y)
 
@@ -14,6 +14,7 @@ sz = size(x);
 if sz(2) ~= 1
     x = x';
     y = y';
+    sz = sz([2 1]);
 end
 
 x0 = x - sum(x,1)/sz(1); % here sum is faster than mean

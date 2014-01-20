@@ -1,3 +1,10 @@
+* beta 2.5.9_rev126 - 2014/01/06
+Last stable version before starting to create the version for the paper.
+Recommended version until the new changes have been tested properly.
+
+The zip for this version has been created post-hoc. So the SVN revision 126 is exactly like this, EXCEPT that the version number and this entry to LOG.txt is missing.
+
+
 * beta 2.5 - 2013/06/19
 Lots of things added, including
 - automatic visualisation of design matrix and saving as image to results

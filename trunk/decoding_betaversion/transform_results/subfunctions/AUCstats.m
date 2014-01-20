@@ -19,11 +19,11 @@ if ~exist('plot_on','var')
 end
 
 if numel(labels)~=2
-    error('Number of labels must be 2.')
+    error('Number of labels for calculation of AUC must be 2.')
 end
 
 % sort values
-[decision_values,ind] = sort(-decision_values);
+[decision_values,ind] = sort(decision_values);
 true_labels = true_labels(ind);
 
 sens_labels = true_labels == labels(1);

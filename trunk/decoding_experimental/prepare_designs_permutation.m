@@ -93,7 +93,7 @@ if ~exist('n_perms_select','var')
 end
 
 % Check if number of requested permutations exceeds number of possible permutations
-if isstr(n_perms_select)
+if ischar(n_perms_select)
     if strcmpi(n_perms_select,'all')
         n_perms_select = n_perms;
     else

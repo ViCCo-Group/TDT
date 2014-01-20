@@ -6,6 +6,23 @@
 
 % Adapted to passing kernel as .kernel
 
+% Brief explanation of decision values and how they are used to get the
+% predicted labels:
+% In two-class classification, there is either a number <0 or >0, and the
+% number >0 will refer to the first label. For multiple predicted labels,
+% there is an nx1 vector
+% In multiclass classification, there is an nxm matrix where m is the
+% number of classes and n the number of predicted labels. Each row
+% corresponds to the one-vs-one comparison: the first entry is label1 vs.
+% label2, the second label1 vs. label 3, until label1 vs. label n, and then
+% label2 vs. label 3, until label2 vs. label n, etc. If the first class is
+% predicted, the number will be positive, if the second is predicted, the
+% number will be negative. Now there are three predictions for one
+% predicted label where all will definitely be wrong where the comparison
+% doesn't contain the predicted label. One-vs-one chooses the label by 
+% majority vote. If there is a draw, the first label is chosen by default
+% (which is unfortunately not a very good choice).
+
 function decoding_out = libsvm_test(labels_test,data_test,cfg,model)
 
 try

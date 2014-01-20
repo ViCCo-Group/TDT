@@ -86,7 +86,7 @@ elseif strcmpi(method, 'sensitivity') || strcmpi(method, 'sensitivity_minus_chan
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
-    labels = unique(true_labels);
+    labels = uniqueq(true_labels);
     if length(labels) > 2
         error('Too many labels for sensitivity measure! Check input labels.')
     end
@@ -101,7 +101,7 @@ elseif strcmpi(method, 'specificity') || strcmpi(method, 'specificity_minus_chan
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
-    labels = unique(true_labels);
+    labels = uniqueq(true_labels);
     if length(labels) > 2
         error('Too many labels for sensitivity measure! Check input labels.')
     end
@@ -115,7 +115,7 @@ elseif strcmpi(method, 'balanced_accuracy') || strcmpi(method, 'balanced_accurac
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
-    labels = unique(true_labels);
+    labels = uniqueq(true_labels);
     n_labels = size(labels,1);
     for i_label = 1:n_labels
         labelfilt = true_labels == labels(i_label);
@@ -146,14 +146,14 @@ elseif strcmpi(method, 'loglikelihood')
 elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
     decision_values = vertcat(decoding_out.decision_values);
     true_labels = vertcat(decoding_out.true_labels);
-    labels = unique(true_labels);
+    labels = uniqueq(true_labels);
     
     if length(labels) > 2 && isfield(cfg, 'AUC') && cfg.AUC.experimental == 1 % otherwise it will fail
         decoding_out = equalize_set_labels(decoding_out, cfg);
         % redo ordering
         decision_values = vertcat(decoding_out.decision_values);
         true_labels = vertcat(decoding_out.true_labels);
-        labels = unique(true_labels);
+        labels = uniqueq(true_labels);
     end
     
     output = AUCstats(decision_values,true_labels,labels,0);
@@ -196,17 +196,3 @@ else
 end
     
 end
-
-
-
-
-
-%% Possibly use this function (replace unique by unique_labels )
-% % 30% faster than unique for the small arrays used here
-% function vect_out = unique_labels(vect_in)
-% 
-% vect_in = vect_in(:);
-% vect_sorted = sort(vect_in);
-% vect_sorted_diff = diff(vect_sorted);
-% vect_sorted_ind = [true; vect_sorted_diff ~=0];
-% vect_out = vect_sorted(vect_sorted_ind);

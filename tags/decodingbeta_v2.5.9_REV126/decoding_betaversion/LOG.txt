@@ -1,0 +1,13 @@
+* beta 2.5 - 2013/06/19
+Lots of things added, including
+- automatic visualisation of design matrix and saving as image to results
+- real-time plot of selected voxels
+- more checks for potential errors
+- feature selection working
+- and many more
+
+* beta 2.2 - some time in the past
+Stable version of 2.1, but still has 2.1 as number displayed when starting
+Widely used last stable version before starting this log
+
+* beta 2.1 - some time in the past

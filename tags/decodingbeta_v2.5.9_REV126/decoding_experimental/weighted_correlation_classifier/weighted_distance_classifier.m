@@ -1,0 +1,192 @@
+% [predicted_labels decision_values not_unique] = weighted_distance_classifier(labels_test,vectors_test,model,pdist_distance)
+%
+% This function performs a weighted comparision for each test vector using
+% the correlation to all training vectors.
+%
+% At the moment, the following pdist methods are implemented
+%   'correlation': because it's a distance, 1-correlation will be used
+%   'euclidean'
+%   'cosine'
+% More methods can be implemented. Just make sure that
+%   - values are transformed into something that can be averaged (e.g.
+%       z-transformation for correlation)
+%
+% In detail, it does:
+%
+%   1. Calculate the distance between all training & test vectors, distance
+%         provided by pdist_distance
+
+%   2. For correlation only at the moment:
+%       Performs a Fisher-z-transform on the correlation values
+%       Corrects negative/positive infinity z-values (perfect correlation)
+%       to very small/large values
+%
+%   For all pdist_distance methods again:
+%   3. Averages the (for correlation z-transformed) distance values for
+%       each test pattern for each class
+%   4. Takes the "vote", i.e. check which class average is larger (smaller
+%       for euclidean
+%
+%   As decision value, the difference between the two classes is returned.
+%
+% Possible alternative 1 (mean_before = 1):
+%   Instead of calculating all correlations, calculate the average vector
+%   for each training class first, and then do the correlation of this
+%   average vector to all test vectors (should be faster).
+%
+%
+% IN
+%   labels_test: n_test x 1 vector with test labels
+%   vectors_test: n_test x n_dim matrix with test vectors
+%   model: struct with
+%       model.labels_train: n_train x 1 vector with training labels
+%       model.vecotrs_train: n_train x n_dim vector with training vectors
+%   pdist_distance: String argument to pdist.m
+%   mean_before: if 1, TRAINING data will be averaged within each class
+%       before voting, if 0, voting results will be averaged
+%
+% OUT
+%   predicted_labels: n_test x 1 vector with predicted labels. If two
+%       classes have equal maximal correlation values, the first of theses
+%       classes is taken. (Labels are sorted using sort).
+%   decision_value: n_test x n_unique_labels with final voting (i.e.
+%   average distance (mean_before = 0) or distance to the average
+%   (mean_before = 1) of each test label to the training data
+%   not_unique: n_test x 1 logical vector, having 1 for each test pattern
+%       for which there is no unique class decision, because multiple
+%       classes have equal average correlation values.
+%
+% See also: correlation_classifier.m (Haxby-style)
+
+function [predicted_labels decision_values not_unique] = weighted_distance_classifier(labels_test,vectors_test,model,pdist_distance,mean_before)
+
+%% Check if method is implemented
+implemented_methods = {'correlation', 'euclidean', 'cosine'};
+if ~any(strcmp(pdist_distance, implemented_methods))
+    error('Method %s not implemented at the moment', pdist_distance)
+end
+
+%% extract and verify training and test vectors and labels
+vectors_train = model.vectors_train;
+labels_train = model.labels_train;
+
+% check how many test classes we have
+unique_test_labels = sort(unique(labels_test));
+n_unique_test_labels = size(unique_test_labels,1);
+if n_unique_test_labels == 1
+    warningv('Correlation_classifier:only_1_testlabel', 'Only 1 unique testlabel is present, testing to which class the mean is more similar');
+end
+
+% check how many training classes we have
+unique_train_labels = sort(unique(labels_train));
+n_unique_train_labels = size(unique_train_labels,1);
+if n_unique_train_labels == 1
+    error('Correlation_classifier:only_1_trainlabel', 'Only 1 unique trainlabel is present, classification with only 1 label not possible');
+end
+
+% check how many classes we have in training and test
+labels = sort(unique([labels_test; labels_train]));
+n_labels = size(labels,1);
+if n_labels > 2, error('Correlation classifier cannot yet deal with more than two labels at a time.\n Run all pairs separately.'), end
+
+% create mean training and test vectors (TODO, if wanted)
+% train = cell(n_labels,1);
+% test = cell(n_labels,1);
+% for i_label = 1:n_labels
+%     % TODO: possibly replace mean by % sum(...,1)/sum(labels_train==i_label) to gain speed
+%     train{i_label} = mean(vectors_train(labels_train==labels(i_label),:),1);
+%     test{i_label} = mean(vectors_test(labels_test==labels(i_label),:),1);
+% end
+
+%% check that number of voxels is > 2 for correlation
+if strcmp(pdist_distance, 'correlation')
+    if size(vectors_train, 2) <= 2 % if less than two voxels are present, a correlation is not possible
+        warning('DISTANCE_CLASSIFIER:CORRELATION_LESSTHAN2VOXLS','Searchlight or ROI with <= 2 voxels (may happen at borders of mask). Setting value to NaN!')
+        decision_values = nan(length(labels_test), length(unique_train_labels));
+        predicted_labels = nan(length(labels_test), 1);
+        not_unique = nan(length(labels_test), 1);
+        return
+    end
+end
+
+%% If trainingspatterns should be averaged at the beginning, to it know
+
+% Here, no ztransformation is necessary, because we calculate the euclidean
+% average in all cases (data is still not processed)
+
+if mean_before
+    vectors_train_new = zeros(length(unique_train_labels), size(vectors_train, 2));
+    labels_train_new = zeros(length(unique_train_labels), 1);
+    for u_train_label_ind = 1:length(unique_train_labels)
+        curr_label = unique_train_labels(u_train_label_ind);
+        vectors_train_new(u_train_label_ind, :) = mean(vectors_train(labels_train==curr_label, :), 1);
+        labels_train_new(u_train_label_ind) = curr_label; % generate new labels
+    end
+    % replce patterns and labels by the averaged patterns
+    vectors_train = vectors_train_new; 
+    labels_train = labels_train_new;
+end
+
+%% Get distance
+distmat = pdist([vectors_train; vectors_test], pdist_distance);
+% only get relevant entris
+distmat = squareform(distmat);
+% get only the part of the distance matrix, that contains the 
+% n_vec_train x n_vec_test distances
+distmat = distmat(1:length(labels_train), length(labels_train)+1:end);
+
+%% Check values for correlation
+if ~mean_before && strcmp(pdist_distance, 'correlation')
+    % for pdist, 'correlation' means 1 - correlation, thus we need to
+    % revert this to get the proper correlation
+    distmat = 1-distmat;
+    
+    % force finite values for later z-transformation (only if mean after
+    % voting)
+    if any(abs(distmat(:)) > (1 - 1.0e-15))  % taking 1.0e-15 because abs does not work perfectly for -1.0
+        warningv('WEIGHTED_CORRELATION_CLASSIFIER:ZCORRINF','Correlations of +1 or -1 found. Correcting to +/-0.99999 to avoid infinity for z-transformed correlations!')
+        distmat(distmat > (1 - 1.0e-15)) =  0.99999; % forces finite values
+        distmat(distmat <-(1 - 1.0e-15)) = -0.99999; % forces finite values
+    end
+end
+    
+%% Do z-tranformation before averaging if necessary
+
+% Dont forget backtransformation below
+
+if ~mean_before && strcmp(pdist_distance, 'correlation')
+    % translate to Fisher's z transformed values
+    distmat = atanh(distmat);
+end
+%% Vote    
+    class_vote = zeros(length(labels_test), length(unique_train_labels));
+    % get average zcorr for each class for each test pattern
+    for u_train_label_ind = 1:length(unique_train_labels)
+        curr_label = unique_train_labels(u_train_label_ind);
+        class_vote(:, u_train_label_ind) = mean(distmat(labels_train==curr_label, :), 1); % get mean z-correlation for each pattern for each class
+    end
+
+%% Back z-transform if necessary    
+    
+if ~mean_before && strcmp(pdist_distance, 'correlation')
+    % translate to Fisher's z transformed values
+    class_vote = 1-tanh(class_vote);
+end
+    
+%% Translate into classes    
+    % get the minimum in each row -- this is the class each pattern "voted"
+    % for (i.e. the smallest distance to the target pattern)
+    [closest_val, closest_ind] = min(class_vote, [], 2);
+    
+    % translate max_ind back to predicted class
+    predicted_labels = unique_train_labels(closest_ind);
+    
+    % What to do if two classes are equally likely, i.e. get equally strong votes?
+    not_unique = sum(class_vote - repmat(closest_val, 1, size(class_vote, 2))==0, 2)>1;
+    
+    if any(not_unique)
+        warningv('WEIGHTED_CORRELATION:Not_Unique_classes', 'Some test patterns get equal max correlation values from different classes -- putting them into the first class. Check out.not_unique')
+    end
+    
+    % finally, save average z-correlation from class_vote as decision value
+    decision_values = class_vote;

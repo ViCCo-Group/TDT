@@ -1,4 +1,4 @@
-% function [predicted_labels decision_values] = correlation_classifier(labels_test,data_test,model)
+% function [predicted_labels decision_values opt] = correlation_classifier(labels_test,data_test,model)
 %
 % This function uses a Haxby style MVPA analysis where multivoxel patterns
 % *within* one class are simply correlated and tested against another 
@@ -19,6 +19,7 @@
 % History:
 % 2014-01-19 Martin:
 % - made compatible with multiple classes
+% - enabled passing more output
 
 % Typical structure of MVPA:
 % 1. Split-half of two data sets (in general split n possible)
@@ -36,7 +37,7 @@
 % etc for more classes. Since all use the same model, the maximal
 % correlation always wins
 
-function [predicted_labels decision_values] = correlation_classifier(labels_test,data_test,model)
+function [predicted_labels decision_values opt] = correlation_classifier(labels_test,data_test,model)
 
 % Output correlation matrix: columns are train indices, rows are test indices.
 % TODO: also pass unique labels to know what columns and rows are referred
@@ -93,14 +94,16 @@ if n_vox > 1 % normal case in which more than one voxel is present
     [tmp,predict_ind] = max(z,[],2);
     predicted_labels = unique_labels_test(predict_ind);
 
+    opt.r = r;
+    opt.z = z;
 
 else % if only one voxel is present, a correlation is not possible
    
 warning('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxel (may happen at borders of mask). No correlation possible, setting value to NaN!')
 
-r = NaN(n_labels_train,n_labels_test);
-z = NaN(n_labels_train,n_labels_test);
-decision_values = NaN(n_labels_test,1);
+opt.r = NaN(n_labels_test,n_labels_train);
+opt.z = NaN(n_labels_test,n_labels_train);
+decision_values = NaN(n_labels_test,nchoosek(n_labels_train,2));
 predicted_labels = NaN(n_labels_test,1);
 
 end

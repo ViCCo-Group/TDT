@@ -17,3 +17,5 @@ end
 decoding_out.predicted_labels = predicted_labels;
 decoding_out.true_labels = labels_test;
 decoding_out.decision_values = decision_values;
+decoding_out.model = model;
+decoding_out.opt = [];

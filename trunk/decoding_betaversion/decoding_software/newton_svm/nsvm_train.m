@@ -52,8 +52,8 @@ function [w,gamma,iter]=nsvm_with_smw(A,d,nu,arm,wp1)
        v=u/nu+H*(H'*u)-e;
     else
        vt=ones(m,1);
-       vt(find(d==1))=(1-wp1)*ones(length(find(d==1)),1);
-       vt(find(d==-1))=wp1*ones(length(find(d==-1)),1);
+       vt(d==1)=(1-wp1)*ones(length(find(d==1)),1);
+       vt(d==-1)=wp1*ones(length(find(d==-1)),1);
        v=vt.*u/nu+H*(H'*u)-e;
     end  
     hu=-max((v-alpha*u),0)+v;
@@ -61,7 +61,7 @@ function [w,gamma,iter]=nsvm_with_smw(A,d,nu,arm,wp1)
 
 
 
-    while norm(hu)>10^(-3) & (iter < maxIter)  
+    while norm(hu)>10^(-3) && (iter < maxIter)  
         iter=iter+1;
         E=sign(max(v-alpha*u,0));
         if wp1==.5
@@ -127,7 +127,7 @@ end
 %        NSVM for m<n                                           %    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [w,gamma,iter]=nsvm_without_smw(A,d,nu,arm,wp1);
+function [w,gamma,iter]=nsvm_without_smw(A,d,nu,arm,wp1)
     maxIter=100;
     [m,n]=size(A);
     iter=0;
@@ -137,15 +137,15 @@ function [w,gamma,iter]=nsvm_without_smw(A,d,nu,arm,wp1);
        Q=speye(m)/nu+HH;
     else
        vt=ones(m,1);
-       vt(find(d==1))=(1-w1)*ones(length(find(d==1)));
-       vt(find(d==-1))=w1*ones(length(find(d==-1)));
+       vt(d==1)=(1-w1)*ones(length(find(d==1)));
+       vt(d==-1)=w1*ones(length(find(d==-1)));
        Q=spdiags(vt,0,m,m)/nu+HH;
     end
     alpha=1.1*((1/nu)+norm(HH));
     v=Q*u-e;
     hu=-max((v-alpha*u),0)+v;
 
-    while norm(hu)>10^(-3) & (iter < maxIter)
+    while norm(hu)>10^(-3) && (iter < maxIter)
         iter=iter+1;
         dhu=sign(max(((Q-alpha*eye(m))*u-e),0));% the 1/2 thing
         dhu=sparse((diag(1-dhu))*Q+diag(alpha*dhu));
@@ -155,13 +155,13 @@ function [w,gamma,iter]=nsvm_without_smw(A,d,nu,arm,wp1);
             lambda=1;
             v=Q*u;
             ve=v-e;
-            su=0.5*(u'*v)-sum(u)+(1/(2*alpha))*(norm(max(-alpha*u+ve,0))^2-norm(ve)^2)           
+            su=0.5*(u'*v)-sum(u)+(1/(2*alpha))*(norm(max(-alpha*u+ve,0))^2-norm(ve)^2);           
             unew=u-lambda*delta;
             v=Q*unew;
             ve=v-e;
             sunew=0.5*(unew'*v)-sum(unew)+(1/(2*alpha))*(norm(max(-alpha*unew+ve,0))^2-norm(ve)^2);
             at=0;
-            while (su-sunew < -(0.25)*lambda*hu) & (at<5)
+            while (su-sunew < -(0.25)*lambda*hu) && (at<5)
                 at=at+1;
                 disp('armijo');
                 lambda=0.5*lambda;           
@@ -216,18 +216,18 @@ function value = EstNuLong(C,d)
     lamdaO=lamda+1;
 
     cnt=0;
-    while (abs(lamdaO-lamda)>10e-4)& (cnt<100)
+    while (abs(lamdaO-lamda)>10e-4) && (cnt<100)
          cnt=cnt+1;
          nu1=0;pr=0;ee=0;waw=0;
          lamdaO=lamda;
          for i=1:p
-         nu1= nu1 + lamda/(u(i)+lamda);
-    pr= pr + u(i)/(u(i)+lamda)^2;
-    ee= ee + u(i)*yt(i)^2/(u(i)+lamda)^3;
-    waw= waw + lamda^2*yt(i)^2/(u(i)+lamda)^2;
-       end
+             nu1= nu1 + lamda/(u(i)+lamda);
+             pr= pr + u(i)/(u(i)+lamda)^2;
+             ee= ee + u(i)*yt(i)^2/(u(i)+lamda)^3;
+             waw= waw + lamda^2*yt(i)^2/(u(i)+lamda)^2;
+         end
 
-    lamda=nu1*ee/(pr*waw);
+         lamda=nu1*ee/(pr*waw);
     end
 
     value =lamda;

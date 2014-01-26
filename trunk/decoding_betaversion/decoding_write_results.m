@@ -32,7 +32,6 @@ global reports
 
 % Unpack results
 mask_index = results.mask_index;
-results.analysis = cfg.analysis;
 
 % Save warning messages
 if ~isempty(reports) % if any warnings were present
@@ -49,7 +48,7 @@ cfg_fname = [cfg.results.filestart '_cfg.mat'];
 cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
 save(cfg_fpath, 'cfg');
 
-% Get roi names and number of rois from masks and unpack mask_index_separate
+% Get roi names and number of rois from masks and unpack mask_index_each
 if strcmpi(cfg.analysis,'roi')
     
     if isfield(cfg,'files') && isfield(cfg.files,'mask')
@@ -57,21 +56,21 @@ if strcmpi(cfg.analysis,'roi')
             [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<*AGROW>
         end
     else
-        for i_mask = 1:numel(results.mask_index_separate)
+        for i_mask = 1:numel(results.mask_index_each)
             roi_names{i_mask} = sprintf('roi%03d',i_mask);
         end
     end
     results.roi_names = roi_names;
     n_rois = length(roi_names);
     
-    mask_index_separate = results.mask_index_separate;
+    mask_index_each = results.mask_index_each;
 end
 
 % Do same for wholebrain, so we can use the same code for both
 if strcmpi(cfg.analysis,'wholebrain')
     roi_names = {'wholebrain'};
     n_rois = 1;
-    mask_index_separate = {results.mask_index};
+    mask_index_each = {results.mask_index};
 end
 
 %% WRITE SEARCHLIGHT RESULTS AS IMAGE
@@ -177,7 +176,7 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             resultsvol_hdr.descrip = sprintf('%s decoding map on ROI %s',outputname,roi_names{i_roi});
             curr_output = results.(outputname).output(i_roi);
             
-            [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_separate,i_roi);
+            [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_each,i_roi);
             if continueflag == 1,
                 str = sprintf('Results for output %s and roi %s cannot be written, because the format is wrong.',outputname,roi_names{i_roi});
                 warningv('DECODING_WRITE_RESULTS:cannot_write',str)
@@ -274,8 +273,6 @@ for i_output = 1:n_outputs
     
     dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
     
-    results.resultdim = cfg.datainfo.dim;
-    
     save(fname,'results');
     
     results.(outputname).fname = fname;
@@ -303,9 +300,9 @@ end
 
 %% SUBFUNCTIONS
 
-function [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_separate,i_roi)
+function [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_each,i_roi)
 
-% numeric output can be written as image when it matches mask_index_separate or is scalar.
+% numeric output can be written as image when it matches mask_index_each or is scalar.
 % cell output can be written as image if we can find a unique and
 % meaningful way to convert it to numeric (e.g. if cell array is 1x1 and
 % contains numeric)
@@ -329,7 +326,7 @@ end
 % numeric case
 if isnumeric(curr_output)
     try
-        resultsvol(mask_index_separate{i_roi}) = curr_output;
+        resultsvol(mask_index_each{i_roi}) = curr_output;
         return
     catch %#ok<CTCH>
         continueflag = 1;

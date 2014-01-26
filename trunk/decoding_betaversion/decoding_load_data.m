@@ -20,13 +20,13 @@
 %             .mask_index.
 %       .mask_index: indices of those voxels that were selected by all
 %             masks minus those that are nan in the input data.
-%       .mask_index_separate: indices of those voxels that were selected by
+%       .mask_index_each: indices of those voxels that were selected by
 %             each mask separately (1xn cell array), only when several
 %             masks were provided
 %       .files: Contains file information as in cfg.files, especially
 %             filenames of datafiles (.name) and mask(s) (.mask)
 %       .hdr: a header from either a mask or a data file (if
-%             cfg.files.mask{1} == 'all voxels')
+%             cfg.files.mask{1} = 'all voxels')
 %       .dim: 1x3 vector containing the dimension of original
 %             dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
@@ -97,6 +97,13 @@ if exist('passed_data', 'var')
         if isfield(passed_data, 'voxelsize')
             cfg.datainfo.voxelsize = passed_data.voxelsize;
         end
+        
+        % finally check if passed_data.mask_index is sorted (must be!)
+        if ~issorted(passed_data.mask_index)
+            passed_data.mask_index = sort(passed_data.mask_index);
+            warning('decoding_load_data:mask_index_not_sorted', 'passed_data.mask_index was not sorted, but must be for later use of ismembc. Sorting indices...')
+        end
+        
         % return to caller function
         return
 
@@ -111,7 +118,7 @@ end
 %% get mask(s)
 
 % load masks or generate a mask for all voxels, if asked
-if strcmp(cfg.files.mask{1}, 'all voxels');
+if strcmpi(cfg.files.mask{1}, 'all voxels');
     % use all voxels from data
     dispv(1,'Using an ALL VOXEL mask')
     
@@ -126,18 +133,18 @@ if strcmp(cfg.files.mask{1}, 'all voxels');
 
     sz = mask_hdr.dim(1:3); % get dimensions of data
     mask_vol = ones(sz); % use all voxels
-    vol = mask_vol; % use all voxels again
+    mask_vol_each = mask_vol; % use all voxels again
 else
     % Load the brain or ROI mask(s)
-    [mask_vol, mask_hdr, sz, vol] = load_mask(cfg);
+    [mask_vol, mask_hdr, sz, mask_vol_each] = load_mask(cfg);
     
 end
 
 mask_index = find(mask_vol); % get indices of all voxels inside the mask
 
-mask_index_separate = cell(1,size(vol,4));
-for i_mask = 1:size(vol,4)
-    mask_index_separate{i_mask} = find(vol(:,:,:,i_mask));
+mask_index_each = cell(1,size(mask_vol_each,4));
+for i_mask = 1:size(mask_vol_each,4)
+    mask_index_each{i_mask} = find(mask_vol_each(:,:,:,i_mask));
 end
 
 %% Load data
@@ -193,16 +200,21 @@ end
 % (may happen e.g. with ROI masks generated independently and sampling 
 % occurs from outside of the decoding volume).
 nan_index = isnan(sum(data,1)); % find voxels where any image contains NaN
-if sum(nan_index)
+if any(nan_index(:))
     data = data(:,~nan_index); % reduce data
     lin_index_out = mask_index(nan_index);
     mask_index = setdiff(mask_index,lin_index_out); % reduce indices
-    warning('DECODING:nansPresent',['Data contains %i NaNs. \n ',...
-        'There might be problems with the definition of data files or ',...
-        'mask file. \n Parts of masks are non-overlapping with data. NaNs are masked...'],sum(nan_index))
-    
-    for i_mask = 1:size(vol,4)
-        mask_index_separate{i_mask} = intersect(mask_index,mask_index_separate{i_mask});
+    if strcmpi(cfg.files.mask,'all voxels')
+        warningv('DECODING_LOAD_DATA:nansRemoved',['Data contains %i NaNs. \n ',...
+            'The mask was set to all voxels. Data points containing NaNs ',...
+            'are masked, because they cannot be used for classification.'],sum(nan_index))
+    else
+        warningv('DECODING_LOAD_DATA:nansPresent',['Data contains %i NaNs. \n ',...
+            'There might be problems with the definition of data files or ',...
+            'mask file. \n Parts of masks are non-overlapping with data. NaNs are masked...'],sum(nan_index))
+    end
+    for i_mask = 1:size(mask_vol_each,4)
+        mask_index_each{i_mask} = intersect(mask_index,mask_index_each{i_mask});
     end
 end
 
@@ -212,7 +224,7 @@ end
 passed_data.files = cfg.files;
 passed_data.data = data;
 passed_data.mask_index = mask_index;
-passed_data.mask_index_separate = mask_index_separate;
+passed_data.mask_index_each = mask_index_each;
 passed_data.hdr = mask_hdr;
 passed_data.dim = sz;
 

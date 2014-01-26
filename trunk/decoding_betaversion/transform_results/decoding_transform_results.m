@@ -1,4 +1,4 @@
-% function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model,data)
+% function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,data)
 %
 % This function caculates a lot of different result measures defined by
 % METHOD.
@@ -48,7 +48,6 @@
 %   decoding_out: struct with result from last decoding step
 %   cfg: the standard decoding cfg struct that was used for the last
 %        decoding
-%   model: the model that was used for the last decoding
 %
 % OUT
 %   output: can be either a single number or a struct ({}) that can contain
@@ -60,10 +59,14 @@
 %       principle output contains whatever the decoding method puts out
 %       (e.g. if you write your own method).
 
-% TODO: Remove chancelevel here as explicit input, should be returned by 
-% each method (also for each decoding step separately).
+% TODO: to improve speed when multiple methods are calculated, pass
+% structure "loaded" with fields predicted_labels, true_labels, labels,
+% decision_values and introduce check in each method if fields exist
+% (rather than using isfield which is slow inintialize
+% loaded.isloaded.decision_values = 0; and change to 1 as soon as it is
+% initialized. Problem: Structure of function doesn't work with setwise. 
 
-function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,model,data)
+function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,data)
 
 %% If method is a string
 if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
@@ -87,7 +90,8 @@ elseif strcmpi(method, 'sensitivity') || strcmpi(method, 'sensitivity_minus_chan
     true_labels = vertcat(decoding_out.true_labels);
     
     labels = uniqueq(true_labels);
-    if length(labels) > 2
+    n_labels = size(labels,1);
+    if n_labels > 2
         error('Too many labels for sensitivity measure! Check input labels.')
     end
     labelfilt = true_labels == labels(1); % use first label (only works with two labels)
@@ -102,7 +106,8 @@ elseif strcmpi(method, 'specificity') || strcmpi(method, 'specificity_minus_chan
     true_labels = vertcat(decoding_out.true_labels);
     
     labels = uniqueq(true_labels);
-    if length(labels) > 2
+    n_labels = size(labels,1);
+    if n_labels > 2
         error('Too many labels for sensitivity measure! Check input labels.')
     end
     labelfilt = true_labels == labels(end); % use last label (only works with two labels)
@@ -182,13 +187,13 @@ elseif strcmpi(method, 'zcorr')
 elseif ischar(method) % all other methods
     
     fhandle = str2func(['transres_' method]);
-    output = feval(fhandle,decoding_out,chancelevel,cfg,model,data);
+    output = feval(fhandle,decoding_out,chancelevel,cfg,data);
     % e.g. if method = 'yourmethod', this calls:
-    %  output = transres_yourmethod(decoding_out,chancelevel,cfg,model,data);
+    %  output = transres_yourmethod(decoding_out,chancelevel,cfg,data);
     
 elseif isobject(method)
     % use passed handle directly and return
-    output = method.apply(decoding_out,chancelevel,cfg,model,data);
+    output = method.apply(decoding_out,chancelevel,cfg,data);
     
 else
     error('Dont know how to handle method %s', method)

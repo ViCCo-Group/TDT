@@ -1,4 +1,4 @@
-% output = transres_SVM_pattern(decoding_out, chancelevel, cfg, model, data)
+% output = transres_SVM_pattern(decoding_out, chancelevel, cfg, data)
 % 
 % Calculates the pattern according to Haufe et al (2014), Neuroimage. This
 % is done by first getting the weights in source space (primal problem), if
@@ -18,7 +18,7 @@
 %   
 % Martin, 2014-01-15
 
-function output = transres_SVM_pattern(decoding_out, chancelevel, cfg, model, data)
+function output = transres_SVM_pattern(decoding_out, chancelevel, cfg, data)
 
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment
@@ -31,15 +31,17 @@ switch lower(cfg.decoding.method)
     case 'classification'
         libsvm_options = cfg.decoding.train.classification.model_parameters;
     case 'classification_kernel'
-        error('Weights cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
+        error('Pattern cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
     case 'regression'
         libsvm_options = cfg.decoding.train.regression.model_parameters;
 end
 % find '-t 0' in the current options (parameter for linear svm)
-if isempty(findstr(libsvm_options, '-t 0'))
+if isempty(strfind(libsvm_options, '-t 0'))
     error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
 end
 
+% Unpack model
+model = [decoding_out.model];
 
 %% Get weights (implementation from libsvm website)
 % see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804
@@ -58,7 +60,7 @@ for i_model = 1:n_models
     [n_samples n_dim] = size(data_train);
     
     if n_dim^2<10^7
-        pattern = cov(data_train)*weights * inv(cov(weights'*data_train'));
+        pattern = cov(data_train)*weights / cov(weights'*data_train');
     else % else do row by row (not much slower, even if we chunk it no dramatic speed-up)
         warning('Pattern is very large, so its estimation will be very slow (up to minutes)!')
         scale_param = inv(cov(weights'*data_train'));

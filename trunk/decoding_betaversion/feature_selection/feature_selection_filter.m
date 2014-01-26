@@ -90,11 +90,11 @@ for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
 
         % Train model
         % e.g. when software is libsvm, call function with name libsvm_train.m
-        model(j_step,iteration) = feval(cfg.feature_selection.decoding.fhandle_train,labels_train,vectors_train(:,ranks_index),cfg.feature_selection);
+        model = feval(cfg.feature_selection.decoding.fhandle_train,labels_train,vectors_train(:,ranks_index),cfg.feature_selection);
         
         % Test Estimated Model
         % e.g. when software is libsvm, call function with name libsvm_test.m        
-        decoding_out(j_step,iteration) = feval(cfg.feature_selection.decoding.fhandle_test,labels_test,vectors_test(:,ranks_index),cfg.feature_selection,model(j_step,iteration));
+        decoding_out(j_step,iteration) = feval(cfg.feature_selection.decoding.fhandle_test,labels_test,vectors_test(:,ranks_index),cfg.feature_selection,model);
 
     end
     
@@ -110,7 +110,7 @@ for iteration = 1:length(n_vox)
         error(['More than one output selected in nested CV for feature selection.\n',...
             'Change field ''cfg.feature_selection.results.output'' to one entry. only.'])
     end
-   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration),data(:,ranks_index)); 
+   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,data(:,ranks_index)); 
 end
 
 % Get number of features where output is highest
@@ -150,5 +150,10 @@ switch lower(cfg.feature_selection.filter)
     case 'external'
         [ranks,ind] = eget(cfg,external,i_step);
     otherwise
-        error('Unknown ranking method %s',cfg.feature_selection.method)
+        try
+            fhandle = str2func(cfg.feature_selection.filter);
+            [ranks,ind] = fhandle(labels_train,vectors_train,cfg);
+        catch
+            error('Unknown ranking method %s',cfg.feature_selection.method)
+        end
 end

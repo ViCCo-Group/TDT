@@ -1,4 +1,4 @@
-% fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images, fighdl)
+% fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl)
 %
 % This function plots a given voxelselection (e.g. searchlight, ROI), and
 % can in addition show a 2d projection of an image.
@@ -8,8 +8,8 @@
 %       Plot currently selected voxels only (no background image)
 %   plot_selected_voxels(position_index,sz,brain_data,mask_index)
 %       Plot searchlight + background
-%   plot_selected_voxels(...,boarder_images)    
-%       Additionally select how the 2d boarder image should look like
+%   plot_selected_voxels(...,border_images)    
+%       Additionally select how the 2d border image should look like
 %       
 %
 % PARAMETER
@@ -29,6 +29,10 @@
 %
 % Martin Hebart, Kai Görgen, 2013/05/27
 
+% History: 
+%   Martin: 2014/01/26: Speed-up of 30% by drawing only voxels that are
+%       visible
+
 % Possible IMPROVEMENTS:
 % Adjust size of each axis to get "real" shape of ROI, not distorted along
 % the smaller/longer axis
@@ -40,7 +44,7 @@
 %       but of course plot searchlight
 %   -- somewhere on the way there: save projections
 
-function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,boarder_images, fighdl)
+function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl)
 
 % check that the correct arguments are provided
 if exist('brain_data', 'var')
@@ -85,24 +89,38 @@ faces_matrix = [1 2 6 5
 1 2 3 4
 5 6 7 8];
 
-n_vox = length(position_index);
+
+[P(:,1) P(:,2) P(:,3)] = ind2sub(sz,position_index);
+n_vox = size(P,1);
+
+% Check if voxel is visible and remove voxels that are not
+removeind = false(n_vox,1);
+for i = 1:n_vox
+    Pdiff = bsxfun(@minus,P(i,:),P);
+    keepind = sum(abs(Pdiff),2)>1;
+    if sum(keepind)<6 % if there are less than six imminent neighbors
+        removeind(i) = true; % remove
+    end
+end
+
+P(removeind,:) = [];
+n_vox = size(P,1);
+position_index(removeind) = [];
 
 large_vertex_matrix = zeros(n_vox* size(vertex_matrix,1), size(vertex_matrix,2));
 large_faces_matrix = zeros(n_vox * size(faces_matrix,1), size(faces_matrix,2));
 
-[px,py,pz] = ind2sub(sz,position_index);
-
 for i = 1:n_vox
     xpos = (i-1)*8 + (1:8);
 %     large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,[M.X(position_index(i)) M.Y(position_index(i)) M.Z(position_index(i))]);
-    large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,[px(i) py(i) pz(i)]);    
+    large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,P(i,:));    
     xpos = (i-1)*6 + (1:6);
     large_faces_matrix(xpos,:) = faces_matrix + (i-1)*8;
 end
 
 clf(fighdl)
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
-'FaceVertexCData',ones(8*length(position_index),1) * [.9 .2 .4],'FaceColor','interp',...
+'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);
 axis([0 sz(1) 0 sz(2) 0 sz(3)])
 
@@ -124,19 +142,18 @@ if exist('brain_data', 'var')
     brain = zeros(sz);
     brain(mask_index) = brain_data*0.9+0.1; % *.9 + .1 serves to differentiate between inmask and outmask voxels
 
-    % % TODO:
-    % % - only project outer voxels 
+    % % TODO: only project outer voxels 
     %
 
-    if ~exist('boarder_image', 'var') || isempty(boarder_image)
-        boarder_images = 'projection+slices'; % choose if you want to project slice (e.g. the middle) or the projection
+    if ~exist('border_image', 'var') || isempty(border_image)
+        border_images = 'projection+slices'; % choose if you want to project slice (e.g. the middle) or the projection
     end
     % check that value is valid
-    if ~(strcmp(boarder_images, 'projection') || strcmp(boarder_images, 'projection+slices') || strcmp(boarder_images, 'slices'))
-        error('Unkown projection method for boarder_images, please check')
+    if ~(strcmp(border_images, 'projection') || strcmp(border_images, 'projection+slices') || strcmp(border_images, 'slices'))
+        error('Unkown projection method for border_images, please check')
     end
 
-    if strcmp(boarder_images, 'projection') || strcmp(boarder_images, 'projection+slices')
+    if strcmp(border_images, 'projection') || strcmp(border_images, 'projection+slices')
         z_projection = sum(brain, 3)';
         x_projection = squeeze(sum(brain, 2))';
         y_projection = squeeze(sum(brain, 1))';   
@@ -153,7 +170,7 @@ if exist('brain_data', 'var')
         y_background = y_projection;
     end
 
-    if strcmp(boarder_images, 'slices') || strcmp(boarder_images, 'projection+slices')
+    if strcmp(border_images, 'slices') || strcmp(border_images, 'projection+slices')
         z_slice = brain(:,:,round(sz(3)/2))';
         x_slice = squeeze(brain(:,round(sz(2)/2),:))';
         y_slice = squeeze(brain(round(sz(1)/2),:,:))';
@@ -161,11 +178,11 @@ if exist('brain_data', 'var')
     end
 
 
-    if strcmp(boarder_images, 'projection+slices')
+    if strcmp(border_images, 'projection+slices')
         z_background(z_slice>0) = z_slice(z_slice>0);
         x_background(x_slice>0) = x_slice(x_slice>0);
         y_background(y_slice>0) = y_slice(y_slice>0);
-    elseif strcmp(boarder_images, 'slices')
+    elseif strcmp(border_images, 'slices')
         z_background = z_slice;
         x_background = x_slice;
         y_background = y_slice;

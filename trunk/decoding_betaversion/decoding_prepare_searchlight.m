@@ -39,7 +39,7 @@ end
 if ~isnumeric(cfg.searchlight.radius), error('cfg.searchlight.radius must be numeric but is not, please check'), end
 
 dim = cfg.datainfo.dim;
-[M.X M.Y M.Z] = ndgrid(1:dim(1),1:dim(2),1:dim(3)); % meshgrid in 3D
+[M.X M.Y M.Z] = ndgrid(1:dim(1),1:dim(2),1:dim(3)); % meshgrid in 3D (meshgrid mixes up dimensions)
 
 % try to get voxel dimensions
 if isfield(cfg, 'datainfo') && isfield(cfg.datainfo, 'voxelsize')

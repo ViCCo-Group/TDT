@@ -156,7 +156,7 @@
 %              selected in .mask_index.
 %       .mask_index: indices of those features that were selected by the
 %                    mask minus those that are NaN in the input data. When
-%                    spatial information is not important, a  vector of 
+%                    spatial information is not important, a vector of 
 %                    1:nFeatures is sufficient.
 %                    These are only the features of the input data that were 
 %                    masked, NOT ROI masks. See .masks.mask_data{} below 
@@ -165,7 +165,7 @@
 %               filenames of datafiles (.name) and mask(s) (.mask) as cell
 %               of strings
 %       .hdr: a header from either a mask or a data file (if
-%             cfg.files.mask{1} == 'all voxels'). '' is ok if no hdr is
+%             cfg.files.mask{1} = 'all voxels'). '' is ok if no hdr is
 %             needed for writing results.
 %       .dim: 1x3 vector containing the original dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
@@ -220,8 +220,6 @@ cfg.feature_selection = decoding_defaults(cfg.feature_selection);
 
 cfg.progress.starttime = datestr(now);
 
-dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
-
 global verbose % MH: don't worry, Kai, this is the only case where global is better than passing!! ;)
 global reports % and this is the second only case (there actually is a third somewhere else)...
 verbose = cfg.verbose;
@@ -231,6 +229,7 @@ reports = []; % init
 ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/01/14 2.7 beta';
 cfg.info.ver = ver;
 dispv(1,ver)
+dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 
 %% Basic checks
 
@@ -303,21 +302,24 @@ use_kernel = cfg.decoding.use_kernel;
 % Prepare searchlight template (if needed, sl_template will be empty for other methods)
 [cfg,sl_template] = decoding_prepare_searchlight(cfg);
 
+% Save analysis type
+results.analysis = cfg.analysis;
 % Save number of conditions (e.g. to get the chancelevel later)
 results.n_cond = cfg.design.n_cond;
 results.n_cond_per_step = cfg.design.n_cond_per_step;
 % Save mask_index
 results.mask_index = mask_index;
-% Save all mask indices separately if several masks are provided
-if isfield(passed_data,'mask_index_separate')
-    results.mask_index_separate = passed_data.mask_index_separate;
-end
+% Save all mask indices separately (useful if several masks are provided)
+results.mask_index_each = passed_data.mask_index_each;
 % Save number of decodings that could be performed
 results.n_decodings = n_decodings;
 % Save subindices if they are provided
 if isfield(cfg.searchlight,'subset')
     results.decoding_subindex = decoding_subindex;
 end
+% save data info (voxel dimensions, size)
+results.datainfo = cfg.datainfo;
+
 
 for i_output = 1:n_outputs
     outname = char(cfg.results.output{i_output}); % char necessary to get name of objects
@@ -422,8 +424,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % set equals the current decoding (used below to skip these trainings)
     previous_i_train = []; % init
     previous_trainlabels = []; % init
-    % clear model variable from the previous decoding
-    clear model;
     
     if use_kernel
         % if all decoding steps use the same data, calculating the
@@ -529,11 +529,11 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % convinient if nothing needs to be changed.
         
         if skip_training
-            model(i_step) = model(i_step-1);
+            model = decoding_out(i_step-1).model;
         else
             % e.g. when software is libsvm, then:
-            % model(i_step) = libsvm_train(labels_train,data_train,cfg);
-            model(i_step) = cfg.decoding.fhandle_train(labels_train,data_train,cfg);
+            % model = libsvm_train(labels_train,data_train,cfg);
+            model = cfg.decoding.fhandle_train(labels_train,data_train,cfg);
         end
 
         % store current training indices & training labels to check if they
@@ -553,18 +553,14 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Test Estimated Model
         % e.g. when software is libsvm, then:
-        % decoding_out(i_step) = libsvm_test(labels_test,data_test,cfg,model(i_step));
-        decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model(i_step));
-
-        % TODO: decoding_out should be made extendable across runs
-        % (sometimes you want to do things across runs)
-        % maybe introduce another function and use all models?
+        % decoding_out(i_step) = libsvm_test(labels_test,data_test,cfg,model);
+        decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model); %#ok<AGROW>
 
     end % i_step
 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
-    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,model,data);
+    results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,current_data);
 
 end % End decoding iterations (e.g. voxel)
 

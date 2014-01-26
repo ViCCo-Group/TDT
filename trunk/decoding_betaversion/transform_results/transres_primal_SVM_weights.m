@@ -1,4 +1,4 @@
-% output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model, varargin)
+% output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, varargin)
 % 
 % Calculates the weights in source space (primal problem), if a linear SVM 
 % was used (otherwise no weights can be calculated for the primal problem).
@@ -51,7 +51,7 @@
 %   Added more efficient method to calculate primal weights.
 %   This method can be extended to multiclass. Link to howto below. 
 
-function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, model, varargin)
+function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, varargin)
 
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment
@@ -69,10 +69,12 @@ switch lower(cfg.decoding.method)
         libsvm_options = cfg.decoding.train.regression.model_parameters;
 end
 % find '-t 0' in the current options (parameter for linear svm)
-if isempty(findstr(libsvm_options, '-t 0'))
+if isempty(strfind(libsvm_options, '-t 0'))
     error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
 end
 
+% Unpack model
+model = [decoding_out.model];
 
 %% new version (using alphas and SVs)
 % see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804

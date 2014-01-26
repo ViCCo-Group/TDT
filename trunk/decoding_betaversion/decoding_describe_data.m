@@ -72,7 +72,7 @@
 
 function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
 
-cfg = decoding_defaults(cfg);
+cfg2 = decoding_defaults(cfg); % keep separate just in case we don't want to set all fields yet
 
 cfg.files.name = [];
 cfg.files.chunk = [];
@@ -98,8 +98,8 @@ else
     end
     dispv(1, 'getting betas from %s', beta_dir)
     % get image and nii files
-    beta_names = get_filenames(cfg.software,beta_dir,'beta*.img');
-    beta_names = [beta_names; get_filenames(cfg.software,beta_dir,'beta*.nii')];
+    beta_names = get_filenames(cfg2.software,beta_dir,'beta*.img');
+    beta_names = [beta_names; get_filenames(cfg2.software,beta_dir,'beta*.nii')];
     
     if isempty(beta_names)
         if isempty(beta_names)

@@ -137,7 +137,7 @@ for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
     % to save time for loading data)
     ranks = []; % init   
     for iteration = 1:length(nested_n_vox)
-        [ranks,decoding_out(j_step,iteration),model(j_step,iteration)] = ...
+        [ranks,decoding_out(j_step,iteration)] = ...
             feval(cfg.feature_selection.embedded_func,cfg,ranks,nested_n_vox,iteration,vectors_train,labels_train,vectors_test,labels_test);
     end
     
@@ -152,7 +152,7 @@ for iteration = 1:length(nested_n_vox)
         error(['More than one output selected in nested CV for feature selection.\n',...
             'Change field ''cfg.feature_selection.results.output'' to one entry, only.'])
     end
-   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration),[]); % passing data doesn't make sense here
+   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,[]); % passing data doesn't make sense here
 end
 
 % Get number of features where output is highest

@@ -1,4 +1,4 @@
-function [ranks,decoding_out,model] = RFE(cfg,ranks,final_n_vox,iteration,data_train,labels_train,data_test,labels_test)
+function [ranks,decoding_out] = RFE(cfg,ranks,final_n_vox,iteration,data_train,labels_train,data_test,labels_test)
 
 % This is a subfunction for feature_selection_embedded. The general
 % structure is (also for other such functions):
@@ -16,8 +16,6 @@ function [ranks,decoding_out,model] = RFE(cfg,ranks,final_n_vox,iteration,data_t
 %   ranks: Ranks that are later used to select features
 %   decoding_out (optional output): Results of decoding analysis, needed
 %       for nested cross-validation
-%   model (optional output): Resulting model, also needed for nested
-%       cross-validation
 %
 % Also don't forget to specify if your method is a forward selection or
 % backward elimination method (using cfg.feature_selection.direction =

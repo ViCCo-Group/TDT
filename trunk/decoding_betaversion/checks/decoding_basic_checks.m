@@ -8,6 +8,8 @@
 % Second, some parameters are set that are later needed.
 
 % History 
+% Martin (2014/01/24): Changed check for writing results, results are now 
+%   overwritten at end of processing, not beginning
 % Martin (2014/01/07): Externalized function from decoding.m
 
 function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
@@ -30,9 +32,6 @@ end
 % - Kai
 % check_software(cfg);
 
-% TODO: make sure that the chosen program can perform
-% the chosen algorithm (e.g. can libsvm perform SVR)
-
 % check if design exists, and create if it doesn't
 field_names = {'label','train','test','set'};
 missing = [1 1 1 1];
@@ -45,7 +44,7 @@ end
 if any(missing) % if only some or no fields for a design exist
     if isfield(cfg.design,'function') && isfield(cfg.design.function,'name') % create design with passed method
         if ~all(missing) % throw warning if some fields exist, but others not
-            warningv('DECODING_BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design was created anew, using the method %s.',cfg.design.function.name)
+            warningv('DECODING_BASIC_CHECKS:MissingFieldsInDesignReplaced','Some fields for design matrix were missing. Design is now created from scratch, using the method %s.',cfg.design.function.name)
         end
         fhandle = str2func(cfg.design.function.name); % create design
         cfg.design = feval(fhandle,cfg);
@@ -62,7 +61,8 @@ else
     % Run quick test that method is the same for both:
     if ~strcmpi(func2str(cfg.decoding.fhandle_train),[cfg.decoding.software '_train']) || ...
        ~strcmpi(func2str(cfg.decoding.fhandle_test),[cfg.decoding.software '_test'])
-       warningv('DECODING_BASIC_CHECKS:decoding_fhandle_name_mismatch', 'Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Must match!')
+       warningv('DECODING_BASIC_CHECKS:decoding_fhandle_name_mismatch',...
+           'Mismatch between cfg.decoding.software and cfg.decoding.fhandle_train / cfg.decoding.fhandle_test. Getting info from cfg.decoding.software and discarding settings!')
        cfg.decoding.fhandle_train = str2func([cfg.decoding.software '_train']); % this format allows variable input
        cfg.decoding.fhandle_test = str2func([cfg.decoding.software '_test']); % this format allows variable input
     end
@@ -101,7 +101,7 @@ use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
 cfg.decoding.use_kernel = use_kernel;
 if use_kernel
     dispv(1, 'Using a "_kernel" decoding method.')
-    dispv(2, sprintf('\nThis means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nparameters to be selected'))
+    dispv(2, sprintf('\nThis means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nmethods of TDT to be selected'))
 else
     dispv(2, 'Using normal method')    
 end
@@ -130,6 +130,19 @@ if use_kernel && ~strcmpi(cfg.feature_selection.method,'none')
     cfg.decoding.use_kernel = 0;
 end
 
+% Using the kernel can disagree with the parameters set manually for
+% decoding, checking this for libsvm and the default linear kernel
+if use_kernel && strcmpi(cfg.decoding.software,'libsvm')
+    fstr = func2str(cfg.decoding.kernel.function);
+    fstr2 = strfind(cfg.decoding.train.classification.model_parameters,'-t 0'); % check for linear kernel
+    if strcmpi(fstr,'@(X,Y)X*Y''') && isempty(fstr2)
+        str = ['Using classification with a linear kernel, but manual settings of classification are set to nonlinear. ',...
+            'We want to prevent you from making a mistake. Please set either cfg.decoding.method = ''classification'' or ',...
+            'in cfg.decoding.train.classification.model_parameters, set -t 0'];
+        error(str)
+    end
+end
+
 if ~strcmpi(cfg.feature_selection.method,'none')
     warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsBeta','Feature selection has not been fully debugged. Running in beta stage!')
 end
@@ -154,7 +167,7 @@ end
 % get number of conditions present in decoding
 cfg.design.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
 
-% get number of used conditions (i.e. labels) for each run separately
+% get number of *used* conditions (i.e. labels) for each run separately
 n_unique_labels = zeros(1,n_steps);
 unique_labels = cell(1,n_steps);
 for i_step = 1:n_steps
@@ -164,13 +177,15 @@ end
 % at the same time make sure that the number is always the same (it is possible that
 % different labels are used as long as the number of labels remains the
 % same)
-if ~all(n_unique_labels == n_unique_labels(1))
-    error('Number of used labels varies across decoding steps which prevents comparing results across steps. If multiple sets are used, run them separately.')
-else
-    diff_unique_labels = diff([unique_labels{:}],1,2);
-    if any(diff_unique_labels(:)) % if any run contains different labels
-        warningv('DECODING_BASIC_CHECKS:more_than_two_labels',...
-            'More than two labels are used, but not all labels are used in each run (e.g. in run 1 labels A and B and in run 2 labels A and C). Make sure this has been intended!')
+if ~strcmpi(cfg.decoding.method,'regression')
+    if ~all(n_unique_labels == n_unique_labels(1))
+        error('Number of used labels varies across decoding steps which prevents comparing results across steps. If multiple sets are used, run them separately.')
+    else
+        diff_unique_labels = diff([unique_labels{:}],1,2);
+        if any(diff_unique_labels(:)) % if any run contains different labels
+            warningv('DECODING_BASIC_CHECKS:more_than_two_labels',...
+                'More than two labels are used, but not all labels are used in each run (e.g. in run 1 labels A and B and in run 2 labels A and C). Make sure this has been intended!')
+        end
     end
 end
 cfg.design.n_cond_per_step = n_unique_labels(1);
@@ -268,41 +283,42 @@ if cfg.results.write
 
     dir_output = cfg.results.dir; % results directory
     if ~exist(dir_output, 'dir'), mkdir(dir_output); end
-
+    dispv(2,'Creating output path at %s',dir_output)
+    
     n_outputs = length(cfg.results.output);
     if ~isfield(cfg.results,'resultsname')
         for i_output = 1:n_outputs
             outputname = cfg.results.output{i_output};
+            % create file names for results that are written
             cfg.results.resultsname(i_output) = { sprintf('%s_%s',cfg.results.filestart,outputname) };
         end
     end
 
     for i_output = 1:n_outputs
 
-        % TODO: should we also introduce this check for each set if sets
-        % are written?
-
-        % Check if it is ok to overwrite existing files
+        % Check if it is ok and possible to overwrite existing files
 
         ext = {'.img','.hdr','.mat'};
         if cfg.results.write == 1, ext = {'.mat'}; end
         for ext_ind = 1:length(ext)
+            % create full path for results that are written
             output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
-            if exist(output_fname,'file')
-                if ~cfg.results.overwrite
-                    error(['Resultfile %s already exists. Change filename or ',...
-                        'set cfg.results.overwrite = 1'],output_fname)
-                else
-                    warningv('DECODING_BASIC_CHECKS:OverwritingExistingResultsfile',sprintf('Resultfile %s already existed. Overwriting...',output_fname))
+            % check if it is possible to write
+            check_write(output_fname,cfg.results.overwrite)
+
+            % If setwise check all files
+            if cfg.results.setwise
+                set_numbers = unique(cfg.design.set);
+                n_sets = length(set_numbers);
+                for i_set = 1:n_sets
+                    output_fname = fullfile(dir_output,sprintf('%s_set%i%s', cfg.results.resultsname{i_output}, set_numbers(i_set), ext{ext_ind}));
+                    check_write(output_fname,cfg.results.overwrite)
                 end
             end
-
-            % Check if it is possible to write
-            temp = fopen(output_fname, 'w');
-            fclose(temp);
-            delete(output_fname);
+            
         end
     end
+    
 end
 
 
@@ -325,4 +341,28 @@ for decoding_step = 1:size(cfg.design.train, 2)
             error('DECODING:CheckUnbalancedDataOk', [message_str, ' If this is ok, set cfg.design.unbalanced_data = ''ok'''])
         end
     end
+end
+
+function check_write(output_fname,overwrite_flag)
+
+if exist(output_fname,'file')
+    if ~overwrite_flag
+        error(['Resultfile %s already exists. Change filename or ',...
+            'set cfg.results.overwrite = 1'],output_fname)
+    else
+        warningv('DECODING_BASIC_CHECKS:OverwritingExistingResultsfile',sprintf('Resultfile %s already existed. Overwriting at end of process...',output_fname))
+    end
+    
+    % Get permissions and check if we can write
+    [temp2,permissions] = fileattrib(output_fname);
+    if permissions.UserWrite ~=1
+        error('Results cannot be written to %s \nCheck that you have writing permission.',output_fname)
+    end
+    
+else
+    % Check if it is possible to write
+    temp = fopen(output_fname, 'w');
+    if temp == -1, error('Results cannot be written to %s \nCheck that you have writing permission.',output_fname), end
+    fclose(temp);
+    delete(output_fname)
 end

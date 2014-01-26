@@ -1,4 +1,4 @@
-% function output = transres_binomial_probability(decoding_out, chancelevel, cfg, model, varargin)
+% function output = transres_binomial_probability(decoding_out, chancelevel, varargin)
 % 
 % Calculate the probability that each value in decoding_out came along when
 % p = chancelevel/100 would be true. This can be used to calculate an
@@ -16,7 +16,7 @@
 %
 % Kai, 2012-03-12
 
-function output = transres_binomial_probability(decoding_out, chancelevel, cfg, model, varargin)
+function output = transres_binomial_probability(decoding_out, chancelevel, varargin)
 
 % calcualte accuracy
 predicted_labels =  vertcat(decoding_out.predicted_labels);

@@ -1,4 +1,4 @@
-% output = transres_primal_SVM_weights_nobias(decoding_out, chancelevel, cfg, model, varargin)
+% output = transres_primal_SVM_weights_nobias(decoding_out, chancelevel, cfg, varargin)
 % 
 % Calculates the weights in source space (primal problem), if a linear SVM 
 % was used (otherwise no weights can be calculated for the primal problem).
@@ -17,7 +17,7 @@
 %   
 % Martin, 2014-01-15
 
-function output = transres_primal_SVM_weights_nobias(decoding_out, chancelevel, cfg, model, varargin)
+function output = transres_primal_SVM_weights_nobias(decoding_out, chancelevel, cfg, varargin)
 
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment
@@ -35,10 +35,12 @@ switch lower(cfg.decoding.method)
         libsvm_options = cfg.decoding.train.regression.model_parameters;
 end
 % find '-t 0' in the current options (parameter for linear svm)
-if isempty(findstr(libsvm_options, '-t 0'))
+if isempty(strfind(libsvm_options, '-t 0'))
     error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
 end
 
+% Unpack model
+model = [decoding_out.model];
 
 %% implementation from libsvm website
 % see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804

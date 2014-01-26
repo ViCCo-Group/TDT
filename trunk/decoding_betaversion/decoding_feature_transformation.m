@@ -88,7 +88,7 @@ if ischar(method)
     fhandle = str2func(['transfeat_' method]);
     [cfg,data_train_trans,data_test_trans,score] = feval(fhandle,cfg,data_train,data_test);
     % e.g. if method = 'yourmethod', this calls:
-    % [cfg,data_train_trans,data_test_trans,score] = transfeat_yourmethod(decoding_out,chancelevel,cfg,model);   
+    % [cfg,data_train_trans,data_test_trans,score] = transfeat_yourmethod(cfg,data_train,data_test);   
 elseif isobject(method)
     % use passed handle directly and return
     [cfg,data_train_trans,data_test_trans,score] = method.apply(cfg,data_train,data_test);

@@ -92,7 +92,7 @@ defaults.parameter_selection.optimization_criterion = 'max';
 defaults.searchlight.unit = 'voxels'; % searchlight unit ('mm' or 'voxels')
 defaults.searchlight.radius = 4; % 4 voxels is a standard often used
 defaults.searchlight.spherical = 0;
-defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur when searchlight is shifted. Only switch off when you are sure that your brain is not near the boarder and when you need even more speed (the check is extremely fast, though).
+defaults.searchlight.wrap_control = 1; % tests that no wrap-around effects occur when searchlight is shifted. Only switch off when you are sure that your brain is not near the border and when you need even more speed (the check is extremely fast, though).
 
 % Decoding specific values
 defaults.decoding.method = 'classification_kernel'; % classification using the kernel speedup as standard

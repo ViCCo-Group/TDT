@@ -48,7 +48,7 @@ for i = stop_ind:-1:1
     field_id = [field_id '.' callers_name{i}];
 end
 
-ind = findstr(msg_id,':');
+ind = strfind(msg_id,':');
 if ~isempty(ind)
     msg_id_short = msg_id(ind+1:end); % remove function location (already provided by dbstack)
 else
@@ -60,7 +60,7 @@ field_id = [field_id '.' msg_id_short];
 
 try % try adding one to the field
     eval([field_id '=' field_id '+1;'])
-    eval(['if ' field_id ' == 2, fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg. dbstack stored in global reports, reports.warnstc\n''); warningv_active = 1; end'])
+    eval(['if ' field_id ' == 2, warning(msg_id,''%s'',msg), fprintf(''Future warnings at same level switched off. Number of warnings stored in cfg. dbstack stored in global reports, reports.warnstc\n''); warningv_active = 1; end'])
 catch %#ok if not possible, create field and plot warning message
     warningv_active = 1; % makes sure that in display_progress.m the message will not be truncated
     eval([field_id '= 1;']);

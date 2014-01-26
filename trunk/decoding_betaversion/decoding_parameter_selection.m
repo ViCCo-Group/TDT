@@ -251,11 +251,11 @@ for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training da
         
         % Train model
         % e.g. when software is libsvm, call function with name libsvm_train.m
-        model(i_step,iteration) = cfg.parameter_selection.decoding.fhandle_train(labels_train,data_train,cfg.parameter_selection); %#ok<AGROW>
+        model = cfg.parameter_selection.decoding.fhandle_train(labels_train,data_train,cfg.parameter_selection);
         
         % Test estimated model
         % e.g. when software is libsvm, call function with name libsvm_test.m
-        decoding_out(i_step,iteration) = cfg.parameter_selection.decoding.fhandle_test(labels_test,data_test,cfg.parameter_selection,model(i_step,iteration));
+        decoding_out(i_step,iteration) = cfg.parameter_selection.decoding.fhandle_test(labels_test,data_test,cfg.parameter_selection,model);
         
     end
     
@@ -270,7 +270,7 @@ for iteration = 1:size(all_combinations,2)
         error(['More than one output selected in nested CV for parameter selection.\n',...
             'Change field ''cfg.parameter_selection.results.output'' to one entry. only.'])
     end
-   results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,model(:,iteration),data_train,data_test); 
+   results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,data_train,data_test); 
 end
 
 % Use parameters where output is highest

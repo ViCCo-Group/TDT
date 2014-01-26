@@ -141,19 +141,7 @@
 %       numbers of voxels in nested feature selection
 %
 
-% TODO list:
-%   - vectors_train and data are used in a confusing manner. Rename to make
-%   clearer (e.g. data_scaled, vectors_train_scaled, or similar)
-%   - introduce decoding_transform_results and other subfunctions used in decoding.m
-%   - find a good way to automatically split training data into well-sized
-%   chunks (one possibility: use same number of test samples as in the main
-%   experiment; problem if cross-classification
-%      -> problem: some samples should not be mixed (e.g. data from one run
-%      should stay together) --> solution: explicitly set design file in cfg
-%   - introduce random forests for feature ranking
-%   - introduce pca (and supervised pca?)
-%   - allow the use of external functions under filter, wrapper, and
-%   embedded methods (thus provide only the selection structure)
+% TODO: introduce random forests for feature ranking
 
 function [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data)
 

@@ -20,28 +20,26 @@ function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,
 n_outputs = length(cfg.results.output);
 
 if cfg.results.setwise
-    unique_sets = unique(cfg.design.set(:));
+    unique_sets = uniqueq(cfg.design.set(:));
     n_sets = length(unique_sets);
 else
     n_sets = 1;
 end
 
+% in case chance-level is not provided (which should only happen for
+% parameter selection or feature selection where it doesn't really matter
+chancelevel = 1/results.n_cond_per_step * 100; % chancelevel in percent    
 
 for i_output = 1:n_outputs
 
     curr_output = cfg.results.output{i_output};
     outname = char(curr_output); % char necessary for classes
 
-    % in case chance-level is not provided (which should only happen for
-    % parameter selection or feature selection where it doesn't really matter
-    
     % TODO: Find some way to get the chancelevel back for each measure
     %   Question: Do we have everything here that we need for this?
 %     if ~isfield(results.(outname),'chancelevel')
 %         results.(outname).chancelevel = 0;
 %     end
-
-    chancelevel = 1/results.n_cond_per_step * 100; % chancelevel in percent    
 
     if strcmpi(outname, 'accuracy') || strcmpi(outname, 'accuracy_minus_chance') || ...
             strcmpi(outname, 'sensitivity') || strcmpi(outname, 'sensitivity_minus_chance') || ...
@@ -76,7 +74,17 @@ for i_output = 1:n_outputs
     if cfg.results.setwise
         for i_set = 1:n_sets
             current_set = unique_sets(i_set);
-            output = decoding_transform_results(curr_output,decoding_out(cfg.design.set == current_set),chancelevel,cfg,data);
+            set_ind = cfg.design.set == current_set;
+            
+            cfg_tmp = cfg;
+            % reduce design matrix to current set (essentially what cfg
+            % should "see" as if there was only this one set)
+            cfg_tmp.design.train = cfg.design.train(:,set_ind);
+            cfg_tmp.design.test = cfg.design.test(:,set_ind);
+            cfg_tmp.design.label = cfg.design.label(:,set_ind);
+            cfg_tmp.design.set = cfg.design.set(:,set_ind);
+            
+            output = decoding_transform_results(curr_output,decoding_out(set_ind),chancelevel,cfg_tmp,data);
 
             % This is a lazy initialization (Martin would call it workaround) for
             % the case in which the output has more than one element (e.g. weights

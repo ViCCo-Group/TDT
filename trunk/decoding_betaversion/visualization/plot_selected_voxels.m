@@ -20,7 +20,7 @@
 %       (e.g. the first brain image), serves as background
 %   mask_index: 1xBD vector specifying the position of each value in 
 %       brain_data in the sz-dimensional space
-%   borader_image: specify type of background image. Possible value:
+%   border_image: specify type of background image. Possible value:
 %       'projection', 'slices', 'projection+slices' (default), []: default
 %   fighdl: Handle to a figure that should be plotted to. By default, the
 %       current axis will be used.
@@ -92,6 +92,8 @@ faces_matrix = [1 2 6 5
 
 [P(:,1) P(:,2) P(:,3)] = ind2sub(sz,position_index);
 n_vox = size(P,1);
+
+% Check if we are dealing with one or several connected components
 
 % Check if voxel is visible and remove voxels that are not
 removeind = false(n_vox,1);

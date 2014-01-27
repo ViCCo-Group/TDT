@@ -47,7 +47,7 @@ if strcmpi(cfg.analysis,'searchlight')
     indexindex0 = ismembc2(position_index,mask_index); % much faster than intersect
     indexindex = indexindex0(indexindex0 > 0); % indexindex give these indices relative to the indices of the mask
 
-elseif strcmpi(cfg.analysis,'ROI')
+elseif strcmpi(cfg.analysis,'roi')
 
     % it is not very efficient to load the masks again, but allows better
     % readability (and probably doesn't matter much, because most of the
@@ -70,7 +70,7 @@ elseif strcmpi(cfg.analysis,'ROI')
     end
         
     % Select indices that relate to the ROI within mask_indices
-    [c,indexindex] = intersect(mask_index,find(mask));
+    [c,indexindex] = intersect(mask_index,find(mask)); %#ok<ASGLU>
     
     if isempty(indexindex)
         error('There is no overlap between mask %s and the decoding data, check position of mask!',fname)
@@ -78,6 +78,6 @@ elseif strcmpi(cfg.analysis,'ROI')
         
 elseif strcmpi(cfg.analysis,'wholebrain')
 
-    indexindex = 1:length(mask_index);
+    indexindex = (1:length(mask_index))';
 
 end

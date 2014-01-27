@@ -50,28 +50,36 @@ n_models = length(model);
 output{1} = cell(n_models,1);
 for i_model = 1:n_models
     m = model(i_model);
-    if strcmpi(cfg.decoding.method, 'classification') && length(unique(m.Label)) > 2
+    if strcmpi(cfg.decoding.method, 'classification') && length(uniqueq(m.Label)) > 2
         error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
     end
     
     weights = m.SVs' * m.sv_coef;    
 
+%% Get pattern    
+    
     data_train = data(cfg.design.train(:, i_model) > 0, :);
     [n_samples n_dim] = size(data_train);
     
     if n_dim^2<10^7
         pattern = cov(data_train)*weights / cov(weights'*data_train');
     else % else do row by row (not much slower, even if we chunk it no dramatic speed-up)
-        warning('Pattern is very large, so its estimation will be very slow (up to minutes)!')
+        warningv('TRANSRES_SVM_PATTERN:pattern_calculation_slow','Pattern is very large, so its estimation will be very slow (up to minutes)!')
         scale_param = inv(cov(weights'*data_train'));
         pattern_unscaled = zeros(n_dim,1);
         for i = 1:n_dim % remove mean columnwise
            data_train(:,i) = data_train(:,i) - mean(data_train(:,i));
         end
+        fprintf(repmat(' ',1,20))
+        backstr = repmat('\b',1,20);
         for i = 1:n_dim % now calculate columnwise
+            if i == 1 || ~mod(i,round(n_dim/50)) || i == n_dim
+                fprintf([backstr '%03.0f percent finished'],100*i/n_dim)
+            end
             data_cov = (data_train(:,i)'*data_train)/(n_samples-1);
             pattern_unscaled(i,1) = data_cov * weights;
         end
+        fprintf('\ndone.\n')
         pattern = pattern_unscaled * scale_param;
     end
     output{1}{i_model} = pattern; %#ok<AGROW>

@@ -53,7 +53,7 @@ if strcmpi(cfg.analysis,'roi')
     
     if isfield(cfg,'files') && isfield(cfg.files,'mask')
         for i_mask = 1:length(cfg.files.mask)
-            [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<*AGROW>
+            [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<ASGLU,*AGROW>
         end
     else
         for i_mask = 1:numel(results.mask_index_each)
@@ -102,7 +102,7 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
             fname = sprintf('%s.img',cfg.results.resultsname{i_output});
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
-            resultsvol = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
+            resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume with background value (default: 0)
             resultsvol(mask_index) = results.(outputname).output;
             
             if exist(resultsvol_hdr.fname,'file')
@@ -138,7 +138,7 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
                     fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
                     resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
                     resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
-                    resultsvol_set = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
+                    resultsvol_set = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
                     resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
                     dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
                     write_image(cfg.software,resultsvol_hdr,resultsvol_set);
@@ -176,9 +176,9 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             resultsvol_hdr.descrip = sprintf('%s decoding map on ROI %s',outputname,roi_names{i_roi});
             curr_output = results.(outputname).output(i_roi);
             
-            [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_each,i_roi);
+            [resultsvol,continueflag] = assign_output(cfg,resultsvol_hdr,curr_output,mask_index_each,i_roi);
             if continueflag == 1,
-                str = sprintf('Results for output %s and roi %s cannot be written, because the format is wrong.',outputname,roi_names{i_roi});
+                str = sprintf('Results for output %s and roi ''%s'' cannot be written, because the format is wrong (e.g. leave-one-run-out with more than one output per run).',outputname,roi_names{i_roi});
                 warningv('DECODING_WRITE_RESULTS:cannot_write',str)
                 continue
             end
@@ -216,7 +216,7 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
                     fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
                     resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
                     resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
-                    resultsvol_set = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
+                    resultsvol_set = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
                     resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
                     dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
                     write_image(cfg.software,resultsvol_hdr,resultsvol_set);
@@ -300,7 +300,7 @@ end
 
 %% SUBFUNCTIONS
 
-function [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,mask_index_each,i_roi)
+function [resultsvol,continueflag] = assign_output(cfg,resultsvol_hdr,curr_output,mask_index_each,i_roi)
 
 % numeric output can be written as image when it matches mask_index_each or is scalar.
 % cell output can be written as image if we can find a unique and
@@ -308,7 +308,7 @@ function [resultsvol,continueflag] = assign_output(resultsvol_hdr,curr_output,ma
 % contains numeric)
 
 continueflag = 0;
-resultsvol = zeros(resultsvol_hdr.dim(1:3)); % prepare results volume
+resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
 
 % cell case
 if iscell(curr_output)

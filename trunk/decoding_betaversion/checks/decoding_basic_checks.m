@@ -278,7 +278,6 @@ if length(unique(cfg.design.set)) == 1
     cfg.results.setwise = 0;
 end
 
-
 if cfg.results.write
 
     dir_output = cfg.results.dir; % results directory
@@ -342,6 +341,7 @@ for decoding_step = 1:size(cfg.design.train, 2)
         end
     end
 end
+
 
 function check_write(output_fname,overwrite_flag)
 

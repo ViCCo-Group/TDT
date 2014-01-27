@@ -125,13 +125,13 @@ elseif strcmpi(method, 'balanced_accuracy') || strcmpi(method, 'balanced_accurac
     for i_label = 1:n_labels
         labelfilt = true_labels == labels(i_label);
         if i_label == 1
-            output = 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
+            output = mean(predicted_labels(labelfilt) == true_labels(labelfilt));
         else
-            output = output + 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
+            output = output + mean(predicted_labels(labelfilt) == true_labels(labelfilt));
         end
-        output = output/n_labels;
     end
-    
+    output = output/n_labels;
+
     if strcmpi(method, 'balanced_accuracy_minus_chance')
         output = output - chancelevel; % subtract chancelevel from all output entries
     end
@@ -146,7 +146,7 @@ elseif strcmpi(method, 'loglikelihood')
     predicted_labels =  vertcat(decoding_out.predicted_labels);
     true_labels = vertcat(decoding_out.true_labels);
     
-    [dprime,output] = dprimestats(true_labels,predicted_labels);
+    [dprime,output] = dprimestats(true_labels,predicted_labels); %#ok<ASGLU>
     
 elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
     decision_values = vertcat(decoding_out.decision_values);
@@ -161,9 +161,9 @@ elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
         labels = uniqueq(true_labels);
     end
     
-    output = AUCstats(decision_values,true_labels,labels,0);
+    output = 100*AUCstats(decision_values,true_labels,labels,0); % express in percent
     if strcmpi(method, 'AUC_minus_chance')
-        output = 100*output - chancelevel; % center around 0 and express in percent
+        output = output - chancelevel; % center around 0
     end
     
 elseif strcmpi(method, 'corr')

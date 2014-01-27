@@ -1,10 +1,5 @@
 OPEN BUGS
 
-B13: The output AUC and anything related to weights depends on the order 
-in which labels are entered. This is a libsvm "bug" which is still present 
-for version 3.12, but resolved in version 3.17. Currently compiling all 
-libsvm function from version 3.17 (still missing: mac32 and mac64).
-
 B5: Using the CORRELATION CLASSIFIER (MVPA) with more than two trials per 
 run generates an error. Need to correct the last line of MVPA and true 
 labels or better make it possible to test MVPA trialwise, i.e. with more 
@@ -25,3 +20,6 @@ see run_nest in decoding_parameter_selection
 
 B12: make_design_boot_cv.m does not work for one chunk only. Need to check 
 if it can be adapted or if a new function is needed.
+
+B14: setwise doesn't write ROI results as .img even if it could in some 
+cases (e.g. when one step per set) -> continueflag is problem

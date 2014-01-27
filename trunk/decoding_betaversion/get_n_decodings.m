@@ -21,15 +21,20 @@ if strcmpi(cfg.analysis,'searchlight')
 
         % Check if format is correct
         if subset_sz(2) ~= 3 && subset_sz(2) ~= 1
-            error('Size of input to cfg.searchlight.subset is %ix%i. The second dimension must be of size 1 or 3 (see ''help decoding'' for more information)',subset_sz(1),subset_sz(2));
+            error(['Size of input to cfg.searchlight.subset is %ix%i. If you provided indices, ',...
+                'set cfg.searchlight.subset = cfg.searchlight.subset''. If you wanted to provide ',...
+                'coordinates, ones nx3 as input (see ''help decoding'' for more information)'],subset_sz(1),subset_sz(2));
         end
 
         % if provided as vector
         if subset_sz(2)~=3
             decoding_subindex = cfg.searchlight.subset;
             if any(decoding_subindex>length(mask_index))
-                warning('Some indices in cfg.searchlight.subset are larger than the number of decodings which are %i. Removing all larger values!',length(mask_index))
+                warning('Some indices in cfg.searchlight.subset are larger than the number of decodings (which are %i). Removing all larger values!',length(mask_index))
                 decoding_subindex(decoding_subindex>length(mask_index)) = [];
+                if isempty(decoding_subindex)
+                error('All values removed! None of the provided input indices are actually part of the mask!')
+                end
             end
 
             % if provided as matrix
@@ -44,7 +49,6 @@ if strcmpi(cfg.analysis,'searchlight')
 
             subset_index = sub2ind(sz,cfg.searchlight.subset(:,1),cfg.searchlight.subset(:,2),cfg.searchlight.subset(:,3));
             [temp,decoding_subindex] = intersect(mask_index,subset_index);
-            decoding_subindex = decoding_subindex';
             if isempty(decoding_subindex)
                 error('None of the provided subset of searchlights lie within the mask. Please check the accuracy of your input to cfg.searchligh.subset!')
             end
@@ -52,10 +56,6 @@ if strcmpi(cfg.analysis,'searchlight')
                 warning('Some of the provided subset of searchlights lie outside of the mask. These values are masked anyway. Results may be affected!')
             end
 
-        end
-
-        if size(decoding_subindex,2) == 1   % make sure that it is a row vector
-            decoding_subindex = decoding_subindex'; 
         end
 
         n_decodings = length(decoding_subindex);

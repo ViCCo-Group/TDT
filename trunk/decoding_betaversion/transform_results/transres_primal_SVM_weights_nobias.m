@@ -49,7 +49,7 @@ n_models = length(model);
 output{1} = cell(n_models,1);
 for i_model = 1:n_models
     m = model(i_model);
-    if strcmpi(cfg.decoding.method, 'classification') && length(unique(m.Label)) > 2
+    if strcmpi(cfg.decoding.method, 'classification') && length(uniqueq(m.Label)) > 2
         error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
     end
     

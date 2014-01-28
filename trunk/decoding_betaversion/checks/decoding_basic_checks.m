@@ -114,7 +114,7 @@ end
 if use_kernel && strcmpi(cfg.feature_transformation.estimation,'across')
     newmethod = strrep(cfg.decoding.method,'_kernel','');
     str = sprintf(['Use of cfg.feature_transformation.estimation = ''across'' and decoding method ''%s'' is not possible at the moment. ',...
-                   'Method is now reverted to ''%s'' (which might be slower).'],cfg.decoding.method,newmethod);
+                   'Method is now reverted to ''%s'' (which will be slower).'],cfg.decoding.method,newmethod);
     warningv('DECODING_BASIC_CHECKS:KernelAndFeatureTransformation',str)
     cfg.decoding.method = newmethod;
     cfg.decoding.use_kernel = 0;
@@ -210,7 +210,8 @@ if problem && n_steps == 1
 end
     
 if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
-    warningv('DECODING_BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
+    error(['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation '''. Unknown if you want to scale or not! Set both to ''none'' or both to a different value than ''none''!'])
+%     warningv('DECODING_BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
 end
 
 if ischar(cfg.results.output)

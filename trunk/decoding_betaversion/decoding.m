@@ -179,7 +179,11 @@
 %                           the same data as loaded from a maskfile.
 
 
-% TODO: check that current software can deliver the requested output
+% TODO: repeatedly calculating i_train and i_test across searchlights doesn't
+% make sense. Best externalize this which could also be passed to feature
+% selection and parameter selection. This would also simplify the check for
+% previously identical training data
+%
 % TODO: make passing data more general purpose (to allow e.g. the use of
 %   EEG data)
 
@@ -489,7 +493,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             if ~skip_training
                 % Step 1: Pack
                 [fs_data, skip_feature_selection] = ...
-                    decoding_prepare_feature_selection(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data);
+                    decoding_prepare_feature_selection(cfg,i_train,i_test,i_step,current_data,mask_index(indexindex),previous_fs_data);
                 % Step 2: Perform feature selection method
                 if ~skip_feature_selection
                     [fs_index,fs_results,previous_fs_data] = decoding_feature_selection(cfg,fs_data);
@@ -501,7 +505,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             end
             % Step 3: Select features (unless 'all' is selected which would be double dipping)
             if ~strcmpi(cfg.feature_selection.estimation,'all')
-                data_train = data_train(:,fs_index);
+                data_train = data_train(:,fs_index); % if training was skipped, use fs_index from previous iteration
                 data_test = data_test(:,fs_index);
             end
         end
@@ -526,7 +530,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Development Remark: Additional KERNEL calculation might go here, 
         % if feature selection or scaling on training data is used. Passing
         % a kernel might still be faster for certain methods/more
-        % convinient if nothing needs to be changed.
+        % convenient if nothing needs to be changed.
         
         if skip_training
             model = decoding_out(i_step-1).model;
@@ -548,7 +552,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
         % Do scaling on test data if requested
         if scaling_across_on
-            data_test = decoding_scale_data(cfg,data_test,scaleparams);
+            data_test = decoding_scale_data(cfg,data_test,scaleparams); % if skip_training is active, scaleparams from previous iteration are used
         end
 
         % Test Estimated Model

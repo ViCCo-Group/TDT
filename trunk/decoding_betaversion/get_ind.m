@@ -58,6 +58,8 @@ elseif strcmpi(cfg.analysis,'roi')
 
     if ischar(mask_names) % to deal with different types of input
         mask_names = num2cell(mask_names,2);
+        % possibly activate this line if your software cannot read files properly with trailing whitespaces
+%         mask_names = strtrim(mask_names); 
     end
 
     if isfield(passed_data, 'masks')

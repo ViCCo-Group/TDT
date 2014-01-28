@@ -93,21 +93,23 @@ faces_matrix = [1 2 6 5
 [P(:,1) P(:,2) P(:,3)] = ind2sub(sz,position_index);
 n_vox = size(P,1);
 
-% Check if we are dealing with one or several connected components
+% TODO: Check if we are dealing with one or several connected components
 
-% Check if voxel is visible and remove voxels that are not
-removeind = false(n_vox,1);
-for i = 1:n_vox
-    Pdiff = bsxfun(@minus,P(i,:),P);
-    keepind = sum(abs(Pdiff),2)>1;
-    if sum(keepind)<6 % if there are less than six imminent neighbors
-        removeind(i) = true; % remove
-    end
-end
-
-P(removeind,:) = [];
-n_vox = size(P,1);
-position_index(removeind) = [];
+% BEGINING OF CHECK (doesn't work properly for rois, so deactivated)
+% % Check if voxel is visible and remove voxels that are not
+% removeind = false(n_vox,1);
+% for i = 1:n_vox
+%     Pdiff = bsxfun(@minus,P(i,:),P);
+%     keepind = sum(abs(Pdiff),2)>1;
+%     if sum(keepind)<6 % if there are less than six imminent neighbors
+%         removeind(i) = true; % remove
+%     end
+% end
+% 
+% P(removeind,:) = [];
+% n_vox = size(P,1);
+% position_index(removeind) = [];
+% END OF CHECK
 
 large_vertex_matrix = zeros(n_vox* size(vertex_matrix,1), size(vertex_matrix,2));
 large_faces_matrix = zeros(n_vox * size(faces_matrix,1), size(faces_matrix,2));

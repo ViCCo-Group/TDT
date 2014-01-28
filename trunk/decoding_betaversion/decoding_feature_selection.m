@@ -192,10 +192,6 @@ fs_results.n_vox_steps = n_vox_steps;
 fs_results.output = output;
 fs_results.n_vox_selected = length(fs_index);
 
-if strcmpi(cfg.feature_selection.estimation,'all')
-    fs_index = 1:size(data,2); % do not change decoding for next step when all data is used
-end
-
 if nested_feature_selection_on
     fs_index = nested_fs_index(fs_index); % to return original index
 end
@@ -218,17 +214,25 @@ if ~strcmpi(cfg.feature_selection.method,'none') && ~strcmpi(cfg.feature_selecti
         'Unknown feature selection type.']);
 end
 
+if strcmpi(cfg.scale.method,'across')
+    error('Cannot use scaling method ''across'' within feature selection. Would be too complicated to implement. But pre-scaling outside should do!')
+end
+
 if ~isfield(cfg.feature_selection,'n_vox')
-    error(['Missing field ''nvox'' in cfg.feature_selection. You need to specify the range ',...
+    error(['Missing field ''n_vox'' in cfg.feature_selection. You need to specify the range ',...
                 'in which to search. Type ''help feature_selection'' for details.'])
 else
     n_vox = cfg.feature_selection.n_vox;
 end
 
+if length(cfg.feature_selection.results.output) > 1
+    error('More than one entry in cfg.feature_selection.results.output . This determines your selection criterion, so there can only be one! (if you passed a character array, use a cell)')
+end
+
 if ~isempty(strfind(cfg.feature_selection.decoding.method, '_kernel'))
     newmethod = strrep(cfg.feature_selection.decoding.method,'_kernel','');
     str = sprintf(['Use of kernel methods in feature selection has not been implemented',... 
-                   '(and would only make sense for nested cross-validation in filter methods).',...
+                   '(and would only make sense for nested cross-validation in filter methods). ',...
                    'Method is now reverted to ''%s''.'],newmethod);
     warningv('BASIC_CHECKS:KernelAndFeatureSelection',str)
     cfg.feature_selection.decoding.method = newmethod;
@@ -254,6 +258,9 @@ elseif length(n_vox)>=1 % if range of voxels is entered
     
     n_vox = unique(n_vox); % Needed if steps are very small to prevent repetitions % TODO: repetitions should be noted, but filled in anyhow!
     n_vox = n_vox(n_vox>0);
+    if isempty(n_vox)
+        error('n_vox = 0. Either you entered 0 as the only value or all your chosen percentages of voxels provided are too small.')
+    end
 end
     
 if strcmpi(cfg.feature_selection.method,'filter')
@@ -261,6 +268,10 @@ if strcmpi(cfg.feature_selection.method,'filter')
 
     if ~isfield(cfg.feature_selection,'filter')
         error('In addition to cfg.feature_selection.method = ''filter'', you need to add cfg.feature_selection.filter = ''...'' (for available methods, see help decoding_feature_selection).');
+    end
+
+    if isfield(cfg.feature_selection.filter,'external') && ~strcmpi(cfg.feature_transformation.method,'none')
+        error('It is not possible to use cfg.feature_selection.filter = ''external'' together with feature transformation. This does not make sense, because the spaces are not mapped anymore!')
     end
     
 elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for embedded methods

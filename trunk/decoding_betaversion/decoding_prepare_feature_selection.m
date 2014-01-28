@@ -1,4 +1,4 @@
-function [fs_data,skip_feature_selection] = decoding_prepare_feature_selection(cfg,i_train,i_test,i_step,data,indexindex,mask_index,previous_fs_data)
+function [fs_data,skip_feature_selection] = decoding_prepare_feature_selection(cfg,i_train,i_test,i_step,current_data,subindex,previous_fs_data)
 
 % Pack feature selection data (subfunction of decoding.m)
 
@@ -64,9 +64,12 @@ end
 if skip_feature_selection, return, end
 
 % Continue with assigning values
-fs_data.vectors_train = data(fs_data.i_train, indexindex);
+fs_data.vectors_train = current_data(fs_data.i_train, :);
 fs_data.i_step = i_step;
-fs_data.external.position_index = mask_index(indexindex); % absolute position of currently selected voxels in decoding (for external masks)
+
+if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
+    fs_data.external.position_index = subindex; % absolute position of currently selected voxels in decoding (for external masks)
+end
 
 if strcmpi(cfg.feature_selection.estimation,'all')
     warningv('DECODING_PREPARE_FEATURE_SELECTION:Nonindependence',['Training and test data are both used for feature selection. ',...

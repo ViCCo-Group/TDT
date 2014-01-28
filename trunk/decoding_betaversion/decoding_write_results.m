@@ -86,6 +86,9 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
     
     for i_output = 1:n_outputs
         
+        % write searchlight results as img-file only if the output allows it
+        if fallback, continue, end
+        
         outputname = cfg.results.output{i_output};
         
         if ~isnumeric(results.(outputname).output)
@@ -94,56 +97,52 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
             continue
         end
         
-        % write searchlight results as img-file if the output allows it
-        if ~fallback
-            
-            % Save overall results and save to returning variable
-            
-            fname = sprintf('%s.img',cfg.results.resultsname{i_output});
-            resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
-            resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
-            resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume with background value (default: 0)
-            resultsvol(mask_index) = results.(outputname).output;
-            
-            if exist(resultsvol_hdr.fname,'file')
-                if cfg.results.overwrite
-                    % simply overwrite the file
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',resultsvol_hdr.fname)
-                else
-                    % dont overwrite file, copy it
-                    [old_results_path, old_results_file, dummy_fext] = fileparts(resultsvol_hdr.fname);
-                    old_fname = fullfile(old_results_path, old_results_file);
-                    backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
-                    
-                    for fext = {'.hdr', '.img'}
-                        source = [old_fname, fext{1}];
-                        target = [backup_fname, fext{1}];
-                        dispv(1, 'Copying %s to %s', source, target)
-                        tmp = copyfile(source, target); %#ok<*NASGU> % output needed for linux bug
-                    end
+        % Save overall results and save to returning variable
+        
+        fname = sprintf('%s.img',cfg.results.resultsname{i_output});
+        resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
+        resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
+        resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume with background value (default: 0)
+        resultsvol(mask_index) = results.(outputname).output;
+        
+        if exist(resultsvol_hdr.fname,'file')
+            if cfg.results.overwrite
+                % simply overwrite the file
+                warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',resultsvol_hdr.fname)
+            else
+                % dont overwrite file, copy it
+                [old_results_path, old_results_file, dummy_fext] = fileparts(resultsvol_hdr.fname);
+                old_fname = fullfile(old_results_path, old_results_file);
+                backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
+                warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
+                
+                for fext = {'.hdr', '.img'}
+                    source = [old_fname, fext{1}];
+                    target = [backup_fname, fext{1}];
+                    dispv(1, 'Copying %s to %s', source, target)
+                    tmp = copyfile(source, target); %#ok<*NASGU> % output needed for linux bug
                 end
             end
-            
-            dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsvol_hdr.fname)
-            
-            write_image(cfg.software,resultsvol_hdr,resultsvol);
-            
-            results.(outputname).(outputname).fname = resultsvol_hdr.fname;
-            
-            % Save set results (i.e.: should each set be saved separately?)
-            if cfg.results.setwise
-                n_sets = length(results.(outputname).set);
-                for i_set = 1:n_sets
-                    fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
-                    resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
-                    resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
-                    resultsvol_set = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
-                    resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
-                    dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
-                    write_image(cfg.software,resultsvol_hdr,resultsvol_set);
-                    results.(outputname).set(i_set).fname = resultsvol_hdr.fname;
-                end
+        end
+        
+        dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsvol_hdr.fname)
+        
+        write_image(cfg.software,resultsvol_hdr,resultsvol);
+        
+        results.(outputname).(outputname).fname = resultsvol_hdr.fname;
+        
+        % Save set results (i.e.: should each set be saved separately?)
+        if cfg.results.setwise
+            n_sets = length(results.(outputname).set);
+            for i_set = 1:n_sets
+                fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
+                resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
+                resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
+                resultsvol_set = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
+                resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
+                dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
+                write_image(cfg.software,resultsvol_hdr,resultsvol_set);
+                results.(outputname).set(i_set).fname = resultsvol_hdr.fname;
             end
         end
     end
@@ -163,11 +162,11 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
         end
         
         for i_output = 1:n_outputs
+ 
+            % write roi/wholebrain results as img-file only if the output allows it
+            if fallback, continue, end
             
             outputname = cfg.results.output{i_output};
-            
-            % write searchlight results as img-file if the output allows it
-            if fallback, continue, end
             
             % Save overall results and save to returning variable
             
@@ -179,45 +178,56 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             [resultsvol,continueflag] = assign_output(cfg,resultsvol_hdr,curr_output,mask_index_each,i_roi);
             if continueflag == 1,
                 str = sprintf('Results for output %s and roi ''%s'' cannot be written, because the format is wrong (e.g. leave-one-run-out with more than one output per run).',outputname,roi_names{i_roi});
-                warningv('DECODING_WRITE_RESULTS:cannot_write',str)
-                continue
+                warning('DECODING_WRITE_RESULTS:cannot_write',str) %#ok<SPWRN>
             end
             
-            if exist(resultsvol_hdr.fname,'file')
-                if cfg.results.overwrite
-                    % simply overwrite the file
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',resultsvol_hdr.fname)
-                else
-                    % dont overwrite file, copy it
-                    [old_results_path, old_results_file, dummy_fext] = fileparts(resultsvol_hdr.fname);
-                    old_fname = fullfile(old_results_path, old_results_file);
-                    backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
-                    warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
-                    
-                    for fext = {'.hdr', '.img'}
-                        source = [old_fname, fext{1}];
-                        target = [backup_fname, fext{1}];
-                        dispv(1, 'Copying %s to %s', source, target)
-                        tmp = copyfile(source, target); % output needed for linux bug
+            if ~continueflag
+                
+                % Check if file exists
+                if exist(resultsvol_hdr.fname,'file')
+                    if cfg.results.overwrite
+                        % simply overwrite the file
+                        warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',resultsvol_hdr.fname)
+                    else
+                        % dont overwrite file, copy it
+                        [old_results_path, old_results_file, dummy_fext] = fileparts(resultsvol_hdr.fname);
+                        old_fname = fullfile(old_results_path, old_results_file);
+                        backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
+                        warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
+                        
+                        for fext = {'.hdr', '.img'}
+                            source = [old_fname, fext{1}];
+                            target = [backup_fname, fext{1}];
+                            dispv(1, 'Copying %s to %s', source, target)
+                            tmp = copyfile(source, target); % output needed for linux bug
+                        end
                     end
                 end
+                
+                dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsvol_hdr.fname)
+                
+                write_image(cfg.software,resultsvol_hdr,resultsvol);
+                
+                results.(outputname).(outputname).fname = resultsvol_hdr.fname;
+                
             end
-            
-            dispv(1,'Saving %s results to %s', cfg.decoding.method, resultsvol_hdr.fname)
-            
-            write_image(cfg.software,resultsvol_hdr,resultsvol);
-            
-            results.(outputname).(outputname).fname = resultsvol_hdr.fname;
             
             % Save set results (i.e.: should each set be saved separately?)
             if cfg.results.setwise
                 n_sets = length(results.(outputname).set);
                 for i_set = 1:n_sets
-                    fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
+                    fname = sprintf('%s_set%i_%s.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id,roi_names{i_roi});
                     resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
                     resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
-                    resultsvol_set = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
-                    resultsvol_set(mask_index) = results.(outputname).set(i_set).output;
+                    curr_output = results.(outputname).set(i_set).output(i_roi);
+                    [resultsvol_set,continueflag] = assign_output(cfg,resultsvol_hdr,curr_output,mask_index_each,i_roi);
+                    
+                    if continueflag == 1,
+                        str = sprintf('Results for output %s, roi ''%s'' and set %i cannot be written, because the format is wrong (e.g. leave-one-run-out with more than one output per run).',outputname,roi_names{i_roi},i_set);
+                        warning('DECODING_WRITE_RESULTS:cannot_write',str) %#ok<SPWRN>
+                        continue
+                    end
+                                        
                     dispv(2,'Saving results for set %i to %s', i_set, resultsvol_hdr.fname)
                     write_image(cfg.software,resultsvol_hdr,resultsvol_set);
                     results.(outputname).set(i_set).fname = resultsvol_hdr.fname;

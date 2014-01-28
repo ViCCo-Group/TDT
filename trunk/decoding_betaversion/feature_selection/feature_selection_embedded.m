@@ -121,8 +121,6 @@ n_steps = size(cfg.feature_selection.design.train,2);
 % if scaling is wanted, per default use all data
 data = decoding_scale_data(cfg.feature_selection,data);
 
-decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
-
 for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
     itrain = find(cfg.feature_selection.design.train(:, j_step) > 0);

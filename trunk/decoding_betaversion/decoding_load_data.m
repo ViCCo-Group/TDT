@@ -140,7 +140,7 @@ else
     
 end
 
-mask_index = find(mask_vol); % get indices of all voxels inside the mask
+mask_index = find(mask_vol); % get indices of all voxels inside the mask (important: need to be sorted for ismembc!!)
 
 mask_index_each = cell(1,size(mask_vol_each,4));
 for i_mask = 1:size(mask_vol_each,4)

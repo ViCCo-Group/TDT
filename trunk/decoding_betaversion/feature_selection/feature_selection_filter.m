@@ -1,6 +1,10 @@
 function [fs_index,n_vox_steps,output] = feature_selection_filter(cfg,fs_data,labels,data_scaled,n_vox,i_step,i_train)
 
 output = []; % init
+
+% create field if non-existent
+if ~isfield(fs_data,'external'), fs_data.external = []; end
+
 % Rank features for feature selection
 [ranks,ind] = rank_features(cfg,fs_data.external,labels,data_scaled,i_step);
 
@@ -65,8 +69,6 @@ n_steps = size(cfg.feature_selection.design.train,2);
 
 data = decoding_scale_data(cfg.feature_selection,data);
 
-decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
-
 for j_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
     % TODO: add kernel method (would need to invert the loops)
@@ -102,6 +104,7 @@ end
 
 results.n_cond = cfg.design.n_cond; % init
 results.n_cond_per_step = cfg.design.n_cond_per_step;
+% TODO: init results.(outname).output if possible
 
 % transform decoding_out to result format that is requested
 for iteration = 1:length(n_vox)

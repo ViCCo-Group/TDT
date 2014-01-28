@@ -221,8 +221,6 @@ end
 
 n_steps = size(cfg.parameter_selection.design.train,2);
 
-decoding_out = struct('predicted_labels',{},'true_labels',{},'decision_values',{});
-
 for i_step = 1:n_steps % loop over decoding steps (e.g. runs) within training data
     
     i_train = find(cfg.parameter_selection.design.train(:, i_step) > 0);

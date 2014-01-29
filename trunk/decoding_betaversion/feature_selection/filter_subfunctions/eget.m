@@ -15,17 +15,17 @@ if ~isfield(cfg.feature_selection,'external_fname')
     error('Field ''external_fname'' was not provided for cfg.feature_selection.')
 end
 external_fname = cfg.feature_selection.external_fname;
-if ischar(external_fname)
+if ischar(external_fname) % TODO: checked before in basic checks, see if still necessary
     external_fname = num2cell(external_fname,2);
 end
 
 % if only one image
 if length(external_fname) == 1 
     ranks_image = external.ranks_image{1};
-% if several images    
+% if several images, pick the one corresponding to the current step    
 elseif length(external_fname) > 1
-    if i_step > length(external_fname)
-        error('The number of external images needs to match the number of cross-validation steps!');
+    if i_step > length(external_fname) % TODO: probably, this check is obsolete
+        error('Something is wrong with the number of steps and the correspondence to external filenames. Check!');
     end
     ranks_image = external.ranks_image{i_step};
 else

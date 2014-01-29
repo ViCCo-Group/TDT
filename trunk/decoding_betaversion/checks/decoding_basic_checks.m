@@ -279,6 +279,21 @@ if length(unique(cfg.design.set)) == 1
     cfg.results.setwise = 0;
 end
 
+if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external') 
+    if ~isfield(cfg.feature_selection,'external_fname')
+        error('Feature selection method ''external'' was chosen, but no file name was provided in cfg.feature_selection.external_fname.')
+    else
+        if ischar(cfg.feature_selection.external_fname)
+            cfg.feature_selection.external_fname = num2cell(cfg.feature_selection.external_fname,2);
+            warning('DECODING_BASIC_CHECKS:convert_to_cell','Converting cfg.feature_selection.external_fname from character to cell. Try providing cell arrays in the future')
+        end
+        n_external = length(cfg.feature_selection.external_fname);
+        if  n_external ~= 1 && n_external ~= n_steps
+            error('Number of external images need to be 1 or one for each decoding step (i.e. %i), but is %i',n_steps,n_external)
+        end
+    end
+end
+
 if cfg.results.write
 
     dir_output = cfg.results.dir; % results directory
@@ -355,7 +370,7 @@ if exist(output_fname,'file')
     end
     
     % Get permissions and check if we can write
-    [temp2,permissions] = fileattrib(output_fname);
+    [temp2,permissions] = fileattrib(output_fname); %#ok<ASGLU>
     if permissions.UserWrite ~=1
         error('Results cannot be written to %s \nCheck that you have writing permission.',output_fname)
     end

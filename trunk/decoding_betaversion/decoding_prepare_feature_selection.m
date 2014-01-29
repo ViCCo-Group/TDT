@@ -4,9 +4,12 @@ function [fs_data,skip_feature_selection] = decoding_prepare_feature_selection(c
 
 % Martin 2014/01/12
 
+% TODO: this is still quite dirty and error prone, best move the reading of
+% external images to the file reading part and pass fs_data.external along.
+
 skip_feature_selection = 0; % init
 
-% If requested load external data for feature selection (do only once!)
+% If requested load external data for feature selection (do only once to save time!)
 if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
     try
         fs_data.external = previous_fs_data.external;

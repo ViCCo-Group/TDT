@@ -370,7 +370,7 @@ if exist(output_fname,'file')
     end
     
     % Get permissions and check if we can write
-    [temp2,permissions] = fileattrib(output_fname); %#ok<ASGLU>
+    [ignore,permissions] = fileattrib(output_fname); %#ok<ASGLU>
     if permissions.UserWrite ~=1
         error('Results cannot be written to %s \nCheck that you have writing permission.',output_fname)
     end

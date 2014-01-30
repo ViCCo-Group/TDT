@@ -14,9 +14,9 @@ function [fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,d
 % although such values are not used later? Because for embedded and wrapper
 % methods, later steps depend on earlier steps, i.e. if we started off with
 % a smaller number of voxels, we might end up with different voxels than
-% when we started off with a larger number
+% when we started off with a larger number.
 
-output = []; % init (not used, but for consistency with feature_selection_filter)
+output = []; % init (not used, because it is changed on each iteration, but for consistency with feature_selection_filter)
 
 % to ease readability, set variables here
 if strcmpi(cfg.feature_selection.direction,'forward')
@@ -42,8 +42,9 @@ else % perform nested cross validation unless length(n_vox) == 1
 if length(n_vox) == 1 % if number of to be selected voxels is fixed to 1
     n_vox_selected = n_vox;
 elseif strcmp(n_vox,'automatic') % if number should be determined automatically
-    n_vox = sort(nested_n_vox,sortstr); % nested_n_vox are the only steps we check, so n_vox can be made identical to nested_n_vox
-    [n_vox_selected,output,cfg.feature_selection.design.msg] = run_nest(cfg,data_scaled,i_train,n_vox,nested_n_vox); % determine optimal number of features
+    nested_n_vox = sort(nested_n_vox,sortstr);
+    n_vox = nested_n_vox; % nested_n_vox are the only steps we check, so n_vox can be made identical to nested_n_vox
+    [n_vox_selected,nested_output,cfg.feature_selection.design.msg] = run_nest(cfg,data_scaled,i_train,n_vox,nested_n_vox); %#ok<ASGLU> % determine optimal number of features
 elseif length(n_vox) > 1 % if a prespecified range of numbers should be searched
     n_vox = sort(n_vox,sortstr);
     if forward
@@ -51,8 +52,8 @@ elseif length(n_vox) > 1 % if a prespecified range of numbers should be searched
     else
         nested_n_vox = nested_n_vox(nested_n_vox>=min(n_vox)); % because a minimum of n_vox will be selected later, so it doesn't make sense to continue reducing further
     end
-    nested_n_vox = sort(unique([nested_n_vox n_vox]),sortstr); % include stopping value(s) n_vox
-    [n_vox_selected,output,cfg.feature_selection.design.msg] = run_nest(cfg,data_scaled,i_train,n_vox,nested_n_vox); % determine optimal number of features
+    nested_n_vox = sort(nested_n_vox,sortstr); % include stopping value(s) n_vox
+    [n_vox_selected,nested_output,cfg.feature_selection.design.msg] = run_nest(cfg,data_scaled,i_train,n_vox,nested_n_vox); %#ok<ASGLU> % determine optimal number of features
 else
     error('Variable ''n_vox'' has wrong size. n_vox = %s', num2str(n_vox) )
 end
@@ -63,11 +64,11 @@ end
 % Create final_n_vox as a combination of nested_n_vox and to stop at
 % n_vox_selected (we still need nested_n_vox to repeat the same scheme used in the nested cross-validation)
 if forward
-    final_n_vox = nested_n_vox(nested_n_vox<=max(n_vox_selected)); % remove all nested_n_vox that are larger than the stopping value n_vox (unneccessary to compute)
+    final_n_vox = nested_n_vox(nested_n_vox<=n_vox_selected); % remove all nested_n_vox that are larger than the stopping value n_vox_selected
 else
-    final_n_vox = nested_n_vox(nested_n_vox>=min(n_vox_selected)); % remove all nested_n_vox that are smaller than the stopping value n_vox (unneccessary to compute)
+    final_n_vox = nested_n_vox(nested_n_vox>=n_vox_selected); % remove all nested_n_vox that are smaller than the stopping value n_vox_selected
 end
-final_n_vox = sort([final_n_vox n_vox_selected],sortstr);
+final_n_vox = sort(final_n_vox,sortstr); % just to make sure
 
 end % nested cross validation end
 
@@ -159,14 +160,14 @@ all_results = vertcat(results.(cfg.feature_selection.results.output{1}).output);
 % kick out all nested_n_vox, leave only accuracies of n_vox, because only
 % those interest us at the higher level (if present we used additional
 % nested_n_vox to generate the final estimates in the embedded method)
-[i,reduce_ind] = intersect(nested_n_vox,n_vox);
+reduce_ind = ismember(nested_n_vox,n_vox);
 all_results = all_results(reduce_ind);
 
 if strcmpi(cfg.feature_selection.optimization_criterion,'select_peak')
     select_ind = select_peak(n_vox,all_results); % this function selects the peak and for several peaks the most stable one
 else
     fhandle = str2func(cfg.feature_selection.optimization_criterion);
-    [optimal_value,select_ind] = fhandle(all_results);
+    [optimal_value,select_ind] = fhandle(all_results); %#ok<ASGLU>
 end
 n_vox_selected = n_vox(select_ind);
 

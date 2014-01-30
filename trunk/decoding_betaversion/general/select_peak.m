@@ -9,7 +9,16 @@ function select_ind = select_peak(search_range,all_results)
 % step one: check for maximum
 select_ind = find(all_results == max(all_results));
 n_select_ind = length(select_ind);
+
+
 if n_select_ind ~= 1 % if more than one maximum
+    
+    % First sort search_range and apply sorting strategy to all_results
+    [search_range,order_orig] = sort(search_range); % sorting search_range
+    all_results = all_results(order_orig); % sorting all_results in the same manner
+    
+    [ignore,order_rev] = sort(order_orig); %#ok<ASGLU> % index to revert sorting
+    
     search_range_interp = min(search_range):max(search_range);
 	% interpolate missing values in between
     if exist('interp1q','file') % if signal processing toolbox exists
@@ -36,7 +45,7 @@ if n_select_ind ~= 1 % if more than one maximum
         all_results_interp_sm = conv2(all_results_interp_x,gausskernel,'same');
         all_results_interp_sm = all_results_interp_sm(wid+1:end-wid);
         % step five: select absolute peak
-        [ignore,select_ind_interp] = max(all_results_interp_sm);
+        [ignore,select_ind_interp] = max(all_results_interp_sm); %#ok<ASGLU>
     end
     % step six: use nearest neighbor to original value of search_range
     v = abs(search_range - search_range_interp(select_ind_interp));
@@ -45,5 +54,7 @@ if n_select_ind ~= 1 % if more than one maximum
         k = intersect(select_ind,k);
     end
     select_ind = k(end);
-        
+    
+    % step seven: find this value in the original index
+    select_ind = find(order_rev==select_ind);
 end

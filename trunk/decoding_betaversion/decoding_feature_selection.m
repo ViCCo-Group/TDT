@@ -40,14 +40,18 @@
 %                           is reached (see Guyon et al., 2002).
 %
 %       n_vox:
-%            Determines number of to be selected voxels or range in which 
-%            the number of to be selected voxels should be searched. When a
-%            range of numbers is entered, the optimal number of voxels is
-%            determined from this range (input as percentage between 0 and
-%            1 or as total number of voxels). The optimum is determined by
-%            nested CV. When the string 'automatic' is entered, all voxels
-%            will be used for selection and the optimal number will be
-%            determined automatically.
+%            Can be one of two things. Normally, it determines number of to
+%            be selected voxels or range in which the number of to be
+%            selected voxels should be searched. When a range of numbers is
+%            entered, the optimal number of voxels is            determined
+%            from this range (input as percentage between 0 and 1 or as
+%            total number of voxels). The optimum is determined by nested
+%            CV. When the string 'automatic' is entered, all voxels will be
+%            used for selection and the optimal number will be determined
+%            automatically.
+%            Exception: When using an embedded method and selecting
+%            nested_n_vox = 'none', then n_vox defines the path along which
+%            to search.
 %
 %       direction:
 %            Required input for method 'embedded'. Possible values:
@@ -74,7 +78,8 @@
 %            with 100 voxels, then will leave in 80, then 60, etc. and will
 %            terminate at the smallest value of n_vox. Irrelevant values -
 %            even if provided - will not be computed, and there is no
-%            warning.
+%            warning. Please note that all values of n_vox are also
+%            included into nested_n_vox for speed. 
 %
 %       external_fname:
 %            Optional input for method 'filter.external'. 1 x n cell matrix
@@ -247,16 +252,16 @@ elseif length(n_vox)>=1 % if range of voxels is entered
     
     if any(n_vox<1) % when n_vox is given as percentage
         if any(n_vox>1), error('Unclear if field ''n_vox'' is provided as percentage or absolute numbers.'), end
-        n_vox = round(n_vox * n_features);
+        n_vox = unique(round(n_vox * n_features));
     end
 
     if any(n_vox> n_features)
-        warningv('DECODING_FEATURE_SELECTION:MaxIterExceeded','Some iterations exceed maximum number of available features. Removing these iterations!');
+        warningv('DECODING_FEATURE_SELECTION:MaxIterExceeded','Some feature selection iterations exceed maximum number of available features. Removing these iterations!');
         n_vox = n_vox(n_vox<=n_features);
         if isempty(n_vox), n_vox = n_features; end
     end
     
-    n_vox = unique(n_vox); % Needed if steps are very small to prevent repetitions % TODO: repetitions should be noted, but filled in anyhow!
+    n_vox = unique(n_vox); % Sorting. Also needed if steps are very small to prevent repetitions % TODO: repetitions should be noted, but filled in anyhow!
     n_vox = n_vox(n_vox>0);
     if isempty(n_vox)
         error('n_vox = 0. Either you entered 0 as the only value or all your chosen percentages of voxels provided are too small.')
@@ -300,7 +305,9 @@ elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for 
         nested_n_vox = cfg.feature_selection.nested_n_vox;
     else
         error('DECODING_FEATURE_SELECTION:noSelection',['No feature selection performed!\n'...
-            'nested_n_vox was not specified for feature selection method ''embedded''.']);
+            'nested_n_vox was not specified for feature selection method ''embedded''. ',...
+            'Your need to specify how many nested crossvalidation iterations you want to run. ',...
+            'If you don''t want to run any nested crossvalidation, set nested_n_vox = ''none''.']);
     end
     
     if ischar(nested_n_vox)
@@ -336,11 +343,16 @@ elseif strcmpi(cfg.feature_selection.method,'embedded') % gets nested_n_vox for 
         end
         
         if any(nested_n_vox > n_features)
-            warningv('DECODING_FEATURE_SELECTION:MaxIterExceeded','Some iterations exceed maximum number of available features. Removing these iterations!');
+            warningv('DECODING_FEATURE_SELECTION:MaxIterExceeded','Some iterations of nested cross validation exceed maximum number of available features. Removing these iterations!');
             nested_n_vox = nested_n_vox(nested_n_vox<=n_features);
         end
         
-        nested_n_vox = unique(nested_n_vox); % Needed if steps are very small to prevent repetitions
+        if ~isempty(setdiff(n_vox,nested_n_vox))
+            warningv('DECODING_FEATURE_SELECTION:NotAllNvoxInNest','Not all values of n_vox are in nested_n_vox. To speed up computation, we are adding all values. This might change the path along which the optimal number of features is determined.')
+            nested_n_vox = [n_vox nested_n_vox];
+        end
+        
+        nested_n_vox = unique(nested_n_vox); % Sorting. Also needed if steps are very small to prevent repetitions
         nested_n_vox = nested_n_vox(nested_n_vox>0);        
     end
     

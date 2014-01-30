@@ -120,7 +120,7 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
                     source = [old_fname, fext{1}];
                     target = [backup_fname, fext{1}];
                     dispv(1, 'Copying %s to %s', source, target)
-                    tmp = copyfile(source, target); %#ok<*NASGU> % output needed for linux bug
+                    ignore = copyfile(source, target); %#ok<*NASGU> % output needed for linux bug
                 end
             end
         end
@@ -199,7 +199,7 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
                             source = [old_fname, fext{1}];
                             target = [backup_fname, fext{1}];
                             dispv(1, 'Copying %s to %s', source, target)
-                            tmp = copyfile(source, target); % output needed for linux bug
+                            ignore = copyfile(source, target); % output needed for linux bug
                         end
                     end
                 end
@@ -277,7 +277,7 @@ for i_output = 1:n_outputs
             source = [old_fname, fext];
             target = [backup_fname, fext];
             dispv(1, 'Copying %s to %s', source, target)
-            tmp = copyfile(source, target);
+            ignore = copyfile(source, target);
         end
     end
     

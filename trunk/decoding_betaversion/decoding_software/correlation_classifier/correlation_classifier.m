@@ -91,7 +91,7 @@ if n_vox > 1 % normal case in which more than one voxel is present
     % these are not the same as decision values, but they give a useful distance metric from the classification boundary
     g = nchoosek(1:n_labels_train,2);
     decision_values = z(:,g(:,1))-z(:,g(:,2));
-    [tmp,predict_ind] = max(z,[],2);
+    [ignore,predict_ind] = max(z,[],2); %#ok<ASGLU>
     predicted_labels = unique_labels_test(predict_ind);
 
     opt.r = r;

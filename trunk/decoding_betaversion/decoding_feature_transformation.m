@@ -115,7 +115,7 @@ if isfield(cfg.feature_transformation,'n_vox')
            'cfg.feature_transformation.n_vox has been selected to be larger than the number of available features. Setting to maximum and doing no selection')
    end
    
-   [tmp,score_ind] = sort(score,'descend');
+   [ignore,score_ind] = sort(score,'descend'); %#ok<ASGLU>
    score_ind = score_ind(1:n_vox);
    
    data_train_trans = data_train_trans(:,score_ind);

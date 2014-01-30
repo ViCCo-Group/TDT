@@ -48,7 +48,7 @@ if strcmpi(cfg.analysis,'searchlight')
             end
 
             subset_index = sub2ind(sz,cfg.searchlight.subset(:,1),cfg.searchlight.subset(:,2),cfg.searchlight.subset(:,3));
-            [temp,decoding_subindex] = intersect(mask_index,subset_index);
+            [ignore,decoding_subindex] = intersect(mask_index,subset_index); %#ok<ASGLU>
             if isempty(decoding_subindex)
                 error('None of the provided subset of searchlights lie within the mask. Please check the accuracy of your input to cfg.searchligh.subset!')
             end

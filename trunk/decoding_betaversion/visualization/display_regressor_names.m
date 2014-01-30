@@ -35,12 +35,12 @@ if ~exist('compress', 'var')
 end
 
 
-cfg = decoding_defaults;
-% addpath(fullfile(cfg.toolbox_path,'design'))
+decoding_defaults; % use only to add path
+
 regressor_names = design_from_spm(spm_folder,0);
 
 [all_names,b] = unique(regressor_names(1,:),'first');
-[tmp,bb] = sort(b); % to get the original order
+[ignore,bb] = sort(b); %#ok<ASGLU> % to get the original order
 all_names = all_names(bb); % use index to keep the order
 all_runs = unique([regressor_names{2,:}]);
 

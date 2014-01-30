@@ -16,6 +16,7 @@ function [ranks,decoding_out] = RFE(cfg,ranks,final_n_vox,iteration,data_train,l
 %   ranks: Ranks that are later used to select features
 %   decoding_out (optional output): Results of decoding analysis, needed
 %       for nested cross-validation
+%   ind: measure that is used to calculate the ranks
 %
 % Also don't forget to specify if your method is a forward selection or
 % backward elimination method (using cfg.feature_selection.direction =
@@ -40,10 +41,9 @@ end
 % Get classifier weights
 % TODO: generalize to methods other than libsvm
 w = model.SVs' * model.sv_coef;
-w = abs(w);
-[ind,ranks_new] = sort(w,'descend');
+[ignore,ranks_new] = sort(abs(w),'descend'); %#ok<ASGLU>
 
-ranks = ranks(ranks_new(1:final_n_vox(iteration)));
+ranks = ranks(ranks_new(1:final_n_vox(iteration))); % update ranks
 
 
 

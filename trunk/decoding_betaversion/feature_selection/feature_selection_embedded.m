@@ -96,10 +96,8 @@ try
     else
         cfg.feature_selection.design.function = cfg.design.function;
     end
-    cfg.feature_selection.files.mask = cfg.files.mask;
     cfg.feature_selection.files.chunk = cfg.files.chunk(i_train);
     cfg.feature_selection.files.label = cfg.files.label(i_train);
-    cfg.feature_selection.files.name = cfg.files.name(i_train);
     fhandle = str2func(cfg.feature_selection.design.function.name);
     cfg.feature_selection.design = feval(fhandle,cfg.feature_selection);
 catch %#ok<CTCH>

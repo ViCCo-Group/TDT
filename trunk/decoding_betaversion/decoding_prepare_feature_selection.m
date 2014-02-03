@@ -27,6 +27,11 @@ end
 
 % Check also nested level (if it exists)
 if strcmpi(cfg.feature_selection.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.feature_selection.filter,'external')
+    
+    if isfield(cfg.feature_selection,'filter') && isfield(cfg.feature_selection.filter,'external')
+        error('You selected using external selection criteria both for feature selection and nested feature selection. Currently this is not possible in our toolbox.')
+    end
+        
     try
         fs_data.external = previous_fs_data.external;
     catch
@@ -71,6 +76,11 @@ fs_data.vectors_train = current_data(fs_data.i_train, :);
 fs_data.i_step = i_step;
 
 if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external')
+    fs_data.external.position_index = subindex; % absolute position of currently selected voxels in decoding (for external masks)
+end
+
+% Repeat for nested level (if exists)
+if strcmpi(cfg.feature_selection.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.feature_selection.filter,'external')
     fs_data.external.position_index = subindex; % absolute position of currently selected voxels in decoding (for external masks)
 end
 

@@ -198,10 +198,8 @@ try
     else
         cfg.parameter_selection.design.function = cfg.design.function;
     end
-    cfg.parameter_selection.files.mask = cfg.files.mask;
     cfg.parameter_selection.files.chunk = cfg.files.chunk(i_train_external);
     cfg.parameter_selection.files.label = cfg.files.label(i_train_external);
-    cfg.parameter_selection.files.name = cfg.files.name(i_train_external);
     fhandle = str2func(cfg.parameter_selection.design.function.name);
     cfg.parameter_selection.design = feval(fhandle,cfg.parameter_selection);
 catch %#ok<CTCH>

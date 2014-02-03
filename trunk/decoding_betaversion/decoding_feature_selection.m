@@ -219,6 +219,12 @@ if ~strcmpi(cfg.feature_selection.method,'none') && ~strcmpi(cfg.feature_selecti
         'Unknown feature selection type.']);
 end
 
+% Set function handle for classifier in feature_selection
+if ~strcmpi(cfg.feature_selection.method,'none') && (~isfield(cfg.feature_selection.decoding,'fhandle_train') || ~isfield(cfg.feature_selection.decoding,'fhandle_test'))
+    cfg.feature_selection.decoding.fhandle_train = str2func([cfg.feature_selection.decoding.software '_train']); % this format allows variable input
+    cfg.feature_selection.decoding.fhandle_test = str2func([cfg.feature_selection.decoding.software '_test']); % this format allows variable input
+end
+
 if strcmpi(cfg.scale.method,'across')
     error('Cannot use scaling method ''across'' within feature selection. Would be too complicated to implement. But pre-scaling outside should do!')
 end

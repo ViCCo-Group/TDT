@@ -1,10 +1,12 @@
-function select_ind = select_peak(search_range,all_results)
-
+% function select_ind = select_peak(search_range,all_results)
+% 
 % This function selects the index of search_range which is the largest
 % (same as max), but if several peaks exist it picks the most stable. The
 % function has a tendency to select values at the extremes which is
 % slightly corrected by switching a correction on. A major drawback is the
 % slow speed.
+
+function select_ind = select_peak(search_range,all_results)
 
 % step one: check for maximum
 select_ind = find(all_results == max(all_results));

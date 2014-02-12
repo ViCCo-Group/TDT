@@ -5,3 +5,8 @@ This is an (incomplete) list of dependencies if later new methods are introduced
    can be dangerous, but at the moment it is assumed that training data 
    are balanced. When imbalances are allowed, this needs to be taken care 
    of.
+
+It is not possible to combine external with prior dimensionality reduction.
+Currently, there is a bug in that data is passed to the preparation of 
+feature_selection, rather than current_data that should be passed. In that 
+way, it also saves time, because data doesn't need to be selected again.

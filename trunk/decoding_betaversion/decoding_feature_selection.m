@@ -111,12 +111,13 @@
 %            Defaults to 'across' where estimation of optimal features is
 %            done on training data, only. When 'all' is selected, both
 %            training and test data are used for feature selection. Useful
-%            if selection criterion is independent of data (e.g. when best
-%            features are selected on an independent t-map that does not
-%            carry information about the category which is decoded). Also,
-%            the output generated in results.feature_selection can be used
-%            to draw plots of information depending on the number of
-%            features selected (only for illustrative purposes!).
+%            ONLY IF selection criterion is independent of data (e.g. when
+%            best features are selected on an independent t-map that does
+%            not carry information about the category which is decoded).
+%            Also, the output generated in results.feature_selection can be
+%            used to draw plots of information depending on the number of
+%            features selected (only for illustrative purposes!). Beware of
+%            this option, it can lead to double dipping!
 %
 %   files.label: n_steps x 1 vector, specifying the label for each file
 %   files.chunk:  n_steps x 1 vector, used to specify the decoding step of each label
@@ -145,8 +146,48 @@
 %   output: 1 x n results vector, decoding accuracies across different
 %       numbers of voxels in nested feature selection
 %
+% EXAMPLES
+% Example 1
+% Settings in cfg for a classification task using feature selection with
+% 'F-ratio', using nested cross-validation to find the optimal number of
+% features (e.g. voxels):
+%   cfg.decoding.method = 'classification'; % because feature selection doesn't work with kernel method
+%   cfg.feature_selection.method = 'filter';
+%   cfg.feature_selection.filter = 'F';
+%   cfg.feature_selection.n_vox = 'automatic';
+%
+% Example 2
+% Settings in cfg for feature selection using external images, one for each
+% cross-validation step, with nested cross-validation in steps of 5% of
+% voxels. In addition, data is scaled
+%   cfg.decoding.method = 'classification'; % because feature selection doesn't work with kernel method
+%   cfg.feature_selection.method = 'filter';
+%   cfg.feature_selection.filter = 'external';
+%   cfg.feature_selection.external_fname = {'exampledir\example01.img','exampledir\example02.img',...} % add for each cross validation step
+%   cfg.feature_selection.n_vox = 0.05:0.05:1;
+%   cfg.feature_selection.optimization_criterion = 'select_peak'; % if several peaks, we select the most stable
+%   cfg.feature_selection.scale.method = 'min0max1';
+%   cfg.feature_selection.scale.estimation = 'all';
+% 
+% Example 3
+% After an initial selection of 100 voxels (if less are available all
+% voxels) that are maximally discriminative given one external image, we
+% want to run recursive feature elimination, where nested cross-validation
+% is performed to find whether 5, 10, 25, 50, 75 or 100 voxels is the ideal
+% number. In nested cross-validation, we want to pass through all voxels as
+% steps.
+%   cfg.feature_selection.feature_selection.method = 'filter'; % notice the double use of feature_selection!
+%   cfg.feature_selection.feature_selection.filter = 'external';
+%   cfg.feature_selection.feature_selection.external_fname = 'exampledir\example01.img';
+%   cfg.feature_selection.feature_selection.n_vox = 100;
+%   cfg.feature_selection.method = 'embedded';
+%   cfg.feature_selection.embedded = 'RFE';
+%   cfg.feature_selection.direction = 'backward'; % this is later set automatically for RFE, but for other methods you need to set it manually
+%   cfg.feature_selection.n_vox = [5 10 25 50 75 100];
+%   cfg.feature_selection.nested_n_vox = 5:100;
 
-% TODO: introduce random forests for feature ranking
+% TODO list:
+%   - introduce random forests for feature ranking
 
 function [fs_index,fs_results,fs_data] = decoding_feature_selection(cfg,fs_data)
 

@@ -102,8 +102,9 @@ method = cfg.parameter_selection.format.name;
 if ~isa(method,'function_handle')
 fhandle = str2func(['param_' method]);
 all_combinations = feval(fhandle,cfg,default_params,parameters,all_value_combinations);
-% e.g. if method = 'yourmethod', this calls:
-%  all_combinations =  param_yourmethod(cfg,default_params,parameters,all_value_combinations);
+% e.g. if method = 'string_number', this calls:
+%  all_combinations =  param_string_number(cfg,default_params,parameters,all_value_combinations);
+% see folder parameter_selection for the implemented method (used e.g. for libsvm or liblinear)
 else % if passed as function handle
     all_combinations = method(cfg,default_params,parameters,all_value_combinations);
 end

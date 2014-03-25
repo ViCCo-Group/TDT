@@ -46,7 +46,7 @@ try
                 model = svmtrain(labels_train,[(1:size(data_train.kernel,1))' data_train.kernel],cfg.decoding.train.classification_kernel.model_parameters);
 
         case 'regression'
-            if isstruct(data_test), error('Regression without kernel needs the data in vector format'), end
+            if isstruct(data_train), error('Regression without kernel needs the data in vector format'), end
             model = svmtrain(labels_train,data_train,cfg.decoding.train.regression.model_parameters);
 
         otherwise

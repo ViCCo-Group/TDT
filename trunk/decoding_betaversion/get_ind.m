@@ -1,4 +1,4 @@
-% function indexindex = get_ind(cfg,mask_index,i_decodingstep,sz,sl_template)
+% function indexindex = get_ind(cfg,mask_index,i_decodingstep,sz,sl_template,passed_data)
 %
 % Subfunction for decoding.m
 % This function gets the indices for the current step of the decoding

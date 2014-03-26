@@ -314,7 +314,12 @@ results.n_cond_per_step = cfg.design.n_cond_per_step;
 % Save mask_index
 results.mask_index = mask_index;
 % Save all mask indices separately (useful if several masks are provided)
-results.mask_index_each = passed_data.mask_index_each;
+if isfield(passed_data, 'mask_index_each')
+    results.mask_index_each = passed_data.mask_index_each;
+else
+    % seems we have only one mask
+    results.mask_index_each{1} = results.mask_index;
+end
 % Save number of decodings that could be performed
 results.n_decodings = n_decodings;
 % Save subindices if they are provided

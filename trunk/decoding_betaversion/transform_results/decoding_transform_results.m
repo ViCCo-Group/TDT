@@ -80,7 +80,7 @@ if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
     end
 
 elseif strcmpi(method, 'decision_values')
-    output = cell(size(decoding_out));
+    output.decision_value = cell(size(decoding_out));
     for step_ind = 1:length(decoding_out)
         output.decision_value{step_ind} = decoding_out(step_ind).decision_values;
     end

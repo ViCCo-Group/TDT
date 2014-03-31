@@ -5,6 +5,10 @@ if isstruct(data_test), error('This method requires training vectors in data_tra
 switch lower(cfg.decoding.method)
 
     case 'classification'
+        % newtonsvm assumes only -1 and 1 as label, verifying that's true
+        if ~all(labels_test == -1 | labels_test == 1)
+            error('Newtonsvm takes only -1 and 1 as label, but other labels are present in test set. Aborting')
+        end
         [predicted_labels decision_values] = nsvm_test(labels_test,data_test,model);
     case 'classification_kernel'
         % Develop: If you implement this, adapt error at the beginning

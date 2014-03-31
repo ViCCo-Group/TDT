@@ -12,7 +12,6 @@ function model = nsvm_train(d,A,nu,wp1,arm)
     %      0 is less important		    
     % arm: 1 - use armijo, 0 - otherwise, default is 0
     
-    
     if nargin<5,arm=0;end
     if nargin<4,wp1=.5;end
     if     nargin<3 || nu==0,   nu = EstNuLong(A,d);

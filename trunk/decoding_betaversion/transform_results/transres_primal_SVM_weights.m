@@ -17,6 +17,8 @@
 %   
 %     .w: weights for each primal dimension
 %     .b: bias
+%
+%   such that dv = .w'*x + b for data in x
 
 % If you want to draw the lines separating hyperplane & the margins, use
 %
@@ -55,22 +57,25 @@ function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, va
 
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment
-if ~strcmpi('libsvm', cfg.decoding.software)
-    error('Can''t get primal weights for anything except libSVM at the moment');
+if ~(strcmpi('libsvm', cfg.decoding.software) || strcmpi('newton', cfg.decoding.software))
+    error('Can''t get primal weights for anything except libSVM and newtonSVM at the moment');
 end
-% check that we indeed use a linear SVM
-% get the current libSVM parameters
-switch lower(cfg.decoding.method)
-    case 'classification'
-        libsvm_options = cfg.decoding.train.classification.model_parameters;
-    case 'classification_kernel'
-        error('Weights cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
-    case 'regression'
-        libsvm_options = cfg.decoding.train.regression.model_parameters;
-end
-% find '-t 0' in the current options (parameter for linear svm)
-if isempty(strfind(libsvm_options, '-t 0'))
-    error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
+
+if strcmpi('libsvm', cfg.decoding.software)
+    % check that we indeed use a linear SVM
+    % get the current libSVM parameters
+    switch lower(cfg.decoding.method)
+        case 'classification'
+            libsvm_options = cfg.decoding.train.classification.model_parameters;
+        case 'classification_kernel'
+            error('Weights cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
+        case 'regression'
+            libsvm_options = cfg.decoding.train.regression.model_parameters;
+    end
+    % find '-t 0' in the current options (parameter for linear svm)
+    if isempty(strfind(libsvm_options, '-t 0'))
+        error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
+    end
 end
 
 % Unpack model
@@ -83,12 +88,20 @@ n_models = length(model);
 output{1} = cell(n_models,1);
 for i_model = 1:n_models
     m = model(i_model);
-    if strcmpi(cfg.decoding.method, 'classification') && length(uniqueq(m.Label)) > 2 % TODO: replace length by n_labels_per_step somewhere in cfg
-        error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
-    end
     
-    weights.w = m.SVs' * m.sv_coef;    
-    weights.b = -m.rho;
+    if strcmpi('libsvm', cfg.decoding.software)
+        if strcmpi(cfg.decoding.method, 'classification') && length(uniqueq(m.Label)) > 2 % TODO: replace length by n_labels_per_step somewhere in cfg
+            error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
+        end
+        weights.w = m.SVs' * m.sv_coef;    
+        weights.b = -m.rho;
+    elseif strcmpi('newton', cfg.decoding.software)
+        weights.w = m.w;
+        weights.b = -m.gamma;
+    else
+        error('Method not implemented')
+    end
+        
     output{1}{i_model} = weights;
 end
 

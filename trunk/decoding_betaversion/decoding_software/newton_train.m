@@ -5,7 +5,21 @@ if isstruct(data_train), error('This method requires training vectors in data_tr
 switch lower(cfg.decoding.method)
 
     case 'classification'
-        model = nsvm_train(labels_train,data_train,-1);
+        % newtonsvm assumes only -1 and 1 as label, verifying that's true
+        if ~all(labels_train == -1 | labels_train == 1)
+            error('Newtonsvm takes only -1 and 1 as label, but other labels are present in training set. Aborting')
+        end
+        % train newton svm
+        try
+            model = nsvm_train(labels_train,data_train,cfg.decoding.train.newton_nu);
+        catch e
+            % check if no nu has been defined
+            if strcmp('Reference to non-existent field ''newton_nu''.', e.message)
+                error('Newton-SVM is used as decoding software, but no nu-parameter is provided in cfg.decoding.train.newton_nu. Please provide nu (e.g. cfg.decoding.train.newton_nu = 0; see nsvm_train.m for details)');
+            else
+                rethrow e
+            end
+        end
         if isempty(model), error('nsvm_train returned an empty model - please check that nsvm_train is working properly'), end
         
     case 'classification_kernel'

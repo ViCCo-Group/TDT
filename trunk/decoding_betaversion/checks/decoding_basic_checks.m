@@ -144,7 +144,18 @@ if use_kernel && strcmpi(cfg.decoding.software,'libsvm')
 end
 
 if ~strcmpi(cfg.feature_selection.method,'none')
-    warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsBeta','Feature selection has not been fully debugged. Running in beta stage!')
+    warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsBeta','We have only little feedback from users about feature selection so far. Running in beta stage!')
+    if isfield(cfg.feature_selection.results,'output') && numel(cfg.feature_selection.results.output)>1
+        error(['More than one output selected in nested CV for feature selection.\n',...
+            'Change field ''cfg.feature_selection.results.output'' to one entry. only.'])
+    end
+end
+
+if ~strcmpi(cfg.parameter_selection.method,'none')
+    if isfield(cfg.parameter_selection.results,'output') && numel(cfg.parameter_selection.results.output)>1
+        error(['More than one output selected in nested CV for parameter selection.\n',...
+            'Change field ''cfg.parameter_selection.results.output'' to one entry. only.'])
+    end
 end
 
 [n_files, n_steps] = size(cfg.design.train);
@@ -239,6 +250,23 @@ if strcmpi(cfg.parameter_selection.method,'none') && isfield(cfg.parameter_selec
     error('Field ''cfg.parameter_selection.parameters'' exists, but ''cfg.parameter_selection.method = ''none''!')
 end
 
+% parameter_selection: check if for libsvm or liblinear, parameters are passed in format '-<string>'
+if isfield(cfg.parameter_selection,'parameters') && (strcmpi(cfg.decoding.software,'libsvm') || strcmpi(cfg.decoding.software,'liblinear'))
+    tmp = cfg.parameter_selection.parameters;
+    if ~iscell(tmp), tmp = num2cell(tmp,2); end
+    ok = true;
+    for i_tmp = 1:length(tmp)    
+        if ~ischar(tmp{i_tmp})
+            ok = false;
+        else
+            ok = ok & strcmp(tmp{i_tmp}(1),'-');
+        end
+        if ~ok
+        error('Error passing parameters in cfg.parameter_selection.parameters. For libsvm or liblinear, parameter needs to be passed in the format -<string>, e.g. ''-c'' or ''-g'' ')
+        end
+    end
+end
+        
 % Checking for independence of training and test data
 if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
     disp('Positions of Entries in Training- & Testset:')

@@ -19,7 +19,7 @@
 %       parameters: string variable denoting parameter that should be
 %           selected (see parameter descriptions in the classifier)
 %           (for more than one parameter, this is a cell-matrix with
-%           n_parameters x 1 entries), example: '-c'
+%           n_parameters x 1 entries), example: '-c' (please note the '-')
 %
 %       parameter_range: n x 1 vector as range which to search (for more 
 %           than one parameter, this is a cell-matrix with 
@@ -263,11 +263,7 @@ results.n_cond_per_step = cfg.design.n_cond_per_step;
 
 % transform decoding_out to result format that is requested
 for iteration = 1:size(all_combinations,2)
-    if numel(cfg.parameter_selection.results.output)>1,
-        error(['More than one output selected in nested CV for parameter selection.\n',...
-            'Change field ''cfg.parameter_selection.results.output'' to one entry. only.'])
-    end
-   results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,data_train,data_test); 
+    results = decoding_generate_output(cfg.parameter_selection,results,decoding_out(:,iteration),iteration,iteration,data);
 end
 
 % Use parameters where output is highest

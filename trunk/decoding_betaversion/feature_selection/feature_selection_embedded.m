@@ -145,11 +145,7 @@ results.n_cond_per_step = cfg.design.n_cond_per_step;
 
 % transform decoding_out to result format that is requested
 for iteration = 1:length(nested_n_vox)
-    if numel(cfg.feature_selection.results.output)>1,
-        error(['More than one output selected in nested CV for feature selection.\n',...
-            'Change field ''cfg.feature_selection.results.output'' to one entry, only.'])
-    end
-   results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,[]); % passing data doesn't make sense here
+    results = decoding_generate_output(cfg.feature_selection,results,decoding_out(:,iteration),iteration,iteration,[]); % passing data doesn't make sense here
 end
 
 % Get number of features where output is highest

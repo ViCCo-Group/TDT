@@ -37,6 +37,14 @@ function save_fig(filename, cfg)
         formats = {'-dpng', '-depsc2'}; % list all formats that you want to save the figure as
     end
 
+    % replace '.' in filename by '_' to avoid problems with file ending
+    if any(filename == '.')
+      display(['Replacing''.'' in filename ''' filename ''' by ''_'' to avoid problems with file ending'])
+      filename(filename == '.') = '_';
+      display(['New Filename: ' filename])
+    end
+    
+    % Save as FIG
     try
         dispv(2, '%s', ['Saving figure as ' filename '.fig'])
         saveas(gcf, filename, 'fig')
@@ -44,6 +52,9 @@ function save_fig(filename, cfg)
         warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
     end
 
+    % prevent resizing the figure
+    set(gcf,'PaperPositionMode','auto')
+    % prevent changing the background color
     set(gcf, 'InvertHardCopy', 'off');
     % get old color for recovery
     oldcolor = get(gcf, 'color');

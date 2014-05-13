@@ -123,6 +123,14 @@ defaults.decoding.test.regression.model_parameters = '-q';
 %     unexpected problems later when you have unbalanced training data and
 %     did not think how to deal with it
 
+% different image rotation
+%    If your images have different orientation, but you don't care about it
+%    although it might make your results uninterpretable, add to your
+%    script
+%       cfg.files.imagerotation_unequal = 'ok'
+%    ALSO HERE DO NOT SET THIS AS A DEFAULT, because you might forget about
+%    it later, only change it in the script!
+
 % Results specific defaults
 defaults.results.output = {'accuracy_minus_chance'};
 defaults.results.write = 2; % write results both as .mat and as image

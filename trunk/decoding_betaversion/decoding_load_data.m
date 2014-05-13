@@ -173,12 +173,19 @@ for file_ind = 1:n_files
         sz = data_hdr.dim(1:3); % this is the first time we check the dimensions, so let's save it for the next images
     end
 
-    % check that translation & rotation matrices of this image equals the
+    % check that translation & rotation matrices of this image roughly equals the
     % previous ones (otherwise the images would be rotated differently,
     % which we can't handle)
     if exist('mat','var')
-        if ~isequal(data_hdr.mat, mat)
-            error('Rotation & translation matrix of image in file %s \n is different from rotation & translation matrix of the mask file(s)/the first data image file.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position!', fname)
+%         if ~isequal(data_hdr.mat, mat) % old
+        mat_diff = abs(data_hdr.mat(:)-mat(:));
+        tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
+        if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+            if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
+                warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of image in file \n %s \n is different from matrix of the mask file(s)/the first data image file.\n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!',fname)
+            else
+                error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s)/the first data image file.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.imagerotation_unequal = ''ok''!', fname)
+            end
         end
     else
         if isfield(data_hdr, 'mat')

@@ -34,6 +34,16 @@
 %       this function. These can be filled into the cfg by setting 
 %       cfg.design = designs{k} where k is the index of the requested design.
 %
+% Example:
+%   cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir); % see decoding tutorial for details
+%   cfg.design.function.name = 'make_design_cv';
+%   n_perms = 1000;  % pick a reasonable number, the function might compute less if less are available  
+%   designs = prepare_designs_permutation(cfg,n_perms);
+%   for i_perm = 1:n_perms
+%       cfg.design = designs{i_perm};
+%       cfg.results.dir = ['C:\yourresults\perm' sprintf('%04d',i_perm)];
+%   end
+%
 % Martin Hebart, 2013/08/31
 
 % TODO: randomly picking a subset of all possible designs without

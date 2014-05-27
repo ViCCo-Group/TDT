@@ -61,11 +61,11 @@ for i_model = 1:n_models
     data_train = data(cfg.design.train(:, i_model) > 0, :);
     [n_samples n_dim] = size(data_train);
     
-    if n_dim^2<10^7
-        pattern = cov(data_train)*weights / cov(weights'*data_train');
+    if n_dim^2<10^7 % if pattern doesn't have a very large number of voxels
+        pattern = cov(data_train)*weights / cov(weights'*data_train'); % like cov(X)*W * inv(W'*X')
     else % else do row by row (not much slower, even if we chunk it no dramatic speed-up)
         warningv('TRANSRES_SVM_PATTERN:pattern_calculation_slow','Pattern is very large, so its estimation will be very slow (up to minutes)!')
-        scale_param = inv(cov(weights'*data_train'));
+        scale_param = cov(weights'*data_train');
         pattern_unscaled = zeros(n_dim,1);
         for i = 1:n_dim % remove mean columnwise
            data_train(:,i) = data_train(:,i) - mean(data_train(:,i));
@@ -80,7 +80,7 @@ for i_model = 1:n_models
             pattern_unscaled(i,1) = data_cov * weights;
         end
         fprintf('\ndone.\n')
-        pattern = pattern_unscaled * scale_param;
+        pattern = pattern_unscaled / scale_param; % like cov(X)*W * inv(W'*X')
     end
     output{1}{i_model} = pattern; %#ok<AGROW>
 end

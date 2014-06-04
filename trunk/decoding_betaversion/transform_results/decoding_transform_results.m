@@ -10,6 +10,11 @@
 % e.g., it also calls external transres_XX functions that implement other
 % methods, e.g. "trans_model_parameters" if method = 'model_parameter'.
 %
+% Please note that not all methods are useful for all approaches in the
+% toolbox and that we don't test for all meaningless combinations. For
+% example, for regression approaches (e.g. SVR), accuracy doesn't make much
+% sense, but rather corr or zcorr should be used.
+%
 % METHODS IMPLEMENTED HERE:
 % accuracy: decoding accuracy
 % accuracy_minus_chance: decoding accuracy minus chance level (useful for 
@@ -29,8 +34,9 @@
 %   100 (i.e. values from 0 to 100), built from classifier decision values, 
 %   not from sensitivity/specificity
 % AUC_minus_chance: like AUC, but minus chance level(useful for SPM 2nd level)
-% corr: Correlation
-% zcorr: Fisher-z-transformed correlation (necessary for averaging correlations)
+% corr: Correlation (useful e.g. for regression approaches, e.g. SVR)
+% zcorr: Fisher-z-transformed correlation (necessary for averaging
+%   correlations, e.g. across subjects)
 %
 % The function also allows adding new result transformation functions by 
 % calling

@@ -95,6 +95,8 @@
 % 2013/09/08 Martin: Generalized to n designs entered as a cell matrix or
 % more inputs
 
+% TODO: change field cfg.files.set to match the final design!
+
 function ocfg = combine_designs(varargin)
 
 if nargin == 1
@@ -112,7 +114,7 @@ end
 cfg1 = all_cfg{1};
 cfg2 = all_cfg{2};
 
-dispv(1, 'COMBINE_DESIGNS ignores all the values in cfg2 except for cfg2.files and cfg2.design');
+dispv(1, 'COMBINE_DESIGNS ignores all the values in cfg2 except for cfg2.files and cfg2.design . This is normal behavior, but we just inform you about it.');
 
 if ~length(cfg1.files.name)==length(cfg2.files.name)
     warningv('COMBINE_DESIGNS:FileCountsDifferent','File counts are not the same, some files will only appear in one set. WARNING: THIS HAS NEVER BEEN TESTED!!!!');
@@ -154,7 +156,7 @@ for si = 1:length(cfg2.design.set) % si == set index
     end
     
     if any(used_idx_cfg2==0)
-        warningv('COMBINE_DESIGNS:AutoConcat','At least one file exists in cfg2 but not ocfg. Concatenating to end...');
+        warningv('COMBINE_DESIGNS:AutoConcat','At least one file exists in one cfg that does not exist in another cfg. Adding new files to the end of the design matrix...');
     
         % the next set of code copies any missing files into ocfg from
         % cfg2. This only happens once per run.

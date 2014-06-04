@@ -182,7 +182,8 @@ cfg.design.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design
 n_unique_labels = zeros(1,n_steps);
 unique_labels = cell(1,n_steps);
 for i_step = 1:n_steps
-    unique_labels{i_step} = unique(cfg.design.label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step)));
+    curr_label = cfg.design.label(:,i_step);
+    unique_labels{i_step} = unique(curr_label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step)));
     n_unique_labels(i_step) = length(unique_labels{i_step});
 end
 % at the same time make sure that the number is always the same (it is possible that

@@ -6,8 +6,7 @@ function output = transres_RSA_dist_euclidean(decoding_out,chancelevel,cfg,data)
 % datamatrix.
 %
 
-if exist('pdist','file')
-    output = {squareform(pdist(data),'euclidean')};
-else
-    error('Statistics toolbox needed for output transres_RSA_euclidean.')
-end
+% 2013 Martin H.
+
+tmp = sum(data.^2,2);
+output = {sqrt(bsxfun(@plus,tmp,tmp')-(2*data)*data')};

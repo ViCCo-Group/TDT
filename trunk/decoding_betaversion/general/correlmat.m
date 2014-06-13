@@ -9,6 +9,8 @@
 % many, many correlations.
 
 % adapted from http://stackoverflow.com/questions/9262933/what-is-a-fast-way-to-compute-column-by-column-correlation-in-matlab
+%
+% 2013 Martin H.
 
 function r = correlmat(x,y)
 

@@ -37,5 +37,4 @@ for i_label = 1:n_labels
 %         output(i_label,j_label) = sum(curr_predicted_labels==labels(j_label)); % activate me if you want raw results
     end
 end
-
 output = {output};

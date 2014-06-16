@@ -8,6 +8,8 @@
 % Second, some parameters are set that are later needed.
 
 % History 
+% Martin (2014/16/06): Allowing only Matlab versions > 7.3 (all others have
+%   not been tested)
 % Martin (2014/01/24): Changed check for writing results, results are now 
 %   overwritten at end of processing, not beginning
 % Martin (2014/01/07): Externalized function from decoding.m
@@ -16,6 +18,15 @@ function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
 
 % Display image access software that is used
 dispv(1, 'Image access with: %s',cfg.software);
+
+% Check Matlab version
+vers = version; vers = str2double(vers(1:3));
+if vers < 7.3
+    error(['Your Matlab version is older than 7.3. We did not test earlier \n',...
+           'versions, so we strongly recommend not to use them. If you still \n',...
+           'want to proceed, deactivate this error message manually in \n',...
+           'decoding_basic_checks.m, but also remove the -v7.3 flag in decoding_write_results.m'])
+end
 
 % Display what data is saved
 switch cfg.results.write

@@ -18,6 +18,7 @@
 % by Martin Hebart and Kai Görgen
 %
 % HISTORY
+% MARTIN: 2014/06/16: now writing results > 2GB with -v7.3 flag
 % MARTIN: 2014/09/01: now returning results as .mat file as a default
 % MARTIN: 2013/06/16: removed input mask_index (should anyway be contained
 %   in results struct), restructured ROI and wholebrain writing section
@@ -283,7 +284,8 @@ for i_output = 1:n_outputs
     
     dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
     
-    save(fname,'results');
+    saveflag = checkvarsize(results);
+    save(fname,'results',saveflag);
     
     results.(outputname).fname = fname;
     
@@ -298,7 +300,8 @@ for i_output = 1:n_outputs
             results.(outputname) = rmfield(results.(outputname),'set');
             results.(outputname).set(i_set).fname = fname;
             
-            save(fname,'results');
+            saveflag = checkvarsize(results);
+            save(fname,'results',saveflag);
             
             results = results_all; % reset
         end
@@ -347,3 +350,17 @@ end
 % in all other cases return, because results cannot be written
 continueflag = 1;
 return
+
+%%%%%
+function saveflag = checkvarsize(var)
+
+% If larger than 2GB, use -v7.3 option
+
+v = whos('var');
+sz = v.bytes/(1024^3);
+if sz > 2
+    saveflag = '-v7.3';
+    warning('CHECKVARSIZE:LARGEFILE','File is larger than 2GB. To be able to write it, we are using the -v7.3 option (see help save for details)')
+else
+    saveflag = ''; % when empty, default flag will be used
+end

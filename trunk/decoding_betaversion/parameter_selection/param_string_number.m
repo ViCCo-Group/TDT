@@ -50,7 +50,14 @@ for i_param = 1:length(parameters)
     if length(strstart)==1
         numstart = strend+1;
         str = strfind(default_params,separator); % find separators between two entries
-        numend = str(find(str>numstart,1)); % number goes until the next whitespace is found
+        numend = str(find(str>numstart,1)); % number goes until the next separator is found
+        
+        % if no other separator is found, the string is the last one, i.e. the string-number is at the end. In that case
+        % also remove the separator before the string
+        if isempty(numend)
+            numend = length(default_params);
+            if strstart~=1, strstart = strstart-1; end % remove separator only if there is one
+        end
         
         default_params(strstart:numend) = [];
         

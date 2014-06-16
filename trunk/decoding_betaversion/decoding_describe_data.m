@@ -82,7 +82,12 @@ cfg.files.xclass = [];
 cfg.files.descr = {}; % contains the regressor names from SPM (more or less)
 
 if length(labelnames) ~= length(labels)
-    error('Label names have to be of equal size than label numbers!')
+    if length(labelnames)==1 && length(labelnames{1}) == length(labels)
+        warningv('DECODING_DESCRIBE_DATA:CELL','Label names were passed as cells in a cell (e.g. {labelnames}), rather than just as a 1xn cell vector. Changing automatically!')
+        labelnames = labelnames{1};
+    else
+        error('Label names have to be of equal size than label numbers!')
+    end
 end
 
 % check if beta_dir is a directory or a cellstr (in this case, assume it's the name of the input files directly)

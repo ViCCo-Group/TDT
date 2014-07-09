@@ -20,8 +20,8 @@ function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
 dispv(1, 'Image access with: %s',cfg.software);
 
 % Check Matlab version
-vers = version; vers = str2double(vers(1:3));
-if vers < 7.3
+vers = sscanf(version,'%d.%d');
+if vers(1) < 7 || (vers(1)==7 && vers(2) < 3)
     error(['Your Matlab version is older than 7.3. We did not test earlier \n',...
            'versions, so we strongly recommend not to use them. If you still \n',...
            'want to proceed, deactivate this error message manually in \n',...

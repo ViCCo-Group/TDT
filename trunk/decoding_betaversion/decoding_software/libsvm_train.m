@@ -37,7 +37,7 @@ try
     switch lower(cfg.decoding.method)
 
         case 'classification'
-            if isstruct(data_train), error('Classification wiithout kernel needs the data in vector format'), end
+            if isstruct(data_train), error('Classification without kernel needs the data in vector format'), end
             model = svmtrain(labels_train,data_train,cfg.decoding.train.classification.model_parameters);
             
         case 'classification_kernel'

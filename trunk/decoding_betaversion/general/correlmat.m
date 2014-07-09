@@ -15,26 +15,24 @@
 function r = correlmat(x,y)
 
 sz = size(x,1);
-mx0 = sum(x,1)/sz;
-x0 = bsxfun(@minus,x,mx0); % here sum is faster than mean
+x0 = bsxfun(@minus,x,sum(x,1)/sz); % here sum is faster than mean
 
 if nargin == 1
     
     r = x0'*x0;
-    normx = sqrt(diag(r)); % here diag(r) can be used (faster)
-    r = bsxfun(@rdivide,r,normx');
-    r = bsxfun(@rdivide,r,normx);
+    normx = diag(r).^(-1/2); % here diag(r) can be used (faster)
+    r = bsxfun(@times,r,normx');
+    r = bsxfun(@times,r,normx);
     
 else
     
-    my0 = sum(y,1)/sz;
-    y0 = bsxfun(@minus,y,my0);
+    y0 = bsxfun(@minus,y,sum(y,1)/sz); % here sum is faster than mean
     
     r = x0'*y0;
-    normx = sqrt(sum(x0.^2,1)); % L2-norm
-    normy = sqrt(sum(y0.^2,1));
-    r = bsxfun(@rdivide,r,normx');
-    r = bsxfun(@rdivide,r,normy);
+    normx = (sum(x0.^2,1)).^(-1/2); % L2-norm
+    normy = (sum(y0.^2,1)).^(-1/2);
+    r = bsxfun(@times,r,normx');
+    r = bsxfun(@times,r,normy);
     
 end
 

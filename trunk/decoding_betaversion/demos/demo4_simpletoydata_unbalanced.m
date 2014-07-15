@@ -115,7 +115,7 @@ legstr = {'data'}; % caption for legend
 for use_correct_weights = 0:1
     if use_correct_weights
         display('Using correct (balanced) weights')
-        weight_str = ['-w-1 ' int2str(set2.fact) ' -w1 ' int2str(set1.fact)];
+        weight_str = ['-w-1 ' num2str(set2.fact) ' -w1 ' num2str(set1.fact)];
     else
         display('Using equal weights')
         weight_str = ['-w-1 1 -w1 1'];

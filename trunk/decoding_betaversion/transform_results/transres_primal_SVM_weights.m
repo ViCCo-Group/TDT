@@ -55,6 +55,9 @@
 
 function output = transres_primal_SVM_weights(decoding_out, chancelevel, cfg, varargin)
 
+%% check that input data has not been changed without the user knowing it
+check_inputdata_transformations(mfilename, cfg); 
+
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment
 if ~(strcmpi('libsvm', cfg.decoding.software) || strcmpi('newton', cfg.decoding.software))

@@ -48,7 +48,8 @@ function save_fig(filename, cfg)
     try
         dispv(2, '%s', ['Saving figure as ' filename '.fig'])
         saveas(gcf, filename, 'fig')
-    catch %#ok<CTCH>
+    catch e
+        e
         warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
     end
 

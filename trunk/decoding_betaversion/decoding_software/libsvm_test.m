@@ -43,7 +43,7 @@ try
 
     end
 
-    if isempty(predicted_labels), error('svmtest returned empty predictions - please check that svmtest is working properly'), end
+    if isempty(predicted_labels), error('libsvm''s svmpredict returned empty predictions - please check that svmpredict is working properly or that the model was passed properly'), end
     
     decoding_out.predicted_labels = predicted_labels;
     decoding_out.true_labels = labels_test;

@@ -272,7 +272,7 @@ end
 
 if ~isfield(cfg.feature_selection,'n_vox')
     error(['Missing field ''n_vox'' in cfg.feature_selection. You need to specify the range ',...
-                'in which to search. Type ''help feature_selection'' for details.'])
+                'in which to search. Type ''help decoding_feature_selection'' for details.'])
 else
     n_vox = cfg.feature_selection.n_vox;
 end

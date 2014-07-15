@@ -11,7 +11,7 @@
 function output = transres_model_parameters(decoding_out, chancelevel, cfg, varargin)
 
 % check that input data has not been changed without the user knowing it
-check_inputdata_transformations(mfilename, cfg); 
+check_datatrans(mfilename, cfg); 
 
 % return the model only
 output.model = [decoding_out.model];

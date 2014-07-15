@@ -21,7 +21,7 @@
 function output = transres_SVM_pattern(decoding_out, chancelevel, cfg, data)
 
 %% check that input data has not been changed without the user knowing it
-check_inputdata_transformations(mfilename, cfg); 
+check_datatrans(mfilename, cfg); 
 
 %% check that the model was a linear SVM 
 % only works for libSVM for the moment

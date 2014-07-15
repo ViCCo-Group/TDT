@@ -13,6 +13,8 @@
 % been set automatically. You can change each of these manually. They are
 % all explained in the functions decoding.m and decoding_defaults.m.
 
+error('This demo script is not for execution, only for editing (it''s more of an example! Try out the other demos!)')
+
 %% First, set the defaults and define the analysis you want to perform
 
 cfg = {};

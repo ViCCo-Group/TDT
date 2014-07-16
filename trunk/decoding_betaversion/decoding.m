@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %
-% Decoding Toolbox, Version: 2.6 beta, by Martin Hebart & Kai Goergen
+% Decoding Toolbox, Version: 2.7 beta, by Martin Hebart & Kai Goergen
 %
 % This is the main function of the decoding toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -230,7 +230,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/01/14 2.7 beta';
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/01/14 2.7 beta'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

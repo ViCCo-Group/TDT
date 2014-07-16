@@ -1,0 +1,40 @@
+* beta 2.7 - 2014/07/14
+- results stored in .mat now always reported as struct
+- introduced feature_transformation as additional step that can be carried 
+ out (e.g. for dimensionality reduction or other approaches)
+- allow several levels of feature selection in one decoding (e.g. first 
+ filter and then recursive feature elimination
+- made parameter selection general purpose. Caveat: No downwards 
+ compatibility for existing scripts (now enter '-c' instead of 'c' for 
+ selecting parameters). Downwards compatibility not useful!
+- replaced 'useall'-option in feature selection with 'estimation' (default 
+in other methods, better comparability
+- debugged feature selection
+- completely rewrote decoding_write_results to allow writing any results 
+  as image and writing searchlight results as .mat (plus fixed a few bugs on the way)
+- filedetails.txt and cfg.mat: now not named after first output, but just named res_
+- allow to pass flag that training and test data can be non-independent (e.g. for illustrative results of weights)
+- added possibility to calculate patterns
+- added balanced_accuracy
+- and quite a bit more
+
+
+* beta 2.6 - 2014/01/07
+- Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
+iterations, e.g. cross-validation steps) can be different from chunks
+(i.e. data that should be kept together when cross-validation is performed)
+- Resolved bug of truncated warnings
+
+* beta 2.5 - 2013/06/19
+Lots of things added, including
+- automatic visualisation of design matrix and saving as image to results
+- real-time plot of selected voxels
+- more checks for potential errors
+- feature selection working
+- and many more
+
+* beta 2.2 - some time in the past
+Stable version of 2.1, but still has 2.1 as number displayed when starting
+Widely used last stable version before starting this log
+
+* beta 2.1 - some time in the past

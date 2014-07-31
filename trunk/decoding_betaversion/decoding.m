@@ -118,6 +118,9 @@
 %       Will only be used, if cfg.design.method ends on "_kernel"
 %   cfg.decoding.kernel.pass_vectors: If 1, the original data will be passed 
 %       in addition to the kernel as data_train.vectors/data_test.vectors
+%   cfg.decoding.use_loaded_results: If 1, training/testing will be
+%       skipped, and data from passed_data.loaded_results will be used
+%       instead.
 %   cfg.results.overwrite: Overwrite existing result file(s) [default = 0]
 %   cfg.results.setwise: Save results of each set separately [default = 0]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
@@ -177,6 +180,11 @@
 %                           optional for passed_data. Remark: mask_data
 %                           does not contain the indices as mask_index, but
 %                           the same data as loaded from a maskfile.
+%       .loaded_results: Contains results that were loaded from result
+%           files. Can be used to compute transformations without redoing 
+%           the full analysis, if the right results have been saved. To use
+%           this, set cfg.decoding.use_loaded_results = 1. 
+%           See also read_resultdata.m.
 
 
 % TODO: repeatedly calculating i_train and i_test across searchlights doesn't
@@ -188,6 +196,10 @@
 %   EEG data)
 
 % HISTORY
+% 2014-07-31 Kai
+%   Added possibility to skip calculating decoding again and use loaded
+%   data instead (Flag: cfg.decoding.use_loaded_results = 1; result data in
+%   passed_data.loaded_results). See also read_resultdata.m
 % 2014-07-01 Martin
 %   Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
 %   iterations, e.g. cross-validation steps) can be different from chunks
@@ -283,6 +295,24 @@ end
 data = passed_data.data;
 mask_index = passed_data.mask_index;
 sz = passed_data.dim;
+
+%% Check if result data should be used to only calculate transformations
+% By default, calculate the data, if not specified otherwise
+if ~isfield(cfg.decoding, 'use_loaded_results')
+    cfg.decoding.use_loaded_results = 0; % set default
+else
+    % check that passed_data contains the loaded results
+    if ~isfield(passed_data, 'loaded_results')
+        error('cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1), but no result data is passed in passed_data.loaded_results. See read_resultdata.m on how to use this feature.')
+    end
+    % check that mask_index agrees
+    if ~isequal(mask_index, passed_data.loaded_results.mask_index)
+        error('mask_index in decding does not fit to passed_data.loaded_results.mask_index')
+    end
+    
+    warning('decoding:loaded_results_experimental', 'cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1). This features is still experimental. Use with care.')
+    display('Skip calculating data and using results from passed_data.loaded_results instead.')
+end
 
 %% Prepare the decoding
 
@@ -479,6 +509,14 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % never skip on first decoding step
         skip_training = i_step~=1 & isequal(previous_i_train, i_train) & isequal(previous_trainlabels, labels_train);
         
+        % also skip training if data should be used directly
+        if cfg.decoding.use_loaded_results
+            if i_decoding == 1 && i_step == 1
+                warningv('decoding:skip_training_loading_results', 'NEVER EXECUTING TRAINING because results should be loaded from data (cfg.decoding.use_loaded_results = 1)');
+            end
+            skip_training = true;
+        end
+        
         % Data transformation (e.g. PCA) applied to training data and extended to test data if requested
         if feature_transformation_across_on
             [cfg,data_train,data_test] = decoding_feature_transformation(cfg,data_train,data_test);
@@ -538,7 +576,14 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % convenient if nothing needs to be changed.
         
         if skip_training
-            model = decoding_out(i_step-1).model;
+            if cfg.decoding.use_loaded_results
+                % we use loaded results instead of train and test, so no 
+                % model is set here
+                model = [];
+            else
+                % use model from previous step
+                model = decoding_out(i_step-1).model;
+            end
         else
             % e.g. when software is libsvm, then:
             % model = libsvm_train(labels_train,data_train,cfg);
@@ -561,14 +606,23 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         end
 
         % Test Estimated Model
-        % e.g. when software is libsvm, then:
-        % decoding_out(i_step) = libsvm_test(labels_test,data_test,cfg,model);
-        decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model); %#ok<AGROW>
-
+        if cfg.decoding.use_loaded_results
+            % get decoding_out from passed_data
+            decoding_out(i_step) = get_decoding_out_from_passed_data(cfg,labels_test,passed_data,i_decoding,mask_index(curr_decoding),i_step);
+        else
+            % do standard testing
+            % e.g. when software is libsvm, then:
+            % decoding_out(i_step) =
+            % libsvm_test(labels_test,data_test,cfg,model);
+            decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model); %#ok<AGROW>
+        end
+            
     end % i_step
 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
+    % This is where result transformations are called 
+    % (so they can use  all decoding steps of the current voxel at once)
     results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,current_data);
 
 end % End decoding iterations (e.g. voxel)

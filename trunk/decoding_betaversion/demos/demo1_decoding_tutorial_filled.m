@@ -175,4 +175,4 @@ cfg.plot_selected_voxels = 30; % Plot every 30' step
 %% Fifth, run the decoding analysis
 
 % Fingers crossed it will not generate any error messages ;)
-results = decoding(cfg);
+[results, cfg] = decoding(cfg);

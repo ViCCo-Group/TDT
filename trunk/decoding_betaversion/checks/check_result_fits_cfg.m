@@ -1,7 +1,4 @@
-function success = check_result_fits_cfg(results, cfg)
-
-% init success as failed
-success = 0;
+function check_result_fits_cfg(results, cfg)
 
 % check analysis type
 if ~isequal(results.analysis, cfg.analysis)
@@ -14,7 +11,3 @@ if ~isequal(results.datainfo, cfg.datainfo)
     disp(cfg.datainfo)
     error('results.datainfo not equal cfg.datainfo, see details above')
 end
-
-
-% return success
-success = 1; % everything worked, so it's successful

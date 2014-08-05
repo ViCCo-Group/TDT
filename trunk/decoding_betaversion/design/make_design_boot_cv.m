@@ -22,7 +22,7 @@
 %   cfg.files.set (optional): currently only one set is possible in this 
 %       function.
 %   n_boot: Number of bootstrap samples to be drawn (final number will be
-%       n_boot * number of chunks, e.g. if n_boot = 10 and n_runs = 3, then 
+%       n_boot x number of chunks, e.g. if n_boot = 10 and n_runs = 3, then 
 %       the final number will be 30)
 %   balance_test (optional if n_pick not needed): Set to 1 if also the 
 %       test data should be balanced. This might make sense if you want all
@@ -30,7 +30,7 @@
 %   n_train (optional): Number of samples per condition to use as training 
 %       samples (and when balanced test sets are used also as test 
 %       samples). If no input is provided, the maximal number of available 
-%       samples will be used (recommended).
+%       samples will be used (we recommend using 90% of all samples).
 %
 % OUTPUT
 %   design.label: matrix with one column for each CV step, containing a
@@ -45,6 +45,7 @@
 %
 %
 
+% TODO: make indexing more efficient (useful for permutations)
 % TODO: allow multiple sets to be used
 % TODO: introduce warning when all data is used (n_choose = n_train)
 % and data is balanced across all chunks. Then using this function doesn't 
@@ -65,9 +66,29 @@ function design = make_design_boot_cv(cfg,n_boot,balance_test,n_train)
 %% generate design matrix
 
 design.function.name = mfilename;
-design.function.ver = 'v20140107';
+design.function.ver = 'v20140805';
 
-if ~exist('balance_test','var'), balance_test = 0; end
+if ~exist('n_boot','var')
+    try
+        n_boot = cfg.boot.n_boot;
+    catch
+        error('Input argument ''n_boot'' must be provided (either as direct input to make_design_boot_cv or as cfg.boot.n_boot.')
+    end
+end
+
+if ~exist('balance_test','var')
+    try
+        balance_test = cfg.boot.balance_test;
+    catch %#ok<*CTCH>
+        balance_test = 0;
+    end
+end
+
+if ~exist('n_train','var')
+    try %#ok<TRYNC>
+        n_train = cfg.boot.n_train;
+    end
+end
 
 % Downward compatibility (cfg.files.chunk used to be called cfg.files.step)
 if isfield(cfg.files,'step')

@@ -30,7 +30,12 @@
 %       equally to the decoding results or both labels equally. Otherwise 0.
 %   n_train (optional): Number of samples per condition to use as training 
 %       samples. If no input is provided, the maximal number of available 
-%       samples will be used (recommended).
+%       samples will be used (we recommend using 90% of all samples).
+%
+% IMPORTANT NOTE:
+%   If you want to pass make_design_boot as cfg.design.function.name, then
+%   pass n_boot, balance_test and n_train as cfg.boot.n_boot,
+%   cfg.boot.balance_test, and cfg.boot.n_train.
 %
 % OUTPUT
 %   design.label: matrix with one column for each CV step, containing a
@@ -47,6 +52,7 @@
 
 % Martin 2013/09/08
 
+% TODO: make indexing more efficient (useful for permutations)
 % TODO: allow multiple sets to be used
 
 function design = make_design_boot(cfg,n_boot,balance_test,n_train)
@@ -56,7 +62,27 @@ function design = make_design_boot(cfg,n_boot,balance_test,n_train)
 design.function.name = mfilename;
 design.function.ver = 'v20140107';
 
-if ~exist('balance_test','var'), balance_test = 0; end
+if ~exist('n_boot','var')
+    try
+        n_boot = cfg.boot.n_boot;
+    catch
+        error('Input argument ''n_boot'' must be provided (either as direct input to make_design_boot or as cfg.boot.n_boot.')
+    end
+end
+
+if ~exist('balance_test','var')
+    try
+        balance_test = cfg.boot.balance_test;
+    catch %#ok<*CTCH>
+        balance_test = 0;
+    end
+end
+
+if ~exist('n_train','var')
+    try %#ok<TRYNC>
+        n_train = cfg.boot.n_train;
+    end
+end
 
 % Downward compatibility (cfg.files.chunk used to be called cfg.files.step)
 if isfield(cfg.files,'step')

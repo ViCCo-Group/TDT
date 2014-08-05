@@ -6,7 +6,7 @@ function [fs_index,n_vox_steps,output] = feature_selection_embedded(cfg,labels,d
 % the code up.
 %
 
-% latest version: 2014/08/01 Martin
+% latest version: 2014/01/08 Martin
 
 % TODO: make sure nested_n_vox is not a single number, otherwise there won't be any range searched!)
 

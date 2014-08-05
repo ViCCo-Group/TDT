@@ -64,7 +64,7 @@ cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
 
 % If you used a bootstrap design, then you might speed up processing using
 % this function:
-cfg = sort_design(cfg);
+cfg.design = sort_design(cfg.design);
 
 % Run decoding
 results = decoding(cfg);

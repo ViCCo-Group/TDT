@@ -1,16 +1,17 @@
 This is a collection of questions that might occur more often. This FAQ section should grow with time.
 
 
-Q2. My searchlight analysis takes several hours, compared to your example which takes only minutes.
+Q1. My searchlight analysis takes several hours, compared to your example which takes only minutes.
     I checked my script and all parameters seem to make sense. I'm not displaying the searchlights,
     not using parameter selection or feature selection and the such, which I know make processing 
     a lot slower. What am I doing wrong?
 
-A2. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
+A1. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
     of searchlights, the radius of the searchlight and the number of cross-validation steps.
     Smaller searchlights are usually trained faster, unless the number of voxels in the searchlight
     are equal or smaller than the number of samples that are entered into the analysis; it that case
     the separating hyperplane is more difficult to find.
+    Sometimes, scaling can help a lot to speed up decoding. See help decoding_scale_data for details.
     If you run classification in libsvm, try using cfg.decoding.method = 'classification_kernel' 
     which can double or triple the speed of classification. If your voxel resolution is 2x2x2 mm or 
     higher and you want a speed-up, consider resampling your data at a lower resolution, e.g. 3x3x3 mm.
@@ -20,39 +21,48 @@ A2. The duration of a searchlight analysis depends on a number of issues, but mo
     of the searchlight, because voxels outside the mask are not considered.
 
 
-Q3. Some of my ROIs take extremely long to calculate while others run much faster. How is that possible? 
+Q2. Some of my ROIs take extremely long to calculate while others run much faster. How is that possible? 
 
-A3. Some examples might be more difficult to separate than others. If your ROI is small, this is more
+A2. Some examples might be more difficult to separate than others. If your ROI is small, this is more
     likely to be the case. If the time difference is very large, try using scaling and possibly reduce
-    outlier voxels as implemented in the scaling method.
+    outlier voxels as implemented in the scaling method. You may also use a smaller C (e.g. 0.001) which
+    often reduces processing time without any change in results. 
 
 
-Q4. I want to run classification across subjects, and I know that imbalances in training data are bad,
-    but there separating data into pairs of both categories for cross-validation doesn't make much sense.
-    How should I proceed?
+Q3. I am running between-subject analyses, but other than your example I don't really have chunks, i.e.
+    there is no unique way how I should specify data for cross-validation. What now?
 
-A4. It is in many cases no problem if your data has a slight imbalance, and if you have the same number
-    of subjects in both groups (e.g. 20 patient, 20 control), the imbalance should not be too bad. If 
-    any, it should rather make your results more conservative. Just set cfg.design.unbalanced_data = 'ok'
-    If you are worried that the imbalance reduces your accuracy, consider also calculating AUC which 
-    should be more resistant to misclassification unless the imbalance is very large. An alternative 
-    would be to set up a design in which you randomly select pairs for cross-validation and repeat this
-    process many times (e.g. 100), but this type of analysis is a lot slower.
+A3. Often, you have implicit chunks, which are defined by matching between groups. For example, you want
+    to classify age or gender, so you can match subjects for these variables and create chunks. If this 
+    does not work, you can randomly assign pairs and keep them together which is a fast solution. Ideally,
+    you would run the make_design_boot function (check decoding_template_nobetas.m) which samples repeatedly
+    from the subjects.
+
+
+Q4. I want to run classification across subjects and have 70 subjects in one group and 30 in another.
+    I know that imbalances in training data are bad. How should I proceed?
+
+A4. It is in many cases no problem if your data has a slight imbalance, but it can be and in your case 
+    will be. Again, you can use make_design_boot, but it is slow. Alternatively, set 
+    cfg.design.unbalanced_data = 'ok' and calculate the AUC which should be guarded against this problem. 
+    Make sure to use balanced_accuracy as output (balanced for the number of samples in each class).
 
 
 Q5. I ran a searchlight analysis and did a group-level analysis, but none of my voxels were significant,
-    although it really was expected to find something. Did I do anything wrong?
+    although I really expected to find something. Did I do anything wrong?
 
 A5. It is possible that you made a mistake, but this is difficult to find. First, check a decoding 
-    analysis with the same data where you expect to find something, e.g. buttonpress left hand vs. 
-    right hand, or visual stimulation in the left vs. the right hemisphere. If you still find nothing, 
-    probably you made a mistake in the assignment of the data entering the classification (e.g. betas),
-    your labels were wrong, or your mask did not contain the right regions.
-    If classification worked here and you are sure that you made no mistake, then see if you can improve 
-    the quality of your data: Check the movement parameters and possibly include movement regressors into 
+    analysis with the same data where you would "have to" find something, e.g. buttonpress left hand vs. 
+    right hand, visual stimulation in the left vs. the right hemisphere, or even visual stimulation on vs. 
+    visual stimulation off. If you still find nothing and you used betas, probably you misspecified the 
+    onsets of your GLM analysis for creating the betas. It is also possible you were using the wrong data
+    or that data was not correctly assigned to the labels or chunks. Also, your mask might not even cover
+    the regions you expect to find.
+    If classification worked and you are sure that you made no mistake, then see if you can improve the 
+    quality of your data: Check the movement parameters and possibly include movement regressors into 
     your subject-level design. Reduce the number of other regressors in your SPM design to a minimum (you 
     can still check for correlations with other variables of no interest later). Try AUC rather than accuracy 
-    which can give you a slightly more sensitive value. Only in rare cases the optimization of 
+    which can sometimes give you a slightly more sensitive value. Only in rare cases the optimization of 
     classification parameters (e.g. C) brings you from chance performance to a reasonable number, so 
     don't spend too much time on this step. Also feature selection can be very time consuming, so don't 
     waste your time trying to find a pattern that is not in the data.
@@ -67,6 +77,6 @@ Q6. I ran parameter optimization of C in libsvm, but the results were identical 
 A6. In most cases, the number of data samples n are much smaller than the number of features or 
     dimensions p (e.g. voxels in a searchlight). That means that all data points will most likely 
     end up as support vectors, but since C acts as a regularization parameter, it should 
-    begin to play a role for extreme values of C, where it will choose a simpler (sparser) solution.
+    begin to play a role for very small values of C, where it will choose a simpler (sparser) solution.
     See "Hastie et al. (2004): The entire regularization path for the Support Vector Machine", 
     Chapter 5.2 for details. 

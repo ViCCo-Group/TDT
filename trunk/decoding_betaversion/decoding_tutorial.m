@@ -170,7 +170,7 @@ cfg.searchlight.spherical = 0;
 % Other parameters of interest:
 % The verbose level allows you to determine how much output you want to see
 % on the console while the program is running (0: no output, 1: normal 
-% output, 2: high output).
+% output [default], 2: high output).
 cfg.verbose = 1;
 
 % Define which measures/transformations you like to get as ouput
@@ -182,12 +182,12 @@ cfg.verbose = 1;
 % measure/transformation in README.txt (or copy one of the transres_*
 % functions).
 
-% cfg.results.output = {'accuracy_minus_chance', 'binomial_probability'};
-% Remark: Be aware that CV results are indeed not binomially distributed,
-% and thus that the binomial_probability is only a crude (and statistically
-% invalid) approximation of real cross-validated decoding accuarcy
-% probabilities. It here serves as an example and might give a first
-% impression of the results of a single subject (e.g. for motor decoding).
+cfg.results.output = 'accuracy_minus_chance';
+% This value does not need to be set here, it is just for illustrative
+% purposes. For multiple outputs, use cell arrays, e.g. 
+% cfg.results.output = {'accuracy_minus_chance', 'AUC_minus_chance'};
+% For more options, again check "help decoding_transform_results" or look
+% at the transres_* functions in the transform_results folder.
 
 % parameters for libsvm (linear SV classification, cost = 1, no screen output)
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
@@ -231,7 +231,10 @@ results = decoding(cfg);
 % course.
 
 % cfg.searchlight.subset = [5, 100, 1000, 1001]'; 
-%   only decode some searchlights (good e.g. if you like to get the models 
-%   at these locations). Takes either single values or 3d coordinates.
+%   only decode some searchlights are executed. This makes sense if you
+%   have coordinates and want results at these searchlight ROIs only. It
+%   can also be used to parallelize the toolbox, i.e. running the first
+%   10000 searchlights on one computer, the second on another, etc. Takes
+%   either single values or 3d coordinates.
 % (call "help decoding" and search for "subset" for more infos)
 

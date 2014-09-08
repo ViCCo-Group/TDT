@@ -36,6 +36,7 @@ labelname2 =
 % cfg.searchlight.spherical = 1;
 % cfg.verbose = 2; % you want all information to be printed on screen
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
+% cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance'};
 
 % Some other cool stuff
 % Check out 

@@ -12,7 +12,7 @@ cfg.analysis = 'searchlight';
 % Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
 cfg.results.dir = 
 
-% Set the filename of your brain mask (or your ROI masks as cell matrix) 
+% Set the filename of your brain mask (or your ROI masks as cell array) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
 cfg.files.mask = 
@@ -29,7 +29,6 @@ cfg.files.chunk =
 % (2) any numbers as class labels, normally we use 1 and -1. Each file gets a
 % label number (i.e. a nx1 vector)
 cfg.files.label = 
-
 
 % Set additional parameters manually if you want (see decoding.m or
 % decoding_defaults.m). Below some example parameters that you might want 
@@ -50,14 +49,11 @@ cfg.files.label =
 cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
 
 % Add additional output measures if you like
-% cfg.results.output = {'accuracy_minus_chance', 'AUC'}
-
-% Nothing needs to be changed below for a standard leave-one-run out cross
-% validation analysis.
+% cfg.results.output = {'accuracy_minus_chance', 'AUC_minus_chance'}
 
 % This creates the leave-one-pair-out cross validation design (assuming there is only one step):
 cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
-% If there are several unbalanced steps, use this function:
+% If there are several unbalanced chunks, use this function:
 % cfg.design = make_design_boot_cv(cfg,100,1); % the 1 keeps test data balanced, too
 % If you have a balanced design, use this function
 % cfg.design = make_design_cv(cfg);

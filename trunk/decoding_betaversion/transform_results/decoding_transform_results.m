@@ -139,9 +139,9 @@ elseif strcmpi(method, 'balanced_accuracy') || strcmpi(method, 'balanced_accurac
     for i_label = 1:n_labels
         labelfilt = true_labels == labels(i_label);
         if i_label == 1
-            output = mean(predicted_labels(labelfilt) == true_labels(labelfilt));
+            output = 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
         else
-            output = output + mean(predicted_labels(labelfilt) == true_labels(labelfilt));
+            output = output + 100 * mean(predicted_labels(labelfilt) == true_labels(labelfilt));
         end
     end
     output = output/n_labels;

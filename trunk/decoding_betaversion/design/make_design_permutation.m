@@ -1,4 +1,4 @@
-% function [designs,cfg_new] = make_design_permutation(cfg,n_perms_select,combine)
+% function designs = make_design_permutation(cfg,n_perms_select,combine)
 %
 % This function creates designs for a number of within-subject permutations
 % for a full permutation test, but importantly keeping data from different
@@ -82,6 +82,9 @@
 % Martin Hebart, 2013/08/31
 
 % Version History:
+%   MH (2014/08/21):
+%   - Removed bug that prevented the use of this function for simple
+%   leave-one-pair out
 %   MH (2014/08/04):
 %   - Allowed passing chunks with a lot of samples
 %   - Enabled combination of designs
@@ -252,7 +255,8 @@ if n_perms <= max_n_perms
             if any(remove_ind==i_iter)
                 continue
             end
-            tmp = all(repmat(original(i_iter,:),size(all_perms,1),1)==inverted,2);
+            tmp = all(repmat(original(i_iter,:),size(all_perms(i_iter:end,:),1),1)==inverted(i_iter:end,:),2);
+            tmp = [zeros(i_iter-1,1); tmp];
             remove_ind = remove_ind|tmp;
         end
         
@@ -360,9 +364,7 @@ if combine
     design.set = kron(1:n_perms_select,ones(1,n_chunks)); % make multiple sets out of it
     design.train = horzcat(design_orig.train); 
     design.test = horzcat(design_orig.test);
-    results.setwise = 1;
-    disp('Combining designs and setting cfg.results.setwise = 1.')
-    design = sort_design(design); % this may help speed everything up
+    disp('Combining designs. Please manually set cfg.results.setwise = 1.')
 end
         
 disp('done.')

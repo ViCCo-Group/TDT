@@ -19,6 +19,10 @@
 % radius: for decoding_type 'searchlight', you may specify the radius of
 %   the searchlight (in voxels).
 
+% Martin H.
+%
+% History: 2014/08/21: Removed small bug preventing more than two ROIs
+
 function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius)
 
 cfg = decoding_defaults;
@@ -50,8 +54,19 @@ switch lower(decoding_type)
         end
         cfg.searchlight.unit = 'voxels';
         
+        % Get file extension (.nii or .img)
+        fname = dir(fullfile(beta_dir,'beta_*.img'));
+        if isempty(fname)
+            fname = dir(fullfile(beta_dir,'beta_*.nii'));
+            if isempty(fname)
+                error('No betas in SPM format (e.g. beta_0001.img or beta_0001.nii) in %s',beta_dir)
+            end
+        end
+            
+        [fp,fn,ext] = fileparts(fname(1).name); %#ok<ASGLU>
+        
         % Use mask in beta dir (e.g. SPM mask) as brain mask
-        cfg.files.mask = fullfile(beta_dir,'mask.img');
+        cfg.files.mask = fullfile(beta_dir,['mask' ext]);
         
 %         cfg.plot_selected_voxels = 100; % activate to plot searchlights
         
@@ -67,16 +82,27 @@ switch lower(decoding_type)
             end
         else
             if ~strcmp(fpath(1,end),filesep), fpath = [fpath filesep]; end
-            cfg.files.mask = [repmat(fpath,2,1) vertcat(char(fnames{:}))];
+            cfg.files.mask = [repmat(fpath,length(fnames),1) vertcat(char(fnames{:}))];
         end
         
         cfg.plot_selected_voxels = 1;
         
     case 'wholebrain'
         
+        % Get file extension (.nii or .img)
+        fname = dir(fullfile(beta_dir,'beta_*.img'));
+        if isempty(fname)
+            fname = dir(fullfile(beta_dir,'beta_*.nii'));
+            if isempty(fname)
+                error('No betas in SPM format (e.g. beta_0001.img or beta_0001.nii) in %s',beta_dir)
+            end
+        end
+            
+        [fp,fn,ext] = fileparts(fname(1).name); %#ok<ASGLU>
+        
         % Use mask in beta dir (e.g. SPM mask) as brain mask
-        cfg.files.mask = fullfile(beta_dir,'mask.img');
-                
+        cfg.files.mask = fullfile(beta_dir,['mask' ext]);       
+        
 end
 
 if exist('output_dir','var')

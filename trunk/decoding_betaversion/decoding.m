@@ -200,7 +200,7 @@
 %   Added possibility to skip calculating decoding again and use loaded
 %   data instead (Flag: cfg.decoding.use_loaded_results = 1; result data in
 %   passed_data.loaded_results). See also read_resultdata.m
-% 2014-07-01 Martin
+% 2014-01-07 Martin
 %   Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
 %   iterations, e.g. cross-validation steps) can be different from chunks
 %   (i.e. data that should be kept together when cross-validation is
@@ -310,7 +310,7 @@ else
         error('mask_index in decding does not fit to passed_data.loaded_results.mask_index')
     end
     
-    warning('decoding:loaded_results_experimental', 'cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1). This features is still experimental. Use with care.')
+    warningv('decoding:loaded_results_experimental', 'cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1). This features is still experimental. Use with care.')
     display('Skip calculating data and using results from passed_data.loaded_results instead.')
 end
 

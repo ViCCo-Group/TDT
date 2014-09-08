@@ -57,7 +57,7 @@ switch lower(decoding_type)
         
     case 'roi'
         
-        [fnames,fpath] = uigetfile('*.img', 'Select your ROI masks', 'Multiselect', 'on');
+        [fnames,fpath] = uigetfile('*.img; *.nii', 'Select your ROI masks', 'Multiselect', 'on');
         
         if ~iscell(fnames)
             if fnames ~= 0

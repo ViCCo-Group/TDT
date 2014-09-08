@@ -1,4 +1,4 @@
-% function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius)
+% function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
 %
 % This is a general function for two class classification, using a linear 
 % SVM as implemented in the libsvm software, with accuracy images (for
@@ -18,14 +18,31 @@
 % output_dir: Where results should be saved (if they should be saved at all)  
 % radius: for decoding_type 'searchlight', you may specify the radius of
 %   the searchlight (in voxels).
+% cfg: If a cfg is provided, these values will be used when starting the
+%   example. However, all values that are specified by the other parameters
+%   will overwrite this (use this e.g. if you use a different the the
+%   standard default settings).
+% ROI-files: If you want to specify ROI files, set 
+%   cfg.files.mask = {'ROI1.img', 'ROI2.nii'} % etc
 
 % Martin H.
-%
-% History: 2014/08/21: Removed small bug preventing more than two ROIs
+% History: 
+% 2014/08/21: Removed small bug preventing more than two ROIs
+% 2014/08/21: Will also look for .nii files as ROI or mask, and can take
+%   cfg as optional last argument
 
-function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius)
 
-cfg = decoding_defaults;
+
+function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
+
+
+if ~exist('cfg', 'var')
+    cfg = [];
+else
+    display('Using default arguments provided by cfg')
+end
+
+cfg = decoding_defaults(cfg);
 
 cfg.testmode = 0;
 cfg.analysis = decoding_type;
@@ -36,7 +53,7 @@ catch % else try out spm8
     cfg.software = 'SPM8';
 end
 
-if exist('output_dir','var')
+if exist('output_dir','var') && ~isempty(output_dir)
     cfg.results.dir = output_dir;
 else
     cfg.results.write = 0;
@@ -47,7 +64,7 @@ switch lower(decoding_type)
     
     case 'searchlight'
         
-        if ~exist('radius','var')
+        if ~exist('radius','var') || isempty(radius)
            warning('Variable ''radius'' wasn''t specified. Using default value %d',cfg.searchlight.radius); %#ok<WNTAG>
         else
             cfg.searchlight.radius = radius;
@@ -72,17 +89,21 @@ switch lower(decoding_type)
         
     case 'roi'
         
-        [fnames,fpath] = uigetfile('*.img; *.nii', 'Select your ROI masks', 'Multiselect', 'on');
-        
-        if ~iscell(fnames)
-            if fnames ~= 0
-                cfg.files.mask = fullfile(fpath,fnames);
+        if isfield(cfg, 'files') && isfield(cfg.files, 'mask') && ~isempty(cfg.files.mask)
+            display('Using provided mask as ROIs')
+        else % show file picker to select ROIs
+            [fnames,fpath] = uigetfile('*.img; *.nii', 'Select your ROI masks', 'Multiselect', 'on');
+
+            if ~iscell(fnames)
+                if fnames ~= 0
+                    cfg.files.mask = fullfile(fpath,fnames);
+                else
+                    error('No file was selected')
+                end
             else
-                error('No file was selected')
+                if ~strcmp(fpath(1,end),filesep), fpath = [fpath filesep]; end
+                cfg.files.mask = [repmat(fpath,2,1) vertcat(char(fnames{:}))];
             end
-        else
-            if ~strcmp(fpath(1,end),filesep), fpath = [fpath filesep]; end
-            cfg.files.mask = [repmat(fpath,length(fnames),1) vertcat(char(fnames{:}))];
         end
         
         cfg.plot_selected_voxels = 1;
@@ -105,7 +126,7 @@ switch lower(decoding_type)
         
 end
 
-if exist('output_dir','var')
+if exist('output_dir','var') && ~isempty(output_dir)
     cfg.results.dir = output_dir;
 end
 

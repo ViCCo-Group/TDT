@@ -79,7 +79,7 @@
 %   cfg.analysis: Determines the type of analysis that is performed
 %       ('searchlight', 'ROI', or 'wholebrain')
 %   cfg.decoding.method: method of decoding ('classification', 'regression',
-%       or other [default = 'classification']
+%       or 'classification_kernel' [default = 'classification_kernel', only useful for libsvm]
 %   cfg.decoding.software: Software used for decoding [default = 'libsvm']
 %   cfg.decoding.train.classification.model_parameters: Model parameters
 %       that the external software needs for training [set for libsvm classification]

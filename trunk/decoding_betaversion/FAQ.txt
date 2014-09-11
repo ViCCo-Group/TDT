@@ -79,4 +79,14 @@ A6. In most cases, the number of data samples n are much smaller than the number
     end up as support vectors, but since C acts as a regularization parameter, it should 
     begin to play a role for very small values of C, where it will choose a simpler (sparser) solution.
     See "Hastie et al. (2004): The entire regularization path for the Support Vector Machine", 
-    Chapter 5.2 for details. 
+    Chapter 5.2 for details.
+
+Q7. When I try running the toolbox, Matlab crashes with a a Segmentation Error.
+
+A7. This is a problem related to the compilation of libsvm or another classifier you are using. It mostly 
+    occurs with Mac OS X. Try one of the following: First check if your design matrix is correct. If you 
+    don't have any training data or test data, libsvm crashes for Mac OS X. If your design is correct, 
+    then zip the libsvm folder of the current version and unzip the libsvm folder of version 3.12. See if 
+    you still get the result. If the error is still present, see if you can compile libsvm yourself or find 
+    a compiled version of it. Otherwise, please use a different classifier (don't forget to set 
+    cfg.decoding.method = 'classification' rather than 'classification_kernel')

@@ -1,3 +1,19 @@
+% Demo how to get individual searchlights (just in case you want)
+% 
+% CHANGE .dim + sz and sl_centers to your dimensions
+% 
+% sl_center is the index in the 3d image where the searchlight is centered.
+%
+% You could get a formula for this with meshgrid (if you want to avoid
+% thinking) or run the searchlights as is currently implemeted and wait.
+% 
+% Suggestions: check what happens for 
+%   cfg.searchlight.wrap_control = 0
+%
+% Enjoy
+
+% Kai, 14/09/15
+
 %% open figure for later drawing
 fighdl = figure;
 
@@ -8,7 +24,7 @@ for i_decodingstep = sl_centers
     %% prepare searchlight
     cfg.analysis = 'searchlight';
     cfg.searchlight.wrap_control = 1;
-    cfg.searchlight.radius = 5;
+    cfg.searchlight.radius = 3;
 
     cfg.datainfo.dim = [64, 64, 32]; % DIMENSIONS of original data
 
@@ -26,8 +42,6 @@ for i_decodingstep = sl_centers
 
     %% plot
     plot_selected_voxels(indexindex,sz, '', '', '', fighdl)
-
-    drawnow
     
     % display total number of voxels
     n_vox = length(indexindex);

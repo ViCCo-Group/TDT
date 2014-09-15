@@ -27,7 +27,7 @@
 %       Remark: Plotting will happen in the background, and the previously 
 %           current axis will be activated in the end again
 %
-% Martin Hebart, Kai Görgen, 2013/05/27
+% Martin Hebart, Kai Gï¿½rgen, 2013/05/27
 
 % History: 
 %   Martin: 2014/01/26: Speed-up of 30% by drawing only voxels that are
@@ -130,7 +130,7 @@ axis([0 sz(1) 0 sz(2) 0 sz(3)])
 
 %% Plot brain on x,y,z plane, if provided
 
-if exist('brain_data', 'var')
+if exist('brain_data', 'var') && ~isempty(brain_data)
     if ~exist('mask_index', 'var')
         error('brain_data is provided, but mask_index not. Both arguments must be provided')
     end

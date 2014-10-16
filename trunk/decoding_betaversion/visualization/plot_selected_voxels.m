@@ -27,15 +27,21 @@
 %       Remark: Plotting will happen in the background, and the previously 
 %           current axis will be activated in the end again
 %
-% Martin Hebart, Kai G�rgen, 2013/05/27
+% Martin Hebart, Kai Goergen, 2013/05/27
 
 % History: 
 %   Martin: 2014/01/26: Speed-up of 30% by drawing only voxels that are
 %       visible
+%   Kai: Removed the small bug that the projections where not shown
+%   properly
 
 % Possible IMPROVEMENTS:
 % Adjust size of each axis to get "real" shape of ROI, not distorted along
 % the smaller/longer axis
+% 
+% Move all coordinates by -.5 (background & searchlight), then the numbers
+% correspond to the center of the shown numbers (now they correspond to the
+% voxel behind the shown number)
 %
 % Speed-Up - Ideas for searchlights: 
 %   - only update the SL, i.e. remove voxels that are not there any longer, 
@@ -126,7 +132,11 @@ clf(fighdl)
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);
-axis([0 sz(1) 0 sz(2) 0 sz(3)])
+axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1])
+set(gca, 'XTick', [1, sz(1)])
+set(gca, 'YTick', [1, sz(2)])
+set(gca, 'ZTick', [1, sz(3)])
+
 
 %% Plot brain on x,y,z plane, if provided
 
@@ -203,17 +213,23 @@ if exist('brain_data', 'var') && ~isempty(brain_data)
     y_sl_projection = squeeze(sum(sl_3d, 1) > 0);
     y_background(y_sl_projection') = 1;
 
+    % REMARK: When plotting the background image using surface, we need to
+    % plot x and y from 1:sz(1)+1, because surface(x,y,z)  plot the value z 
+    % to the square x..x+1, y..y+1. 
+    % This create 8! elements for x and y, but these values only define the
+    % BOUNDARY, and these are 1 more than the containing data.
+    
     % x and y are flipped
-    [x,y] = meshgrid(1:sz(1),1:sz(2));
-    surface(x,y,zeros(size(x)),z_background);
+    [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1);
+    surface(x,y,ones(size(x)),z_background);
     colormap('gray')
     % shading flat
-    [x,z] = meshgrid(1:sz(1),1:sz(3));
-    surface(sz(2)*ones(size(x)),x,z,y_background);
+    [x,z] = meshgrid(1:sz(1)+1,1:sz(3)+1);
+    surface(sz(2)*ones(size(x))+1,x,z,y_background);
     colormap('gray')
     % shading flat
-    [y,z] = meshgrid(1:sz(2),1:sz(3));
-    surface(y,sz(1)*ones(size(y)),z,x_background);
+    [y,z] = meshgrid(1:sz(2)+1,1:sz(3)+1);
+    surface(y,sz(1)*ones(size(y))+1,z,x_background);
     colormap('gray')
     % shading flat
 end

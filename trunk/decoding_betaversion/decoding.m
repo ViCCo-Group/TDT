@@ -444,7 +444,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     
     if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
         if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')
-            cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI');
+            cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI Online ROI (cfg.plot_selected_voxels=0 for more speed)');
         end
         try
             % plot searchlight with brain projection

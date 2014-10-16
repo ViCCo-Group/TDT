@@ -33,15 +33,12 @@
 %   Martin: 2014/01/26: Speed-up of 30% by drawing only voxels that are
 %       visible
 %   Kai: Removed the small bug that the projections where not shown
-%   properly
+%   properly. Also moved coordinate system by -.5 in each direction, so the
+%   center of each voxel is now labeled<
 
 % Possible IMPROVEMENTS:
 % Adjust size of each axis to get "real" shape of ROI, not distorted along
 % the smaller/longer axis
-% 
-% Move all coordinates by -.5 (background & searchlight), then the numbers
-% correspond to the center of the shown numbers (now they correspond to the
-% voxel behind the shown number)
 %
 % Speed-Up - Ideas for searchlights: 
 %   - only update the SL, i.e. remove voxels that are not there any longer, 
@@ -74,7 +71,7 @@ try
 catch %#ok<CTCH>
     disp(lasterr)
     warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
-    fighdl = figure('name', 'Online ROI');
+    fighdl = figure('name', 'Online ROI (cfg.plot_selected_voxels=0 for more speed)');
 end
 %%
 % position_index: indices of all voxel positions
@@ -123,7 +120,7 @@ large_faces_matrix = zeros(n_vox * size(faces_matrix,1), size(faces_matrix,2));
 for i = 1:n_vox
     xpos = (i-1)*8 + (1:8);
 %     large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,[M.X(position_index(i)) M.Y(position_index(i)) M.Z(position_index(i))]);
-    large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,P(i,:));    
+    large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,P(i,:))-.5;    
     xpos = (i-1)*6 + (1:6);
     large_faces_matrix(xpos,:) = faces_matrix + (i-1)*8;
 end
@@ -132,11 +129,10 @@ clf(fighdl)
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);
-axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1])
+axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
 set(gca, 'XTick', [1, sz(1)])
 set(gca, 'YTick', [1, sz(2)])
 set(gca, 'ZTick', [1, sz(3)])
-
 
 %% Plot brain on x,y,z plane, if provided
 
@@ -220,16 +216,16 @@ if exist('brain_data', 'var') && ~isempty(brain_data)
     % BOUNDARY, and these are 1 more than the containing data.
     
     % x and y are flipped
-    [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1);
-    surface(x,y,ones(size(x)),z_background);
+    [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
+    surface(x,y,ones(size(x))-.5,z_background);
     colormap('gray')
     % shading flat
-    [x,z] = meshgrid(1:sz(1)+1,1:sz(3)+1);
-    surface(sz(2)*ones(size(x))+1,x,z,y_background);
+    [x,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); x=x-.5; z=z-.5;
+    surface(sz(2)*ones(size(x))+.5,x,z,y_background);
     colormap('gray')
     % shading flat
-    [y,z] = meshgrid(1:sz(2)+1,1:sz(3)+1);
-    surface(y,sz(1)*ones(size(y))+1,z,x_background);
+    [y,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); y=y-.5; z=z-.5;
+    surface(y,sz(1)*ones(size(y))+.5,z,x_background);
     colormap('gray')
     % shading flat
 end

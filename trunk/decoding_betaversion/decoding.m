@@ -298,7 +298,7 @@ sz = passed_data.dim;
 
 %% Check if result data should be used to only calculate transformations
 % By default, calculate the data, if not specified otherwise
-if ~isfield(cfg.decoding, 'use_loaded_results')
+if ~isfield(cfg.decoding, 'use_loaded_results') || cfg.decoding.use_loaded_results == 0
     cfg.decoding.use_loaded_results = 0; % set default
 else
     % check that passed_data contains the loaded results

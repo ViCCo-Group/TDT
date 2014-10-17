@@ -2,13 +2,18 @@
 % simple simulated 3d toy data.
 % The toy data are matlab matrices and no real fMRI or EEG data.
 %
-% In this simple demo, we use randn data for all voxels in 3d volumes, 
+% If the dimensions of the data are 15 15 7, TDT will be decoded from the
+% data.
+% 
+% Otherwise, we use randn data for all voxels in 3d volumes, 
 % execpt for one, for which we add a strong effect. 
 % Feel free to simulate any effect you like.
 %
 % You can switch between 'searchlight' and 'wholebrain' below.
 %
-% Kai, 2014/10/16
+% Kai, 2014/10/17
+
+% TODO: Extract function plot_slices() to file (it's really useful)
 
 clear all
 dbstop if error % if something goes wrong
@@ -28,7 +33,7 @@ demo_cfg.plot_input_data = 0; % 1: Plot each input data point in a separate figu
 % Set the analysis that should be performed
 % decoding)
 cfg.analysis = 'searchlight'; % alterantives: 'searchlight', 'wholebrain' ('ROI' does not make sense here);
-cfg.searchlight.radius = 2; % set searchlight size
+cfg.searchlight.radius = 1.1; % set searchlight size
 % Define whether you want to see the searchlight
 cfg.plot_selected_voxels = 1; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
 
@@ -42,7 +47,7 @@ cfg.decoding.method = 'classification';
 %% generate some toy data
 % define number of "runs" and center means
 nruns = 4; % lets simulate we have n runs
-sz = [7 7 7]; % dimension of data (note: set last dimension to 1 to have 2d data...)
+sz = [15 15 7]; % dimension of data (note: set last dimension to 1 to have 2d data...)
 
 %% data class 1
 % generate basic data for group 1 
@@ -56,19 +61,42 @@ data2 = randn([nruns, sz]); % all voxels randn, dimension: run, x, y, z
 
 % add effect to data 2
 % here you can add any effect you like, of course
-%
-% add effect to ordinate 3 (or smaller, if 3 does not exist) in each
-% dimension
-% get coordinate to put effect at
 
-x = min(3, sz(1));
-y = min(3, sz(2));
-z = min(3, sz(2));
+if isequal(sz, [15 15 7])
+    % add TDT to middle z slice of all example of data 2
+    TDT=[0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         1     1     1     0     0     0     1     1     1     0     0     0     1     1     1
+         0     1     0     0     0     0     1     0     0     1     0     0     0     1     0
+         0     1     0     0     0     0     1     0     0     1     0     0     0     1     0
+         0     1     0     0     0     0     1     0     0     1     0     0     0     1     0
+         0     1     0     0     0     0     1     1     1     0     0     0     0     1     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
+         0     0     0     0     0     0     0     0     0     0     0     0     0     0     0];
+     
+    for dim1 = 1:size(data2, 1)
+        data2(dim1, :, :, 4) = squeeze(data2(dim1, :, :, 4)) + TDT*10;
+    end
 
-data2(:, x, y, z) = data2(:, x, y, z) + 10; % add effect to voxel number 3 
-                                        % for each volume of  data2 in each 
-                                        % direction
+else
+    % add effect to ordinate 3 (or smaller, if 3 does not exist) in each
+    % dimension
+    % get coordinate to put effect at
 
+    x = min(3, sz(1));
+    y = min(3, sz(2));
+    z = min(3, sz(2));
+
+    data2(:, x, y, z) = data2(:, x, y, z) + 10; % add effect to voxel number 3 
+                                            % for each volume of  data2 in each 
+                                            % direction
+end
 
 %% put all together in a data matrix
 data = [data1; data2]; % data(1:nruns, :, :, :) contains all data for class 1 (data1 above)
@@ -181,7 +209,7 @@ if strcmp(cfg.analysis, 'searchlight')
     sp_cols = ceil(sqrt(size(resultdata, 3)));
     sp_rows = ceil(size(resultdata, 3) / sp_cols);
 
-    for dim3 = 1:size(resultdata, 2) % will return 1 if dimension does not exist, which is fine
+    for dim3 = 1:size(resultdata, 3) % will return 1 if dimension does not exist, which is fine
         subplot(sp_cols, sp_rows, dim3);
         curr_slice_data = squeeze(resultdata(:, :, dim3));
         imagesc(curr_slice_data);

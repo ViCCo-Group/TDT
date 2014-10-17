@@ -2,7 +2,7 @@
 % simple simulated 3d toy data.
 % The toy data are matlab matrices and no real fMRI or EEG data.
 %
-% If the dimensions of the data are 15 15 7, TDT will be decoded from the
+% If the dimensions of the data are 15 15 9, "TDT" will be decoded from the
 % data.
 % 
 % Otherwise, we use randn data for all voxels in 3d volumes, 
@@ -35,7 +35,8 @@ demo_cfg.plot_input_data = 0; % 1: Plot each input data point in a separate figu
 cfg.analysis = 'searchlight'; % alterantives: 'searchlight', 'wholebrain' ('ROI' does not make sense here);
 cfg.searchlight.radius = 1.1; % set searchlight size
 % Define whether you want to see the searchlight
-cfg.plot_selected_voxels = 1; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
+cfg.plot_selected_voxels = 50; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
+
 
 
 %% Set the output directory where data will be saved
@@ -47,7 +48,7 @@ cfg.decoding.method = 'classification';
 %% generate some toy data
 % define number of "runs" and center means
 nruns = 4; % lets simulate we have n runs
-sz = [15 15 7]; % dimension of data (note: set last dimension to 1 to have 2d data...)
+sz = [15 15 9]; % dimension of data (note: set last dimension to 1 to have 2d data...)
 
 %% data class 1
 % generate basic data for group 1 
@@ -62,7 +63,7 @@ data2 = randn([nruns, sz]); % all voxels randn, dimension: run, x, y, z
 % add effect to data 2
 % here you can add any effect you like, of course
 
-if isequal(sz, [15 15 7])
+if isequal(sz, [15 15 9])
     % add TDT to middle z slice of all example of data 2
     TDT=[0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
          0     0     0     0     0     0     0     0     0     0     0     0     0     0     0
@@ -81,7 +82,7 @@ if isequal(sz, [15 15 7])
          0     0     0     0     0     0     0     0     0     0     0     0     0     0     0];
      
     for dim1 = 1:size(data2, 1)
-        data2(dim1, :, :, 4) = squeeze(data2(dim1, :, :, 4)) + TDT*10;
+        data2(dim1, :, :, 5) = squeeze(data2(dim1, :, :, 4)) + TDT*10;
     end
 
 else

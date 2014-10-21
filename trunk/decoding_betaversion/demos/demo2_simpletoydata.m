@@ -57,11 +57,11 @@ if size(data, 2) == 2
 end
 
 %% Prepare data for passing
-pass_data.data = data;
-pass_data.mask_index = 1:size(data, 2); % use all voxels
-pass_data.files = cfg.files;
-pass_data.hdr = ''; % we don't need a header, because we don't write img-files as output (but mat-files)
-pass_data.dim = [length(set1.mean), 1, 1]; % add dimension information of the original data
+passed_data.data = data;
+passed_data.mask_index = 1:size(data, 2); % use all voxels
+passed_data.files = cfg.files;
+passed_data.hdr = ''; % we don't need a header, because we don't write img-files as output (but mat-files)
+passed_data.dim = [length(set1.mean), 1, 1]; % add dimension information of the original data
 % passed_data.voxelsize = [1 1 1];
 
 
@@ -87,7 +87,7 @@ cfg.decoding.method = 'classification';
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q';
 
 %% Run decoding
-[results, cfg] = decoding(cfg, pass_data);
+[results, cfg] = decoding(cfg, passed_data);
 
 %% Print decision boundary in figure
 

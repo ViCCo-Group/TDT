@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %
-% Decoding Toolbox, Version: 2.7 beta, by Martin Hebart & Kai Goergen
+% Decoding Toolbox, Version: 2.8 beta, by Martin Hebart & Kai Goergen
 %
 % This is the main function of the decoding toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -148,52 +148,14 @@
 % PASSING DATA (optional):
 % If you pass passed_data, then these will be
 % taken instead of reading both from files. Some checks are done to
-% assure that the data fits to the filenames.
-%
-%   passed_data: struct with all data that is necessary to do the decodings
-%                as provided by decoding_load_data.
-%       Required fields:
-%       .data: nSamples x nFeatures (e.g. voxels) matrix of data that is
-%              used for decoding. This is not all data from the data files,
-%              but only the data that corresponds to the voxels that are
-%              selected in .mask_index.
-%       .mask_index: indices of those features that were selected by the
-%                    mask minus those that are NaN in the input data. When
-%                    spatial information is not important, a vector of 
-%                    1:nFeatures is sufficient.
-%                    These are only the features of the input data that were 
-%                    masked, NOT ROI masks. See .masks.mask_data{} below 
-%                    on how to pass ROI masks.
-%       .files: Contains file information as in cfg.files, especially
-%               filenames of datafiles (.name) and mask(s) (.mask) as cell
-%               of strings
-%       .hdr: a header from either a mask or a data file (if
-%             cfg.files.mask{1} = 'all voxels'). '' is ok if no hdr is
-%             needed for writing results.
-%       .dim: 1x3 vector containing the original dimensionality of the data.
-%       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
-%                   calculated)
-%       Optional fields (passed_data):
-%       .masks.mask_data{}: each cell contains one binary mask of the same 
-%                           size as the original images containing the mask 
-%                           specified in .files.mask{}. This input is 
-%                           optional for passed_data. Remark: mask_data
-%                           does not contain the indices as mask_index, but
-%                           the same data as loaded from a maskfile.
-%       .loaded_results: Contains results that were loaded from result
-%           files. Can be used to compute transformations without redoing 
-%           the full analysis, if the right results have been saved. To use
-%           this, set cfg.decoding.use_loaded_results = 1. 
-%           See also read_resultdata.m.
+% make sure that the data fits to the filenames. See HOWTOUSEPASSEDDATA.txt
+% on how to use it.
 
 
 % TODO: repeatedly calculating i_train and i_test across searchlights doesn't
 % make sense. Best externalize this which could also be passed to feature
 % selection and parameter selection. This would also simplify the check for
 % previously identical training data
-%
-% TODO: make passing data more general purpose (to allow e.g. the use of
-%   EEG data)
 
 % HISTORY
 % 2014-07-31 Kai
@@ -201,7 +163,7 @@
 %   data instead (Flag: cfg.decoding.use_loaded_results = 1; result data in
 %   passed_data.loaded_results). See also read_resultdata.m
 % 2014-01-07 Martin
-%   Changed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
+%   Renamed cfg.files.step to cfg.files.chunk, because steps (i.e. decoding
 %   iterations, e.g. cross-validation steps) can be different from chunks
 %   (i.e. data that should be kept together when cross-validation is
 %   performed)
@@ -242,7 +204,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/01/14 2.7 beta'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/10/21 2.8 beta'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

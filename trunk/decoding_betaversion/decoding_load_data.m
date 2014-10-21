@@ -252,7 +252,7 @@ else
     passed_data.voxelsize = nan; % unkown voxelsize
 end
 
-% save stuff for cfg (MAKE SURE THIS FITS TO END OF PASS_DATA CHECK above)
+% save stuff for cfg (MAKE SURE THIS FITS TO END OF PASSED_DATA CHECK above)
 cfg.datainfo.dim = sz;
 cfg.datainfo.voxelsize = passed_data.voxelsize;
 end

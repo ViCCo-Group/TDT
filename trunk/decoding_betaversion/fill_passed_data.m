@@ -36,7 +36,7 @@ function [passed_data,cfg] = fill_passed_data(passed_data,cfg,label,chunk)
 %% FILL CFG.FILES (FOR PASSED_DATA)
 
 cfg = decoding_defaults(cfg);
-if isfield(cfg.files,'label') && ~isempty(cfg.files.label)
+if isfield(cfg,'files') && isfield(cfg.files,'label') && ~isempty(cfg.files.label)
     % do nothing
 else
     cfg.files.label = label;

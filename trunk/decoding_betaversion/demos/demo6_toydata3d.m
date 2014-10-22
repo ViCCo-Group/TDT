@@ -13,8 +13,6 @@
 %
 % Kai, 2014/10/17
 
-% TODO: Extract function plot_slices() to file (it's really useful)
-
 dbstop if error % if something goes wrong
 
 % check if decoding.m is in path, otherwise abort
@@ -34,7 +32,7 @@ demo_cfg.plot_input_data = 0; % 1: Plot each input data point in a separate figu
 cfg.analysis = 'searchlight'; % alterantives: 'searchlight', 'wholebrain' ('ROI' does not make sense here);
 cfg.searchlight.radius = 1.1; % set searchlight size
 % Define whether you want to see the searchlight
-cfg.plot_selected_voxels = 1; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
+cfg.plot_selected_voxels = 5; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
 
 cfg.searchlight.spherical = 1;
 

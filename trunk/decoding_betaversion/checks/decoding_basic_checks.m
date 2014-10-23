@@ -283,7 +283,13 @@ end
 if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
     disp('Positions of Entries in Training- & Testset:')
     disp(cfg.design.train ~= 0 & cfg.design.test ~= 0)
-    if isfield(cfg.design,'nonindependence') && strcmpi(cfg.design.nonindependence,'ok')
+    if isfield(cfg.design,'nonindependence')
+        check1 = strcmpi(cfg.design.nonindependence,'ok');
+    else
+        check1 = 0;
+    end
+    check2 = strfind(cfg.results.output,'SVM_weights'); try check2 = cell2mat(check2); end
+    if check1 || check2
         warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. Classification results cannot be interpreted!');
     else
         error(['Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!',...

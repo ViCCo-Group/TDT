@@ -216,6 +216,12 @@ for i_set = 1:n_sets
     
 end
 
+% introduce check that no column of design.train is zeros only
+emptyind = find(sum(design.train)==0);
+if ~isempty(emptyind)
+    error('Empty decoding steps found in design in step(s) %s. Maybe you have only one chunk and want to do cross-validation (which doesn''t make sense).',num2str(emptyind));
+end
+
 
 msg = 'Design for CV decoding for %i files x %i steps created\n';
 if check_verbosity(msg,1)

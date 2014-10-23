@@ -26,7 +26,7 @@ cfg = decoding_defaults;
 
 %% OPTIONS FOR THIS DEMO
 
-demo_cfg.plot_input_data = 0; % 1: Plot each input data point in a separate figure
+demo_cfg.plot_input_data = 1; % 1: Plot each input data point in a separate figure
 % Set the analysis that should be performed
 % decoding)
 cfg.analysis = 'searchlight'; % alterantives: 'searchlight', 'wholebrain' ('ROI' does not make sense here);

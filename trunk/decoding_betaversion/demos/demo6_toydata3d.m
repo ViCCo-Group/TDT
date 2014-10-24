@@ -101,6 +101,23 @@ end
 data = [data1; data2]; % data(1:nruns, :, :, :) contains all data for class 1 (data1 above)
                        % data(nruns+2:end, :, :, :) contains all data for class 2 (data2 above)
 
+% %% Create filters that differ from the pattern 
+% %% (see Haufe, Meinecke, Goergen et al, Neuroimage 2014)
+%                        
+% % add strong correlated noise to each image (simply change baseline for
+% % each image
+% 
+% for data_ind = 1:size(data, 1)
+%     data(data_ind, :) = data(data_ind, :) + randn * 40;
+% end
+
+%% z-score all data to speed-up
+% This z-scoring differs form using z-scoring within TDT, because  here
+% all voxels are z-scored with the same global parameter mu and sigma
+data = data-mean(data(:)); % mean 0
+data = data/std(data(:)); % std 1
+
+
 %% add data description
 % save labels
 cfg.files.label = [ones(size(data1,1), 1); 2*ones(size(data1,1), 1)];
@@ -156,14 +173,22 @@ else
 end
 
 %% Prepare data for passing
-data = reshape(data,size(data,1),numel(data)/size(data,1));
-passed_data.data = data(:,40:prod(sz)-40);
-passed_data.mask_index = 40:prod(sz)-40; % use all voxels
+
+% normally, you can simply pass data like this
+passed_data.data = data; % it's still 4d, but this works if all voxels are used
+passed_data.mask_index = 1:numel(data(1, :)); % use all voxels
+
+% If you like to use a mask_index (not a mask), you can use the following lines 
+% (if you don't know what this means, just ignore it)
+% data = reshape(data,size(data,1),numel(data)/size(data,1));
+% passed_data.data = data(:,40:prod(sz)-40);
+% passed_data.mask_index = 40:prod(sz)-40; % make sure the passed voxels
+%                                          % get the same index
+
 passed_data.files = cfg.files;
 passed_data.hdr = ''; % we don't need a header, because we don't write img-files as output (but mat-files)
 passed_data.dim = sz; % add dimension information of the original data
-% passed_data.voxelsize = [1 1 1];
-passed_data.voxelsize = NaN;
+passed_data.voxelsize = [1 1 1];
 
 %% Add defaults for the remaining parameters that we did not specify
 cfg = decoding_defaults(cfg);

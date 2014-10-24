@@ -54,8 +54,11 @@ cfg.results.dir = FILLTHISOUT;
 % e.g. 'c:\exp\glm\model_buttonpress'
 beta_dir = FILLTHISOUT;
 % Specify the label names that you gave your regressors of interest in the 
-% SPM analysis (e.g. 'button left' and 'button right').
-% Case sensitive!
+% SPM analysis (e.g. 'button left' and 'button right'). If you don't
+% remember, then run:
+% display_regressor_names(beta_dir)
+% You may also use the wildcard * (but use with care!). Label names are
+% case sensitive!
 labelname1 = FILLTHISOUT;
 labelname2 = FILLTHISOUT;
 

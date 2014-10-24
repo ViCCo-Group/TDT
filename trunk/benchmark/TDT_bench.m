@@ -5,15 +5,21 @@ tests.multiple = 0; % multiple results
 tests.writematonly = 0;
 tests.nowrite = 0;
 tests.wholebrain = 0; % include weights
-tests.roi = 0; % testing one and multiple ROIs
+tests.roi = 1; % testing one and multiple ROIs
 tests.roi_setwise = 0; % testing same analysis with setwise settings
 tests.sl_setwise = 0; % testing classical searchlight with setwise settings
 tests.fs_filter = 0;
 tests.fs_embedded = 0;
-tests.fs_multilevel = 1;
+tests.fs_multilevel = 0;
 tests.parameter_selection = 0; % testing basic parameter selection assumptions
 
 %% Possibly, manually deactivate all non-base Matlab toolboxes before running this! And run with an old Matlab version!
+
+try
+decoding_defaults;
+catch
+    error('Add TDT to matlabpath.')
+end
 
 clear defaults
 

@@ -40,7 +40,8 @@
 %       providing the following field:
 %           design.function.name: string named after the design creation
 %               function that should be used (e.g. 'make_design_cv'). Check
-%               the folder 'design' for all options.
+%               the folder 'design' for all options. If a design already
+%               exists, this field is ignored.
 %
 % PROGRESS DISPLAY:
 %       cfg.plot_selected_voxels: if positive, plots searchlight in 3d.

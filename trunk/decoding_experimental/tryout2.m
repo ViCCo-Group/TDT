@@ -1,18 +1,31 @@
+addpath('..\decoding_betaversion')
+decoding_defaults;
+
 clear cfg
+
+cfg.analysis = 'roi';
 
 cfg.software = 'spm8';
 
 cfg.results.dir = 'd:\temp\output_stattest01\'; 
+cfg.results.overwrite = 1;
 
-beta_dir = 'C:\Arbeit\decoding_toolbox\benchmark\SPM_files\full';
+X = version;
+if strcmp(X(1:3),'7.7')
+    base_dir = 'D:\decoding_temp';
+else
+    base_dir = 'C:\Arbeit\decoding_toolbox';
+end
 
-display_regressor_names(beta_dir)
+beta_dir = fullfile(base_dir,'benchmark','SPM_files','full');
+
+% display_regressor_names(beta_dir)
 
 labelname1 = 'button left'; % e.g. 'button left';
 labelname2 = 'button right';
 
-cfg.files.mask = {'C:\Arbeit\decoding_toolbox\benchmark\SPM_files\roi\m1_left.img';...
-                  'C:\Arbeit\decoding_toolbox\benchmark\SPM_files\roi\v1.img'};
+cfg.files.mask = {fullfile(base_dir,'benchmark\SPM_files\roi\m1_left.img');...
+                  fullfile(base_dir,'benchmark\SPM_files\roi\v1.img')};
 
 regressor_names = design_from_spm(beta_dir);
 cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir);
@@ -21,3 +34,33 @@ cfg.files.chunk(cfg.files.chunk<=4) = 1;
 cfg.files.chunk(cfg.files.chunk>=5) = 2;
 
 cfg.design = make_design_separate(cfg);
+
+results = decoding(cfg);
+
+cfg = rmfield(cfg,'design');
+cfg.design.function.name = 'make_design_separate';
+
+cfg.permute.n_perms_select = 1000;
+cfg.permute.combine = 1;
+tic
+cfg.design = make_design_permutation(cfg);
+toc
+
+cfg.results.setwise = 1;
+
+results = decoding(cfg);
+
+% next step: get results in statistical analysis
+
+cfg.stats.test = 'permutation';
+cfg.stats.tail = 'right';
+results = 'D:\temp\output_stattest01\res_accuracy_minus_chance.mat';
+reference = spm_select('fplist','D:\temp\output_stattest01','res_accuracy_minus_chance_set.*\.mat$');
+
+cfg.stats.output = 'accuracy_minus_chance';
+cfg.stats.results.write = 1;
+cfg.stats.results.fpath = 'D:\temp\output_stattest01\stats';
+
+p = decoding_statistics(cfg,results,reference);
+
+% next steps: create results path (mkdir), create result

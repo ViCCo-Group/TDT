@@ -2,11 +2,11 @@
 % 
 % Function to calculate p-value for a permutation test.
 % The permutation sample needs to have been calculated already using XXXX.
-% The results of this function are valid if dependencies that existed in
-% the original results also exist in the permutation. Example: When
-% permuting labels and having multiple chunks, permutation is only valid
-% within chunk, not between chunks (otherwise, you get inflated p-values).
-% Such dependencies need to remain present.
+% The results of this function are valid only if dependencies that existed
+% in the original results also exist in the permutation. Example: When
+% permuting labels and having multiple chunks (e.g. runs), permutation is
+% only valid within chunk, not between chunks (otherwise, you get inflated
+% p-values). Such dependencies need to remain in the permutations.
 %
 %   INPUT:
 %       n_correct: measured decoding value (e.g. how many were judged correctly, accuracy, etc.) (nx1 vector)
@@ -19,13 +19,18 @@
 
 % 14/07/30 Martin Hebart
 
+% TODO: if numerically imprecise numbers are entered, we might end up with
+% wrong results when n_correct = reference often, because it might falsely
+% be perceived as too large or too small. Consider rounding results to a
+% certain number of digits
+
 function [p,z] = stats_permutation(n_correct,reference,tail)
 
 sz = size(n_correct);
 sz_ref = size(reference);
 
 if ~any(sz==1) || ndims(sz)>2
-    error('Wrong dimensionality of input variable n_correct. Please enter a nx1 vector.')
+    error('Wrong dimensionality of input variable n_correct. Please enter an nx1 vector.')
 end
 
 if sz(1)==1

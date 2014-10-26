@@ -1,20 +1,30 @@
 % function designs = make_design_permutation(cfg,n_perms_select,combine)
 %
-% This function creates designs for a number of within-subject permutations
-% for a full permutation test, but importantly keeping data from different
-% decoding chunks (e.g. runs) separate. Instead of generating the designs
-% from an existing design, the designs are created from original data. To
-% use the same decoding scheme as in the non-permuted data, the function
-% name of the original design creation must be provided used (e.g.
-% make_design_cv.m). If no such function was used, it is necessary to
-% create one first to recreate the design creation steps for the
-% permutations. Otherwise this function could not know how to create the
-% permuted designs.
+% This function creates designs for a number of within-subject label
+% permutations for a full permutation test, but importantly keeping data
+% from different decoding chunks (e.g. runs) separate. Instead of
+% generating the designs from an existing design, the designs are created
+% from original data. To use the same decoding scheme as in the
+% non-permuted data, the function name of the original design creation must
+% be provided used (e.g. make_design_cv.m). If no such function was used,
+% it is necessary to create one first to recreate the design creation steps
+% for the permutations. Otherwise this function would not have sufficient
+% information to create the permuted designs.
+%
+% In many cases, the number of permutations is limited, i.e. an exhaustive
+% permutation test can be performed. To improve numerical precision, the
+% function first selects a set of unique permutations within each chunk
+% from all possible permutations (which may nevertheless have the same
+% label combination, i.e. they are unique in the ordering of labels, not in
+% the result of the permutation). Later, the permutations are then combined
+% across chunks and possibly only a subset is selected.
 %
 % For two-class classification, the labels can be used symmetrically. For
 % that reason, the actual possible number of permutations may be half of
 % those expected. (there are special cases where the number is even
-% smaller, but it would be difficult to account for them all).
+% smaller, but it would be difficult to account for them all). The function
+% may remove this symmetry if it is computationally feasible which may
+% reduce the number of possible permutations. 
 %
 % Using multiple sets is not supported, because permutations can be
 % calculated separately for them and then combined using combine_designs.
@@ -42,7 +52,7 @@
 %       disadvantage is that for large data sets it can run out-of-memory 
 %       faster. Also, it may be difficult to parallelize if you run
 %       analyses on a cluster. For regular output (e.g. accuracy) and 1000
-%       searchlight permutations, it should be fine.
+%       searchlight permutations, it should work well.
 %
 %   IMPORTANT NOTE: The inputs n_perms_select and combine can also be
 %       passed as fields of cfg, in the form of
@@ -62,6 +72,7 @@
 %
 % Example (running all permutations separately)
 %   cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir); % see decoding tutorial for details
+%   cfg = rmfield(cfg,'design'); % this is needed if you previously used cfg.
 %   cfg.design.function.name = 'make_design_cv';
 %   n_perms = 1000;  % pick a reasonable number, the function might compute less if less are available
 %    combine = 0;
@@ -73,6 +84,7 @@
 %   end
 %
 % Example (running all permutations in one)
+%   cfg = rmfield(cfg,'design'); % this is needed if you previously used cfg.
 %   cfg.design.function.name = 'make_design_cv';
 %   cfg.permute.n_perms_select = 'all';
 %   cfg.permute.combine = 1;
@@ -82,6 +94,8 @@
 % Martin Hebart, 2013/08/31
 
 % Version History:
+%   MH (2014/10/26):
+%   - Removed bug in npermk and improved use
 %   MH (2014/08/21):
 %   - Removed bug that prevented the use of this function for simple
 %   leave-one-pair out
@@ -96,7 +110,6 @@
 % interchanging label 1 with label 2, and label 2 with label 3 etc.). This
 % reduces the number of possible permutations, but is not implemented, yet.
 %
-%
 
 function design = make_design_permutation(cfg,n_perms_select,combine)
 
@@ -105,11 +118,11 @@ fv = 'v20140804';
 
 design = [];
 % if there are more than max_n_perms possible combinations, only sample some of them.
-max_n_perms = 10^9; % (this is probably how much should be ok with memory)
+max_n_perms = 10^8; % (this is probably how much should be ok with memory)
 max_n_perms_chunk = 10000; % more permutations per chunk probably don't make sense
 
 if isfield(cfg,'design') && isfield(cfg.design,'set') && length(unique(cfg.design.set)) > 1
-    error('Only designs with one set variable (cfg.design.set) are allowed (see help!')
+    error('Only designs with one set variable (cfg.design.set) are allowed (see help!) If you already created the permutation design previously, please call cfg = rmfield(cfg,''design''); and set the other fields again.')
 end
 
 try
@@ -289,7 +302,7 @@ else % in case that number of permutations is very large, calculate only a rando
     
     % Get all possible permutations within each chunk if the number is not
     % too large (i.e. if in all chunks the number of permutations does not exceed max_n_perms_chunk)
-    if all(n_perms_chunk<max_n_perms_chunk)
+    if all(n_perms_chunk<=max_n_perms_chunk)
 
         chunk_perms = cell(1,n_chunks);
         
@@ -356,12 +369,13 @@ end
 
 if combine
     design_orig = cell2mat(design);
+    n_steps_orig = size(design_orig(1).label,2);
     design = struct;
     design.function = design_orig(1).function;
     design.function.permutation.name = fn;
     design.function.permutation.ver = fv;
     design.label = horzcat(design_orig.label);
-    design.set = kron(1:n_perms_select,ones(1,n_chunks)); % make multiple sets out of it
+    design.set = kron(1:n_perms_select,ones(1,n_steps_orig)); % make multiple sets out of it
     design.train = horzcat(design_orig.train); 
     design.test = horzcat(design_orig.test);
     disp('Combining designs. Please manually set cfg.results.setwise = 1.')
@@ -464,10 +478,11 @@ end
 %--------------
 function p = permk(n,k)
 
-% TODO: in the future make order the same as the output of perms, which would be ideal.
+% TODO: in the future make the order the same as the output of perms, which
+% would be ideal for comparability (i.e. rearrange things internally)
 
 nk = length(k);
-p = zeros(n,nk);
+p = zeros(nk,n);
 newind = zeros(n,1);
 
 % maxp = factorial(n);
@@ -478,6 +493,7 @@ newind = zeros(n,1);
 
 x = cell(n,1);
 [x{:}] = ind2sub(n:-1:1,k); % for very large k, this can yield rounding errors
+x{end} = ones(1,nk); % must be ones only
 
 for j = 1:nk
     % here are the numbers we would like to distribute
@@ -487,7 +503,7 @@ for j = 1:nk
         newind(i) = ind(round(x{i}(j)));
         ind(ind==newind(i)) = []; % TODO: speed this loop up in the future
     end
-    p(:,j) = newind;
+    p(j,:) = newind;
 end
 
 %--------------

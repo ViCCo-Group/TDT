@@ -44,8 +44,19 @@ end
 
 n_outputs = length(cfg.results.output);
 
+% Check if we are dealing with permutation results
+if isfield(cfg.design,'function') && isfield(cfg.design.function,'permutation')
+    isperm = 1;
+else
+    isperm = 0;
+end
+
 % Save cfg
-cfg_fname = [cfg.results.filestart '_cfg.mat'];
+if ~isperm
+    cfg_fname = [cfg.results.filestart '_cfg.mat'];
+else
+    cfg_fname = [cfg.results.filestart '_cfg_perm.mat'];
+end
 cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
 save(cfg_fpath, 'cfg');
 
@@ -75,8 +86,10 @@ if strcmpi(cfg.analysis,'wholebrain')
 end
 
 %% WRITE SEARCHLIGHT RESULTS AS IMAGE
+% exception: do not write any when permutations were executed (otherwise we
+% overwrite the original results and write e.g. 1000 images!)
 
-if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
+if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight') && ~isperm
     
     try
         resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
@@ -150,8 +163,10 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight')
 end
 
 %% WRITE ROI OR WHOLEBRAIN RESULTS AS .IMG IF REQUESTED
+% exception: do not write any when permutations were executed (otherwise we
+% overwrite the original results and write e.g. 1000 images!)
 
-if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysis,'wholebrain'))
+if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysis,'wholebrain')) && ~isperm
     
     for i_roi = 1:n_rois % loop over ROIs and write results separately
         
@@ -240,6 +255,7 @@ end
 
 
 %% WRITE SEARCHLIGHT, ROI OR WHOLEBRAIN RESULTS AS .MAT FILE
+% write only setwise when permutations are running
 
 % first remove all output fields and store separately
 for i_output = 1:n_outputs
@@ -261,33 +277,36 @@ for i_output = 1:n_outputs
     fdir = cfg.results.dir;
     fname = fullfile(fdir,sprintf('%s.mat',cfg.results.resultsname{i_output}));
     
-    if exist(fname,'file')
-        if cfg.results.overwrite
-            % simply overwrite the file
-            str = sprintf('Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname);
-            warningv('decoding_write_results:overwrite_results', str)
-        else
-            % dont overwrite file, copy it
-            [old_results_path, old_results_file, dummy_ending] = fileparts(fname);
-            old_fname = fullfile(old_results_path, old_results_file);
-            backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
-            str = sprintf('Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
-            warningv('decoding_write_results:overwrite_results', str);
-            
-            fext = '.mat';
-            source = [old_fname, fext];
-            target = [backup_fname, fext];
-            dispv(1, 'Copying %s to %s', source, target)
-            ignore = copyfile(source, target);
+    if ~isperm % when permutations run, we don't need to check, because we don't write it
+        if exist(fname,'file')
+            if cfg.results.overwrite
+                % simply overwrite the file
+                str = sprintf('Resultfile %s already existed. Overwriting it (because cfg.results.overwrite = 1)',fname);
+                warningv('decoding_write_results:overwrite_results', str)
+            else
+                % dont overwrite file, copy it
+                [old_results_path, old_results_file, dummy_ending] = fileparts(fname);
+                old_fname = fullfile(old_results_path, old_results_file);
+                backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
+                str = sprintf('Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)', fname, old_fname, backup_fname);
+                warningv('decoding_write_results:overwrite_results', str);
+                
+                fext = '.mat';
+                source = [old_fname, fext];
+                target = [backup_fname, fext];
+                dispv(1, 'Copying %s to %s', source, target)
+                ignore = copyfile(source, target);
+            end
         end
+        
+        dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
+        
+        saveflag = checkvarsize(results);
+        save(fname,'results',saveflag);
+    
+        results.(outputname).fname = fname;
+    
     end
-    
-    dispv(1,'Saving %s results to %s', cfg.decoding.method, fname)
-    
-    saveflag = checkvarsize(results);
-    save(fname,'results',saveflag);
-    
-    results.(outputname).fname = fname;
     
     % Save set results (should each set be saved separately?)
     if cfg.results.setwise

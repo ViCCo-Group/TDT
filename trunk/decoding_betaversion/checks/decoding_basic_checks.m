@@ -359,14 +359,18 @@ if cfg.results.write
 
         % Check if it is ok and possible to overwrite existing files
 
-        ext = {'.img','.hdr','.mat'};
+        ext = {'.img','.hdr','.mat','.nii'};
         if cfg.results.write == 1, ext = {'.mat'}; end
         for ext_ind = 1:length(ext)
-            % create full path for results that are written
-            output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
-            % check if it is possible to write
-            check_write(output_fname,cfg.results.overwrite)
-
+            if isfield(cfg.design,'function') && isfield(cfg.design.function,'permutation')
+                % do not run check when we are running a permutation test
+            else
+                % create full path for results that are written
+                output_fname = [fullfile(dir_output,cfg.results.resultsname{i_output}) ext{ext_ind}];
+                % check if it is possible to write
+                check_write(output_fname,cfg.results.overwrite)
+            end
+            
             % If setwise check all files
             if cfg.results.setwise
                 set_numbers = unique(cfg.design.set);

@@ -108,7 +108,7 @@ else
     
     if isempty(beta_names)
         if isempty(beta_names)
-            error('No img-files starting with ''beta'' found in %s',beta_dir)
+            error('No img/nii-files starting with ''beta'' found in %s',beta_dir)
         end
     end
 end

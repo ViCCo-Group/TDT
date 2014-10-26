@@ -218,7 +218,8 @@ if any(nan_index(:))
     else
         warningv('DECODING_LOAD_DATA:nansPresent',['Data contains %i NaNs. \n ',...
             'There might be problems with the definition of data files or ',...
-            'mask file. \n Parts of masks are non-overlapping with data. NaNs are masked...'],sum(nan_index))
+            'mask file or you may have chosen masks that do not fully overlap '...
+            'with data. \n Parts of masks are non-overlapping with data. NaNs are masked...'],sum(nan_index))
     end
     for i_mask = 1:size(mask_vol_each,4)
         mask_index_each{i_mask} = intersect(mask_index,mask_index_each{i_mask});

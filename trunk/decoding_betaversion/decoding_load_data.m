@@ -5,8 +5,8 @@
 % INPUT
 %   cfg: Struct that specifies which data should be loaded.
 %     Required fields:
-%       cfg.files.mask: 1xM Cell with filename(s) of mask(s) as strings
-%       cfg.files.name: 1xN Cell with filenames of data files as strings
+%       cfg.files.mask: 1xm cell with filename(s) of mask(s) as strings
+%       cfg.files.name: 1xn cell with filenames of data files as strings
 %
 % OPTIONAL INPUT:
 %   passed_data: Data as returned 

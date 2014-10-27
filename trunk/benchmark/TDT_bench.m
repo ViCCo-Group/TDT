@@ -329,7 +329,7 @@ if tests.wholebrain
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','primal_SVM_weights_nobias'};
+    cfg.results.output = {'accuracy_minus_chance','SVM_weights'};
     
     % Now run searchlight analysis
     results = decoding(cfg);
@@ -351,7 +351,7 @@ if tests.roi
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','primal_SVM_weights_nobias','primal_SVM_weights'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     cfg.plot_selected_voxels = 1;
     
     % Now run searchlight analysis
@@ -362,9 +362,9 @@ end
 %% 9th test: ROI (multiple) with four sets
 
 % Here, images for accuracy_minus_chance and AUC_minus_chance should be
-% written, but not for primal_SVM_weights, because the format is struct
+% written, but not for SVM_weights_plusbias, because the format is struct
 % with two entries and the toolbox cannot decide which to choose
-% Using primal_SVM_weights_nobias does work only with set 2, because this
+% Using SVM_weights does work only with set 2, because this
 % set is unique and only has one cell vector as output that matches in size
 % (other than sets 1, 3, and 4). Check if this accords to the results that
 % we find here.
@@ -383,7 +383,7 @@ if tests.roi_setwise
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','primal_SVM_weights_nobias','primal_SVM_weights'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     cfg.results.backgroundvalue = NaN;
     
     % Now run searchlight analysis
@@ -407,7 +407,7 @@ if tests.sl_setwise
     cfg.results.overwrite = 1;
     cfg.plot_design = 1;
     cfg.decoding.method = 'classification';
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','primal_SVM_weights_nobias','SVM_pattern'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_pattern'};
 
     results = decoding(cfg);
       
@@ -426,7 +426,7 @@ if tests.fs_filter
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification_kernel';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','primal_SVM_weights_nobias','primal_SVM_weights'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     
     cfg.feature_selection.method = 'filter';
     cfg.feature_selection.filter = 'external';
@@ -450,7 +450,7 @@ if tests.fs_embedded
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification_kernel';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','primal_SVM_weights_nobias','primal_SVM_weights'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     
     cfg.feature_selection.method = 'embedded';
     cfg.feature_selection.embedded = 'RFE';
@@ -490,7 +490,7 @@ if tests.fs_multilevel
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification_kernel';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','primal_SVM_weights_nobias','primal_SVM_weights'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     
     cfg.feature_selection.feature_selection.method = 'filter';
     cfg.feature_selection.feature_selection.filter = 'external';

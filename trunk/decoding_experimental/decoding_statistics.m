@@ -26,9 +26,12 @@
 % please take this into account.
 %
 % INPUT:
-%   cfg: structure with at least the following fields:
+%   cfg: structure that was used for the original decoding. Can be found in
+%       the results folder as res_cfg.mat or the like. In addition, the
+%       field stats is required.
+%
 %       stats: struct containing parameters for statistical analysis
-%       fields:
+%         with fields:
 %           test:
 %               'binomial':    Runs a binomial test
 %               'permutation': Runs a permutation test
@@ -118,10 +121,7 @@ function [p,results] = decoding_statistics(cfg,results,reference)
 
 decoding_defaults;
 
-% use decoding_subindex for reporting p-values (i.e. only those, where
-% subindex exists)
-
-% Really important: use only subindex later for writing multiple ROIs!!
+% TODO: Really important for later: use only subindex for writing multiple ROIs!!
 
 warningv('decoding_statistics:beta',...
     ['This function is a recent addition to the toolbox. Running in beta mode...',...
@@ -353,6 +353,7 @@ end
 
 [fp fn fext] = fileparts(deblank(results{1}));
 if any(ismember({'.nii','.img'},fext))
+    error('Loading .nii or .img files is not implemented yet!')
     % we are dealing with images, so we can use decoding_load_data
     rescfg  = cfg;
     rescfg.files.mask = cfg.files.mask;

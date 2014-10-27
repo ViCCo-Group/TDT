@@ -60,7 +60,8 @@ max_label = max(cfg.design.label(:));
 
 %% create figure
 
-figure_position = round(get(0,'defaultFigurePosition') .* [1 1 1.3 1]); % increase width by 30%
+figure_position = get(0,'defaultFigurePosition');
+figure_position = round(figure_position .* [1 1 1.3 1] + [0 -0.5*figure_position(2) 0 +0.5*figure_position(2)] ); % increase width by 30% and height by 50%
 if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
     % try to reuse the old figure handel
     try
@@ -124,13 +125,31 @@ set_row(:, :, 3) = 0; % setting 3rd value 0 for better contrast
 %% get x-axis description
 % first row: decoding step [set x]
 
-for x_ind = 1:size(cfg.design.train, 2)
-    if isfield(cfg.design, 'set')
-        xstr{x_ind} = sprintf('%i[%i]', x_ind, cfg.design.set(x_ind));
+% Don't display everything if it is too much to display
+n_ind = size(cfg.design.train,2);
+max_n_ind = 30;
+if n_ind > max_n_ind
+    % In that case, showing them evenly spaced
+    show_ind = round(linspace(1,n_ind,max_n_ind));
+    show_ind = unique(show_ind);
+else
+    show_ind = 1:n_ind;
+end
+
+for x_ind = 1:n_ind
+    
+    if any(show_ind==x_ind)
+        if isfield(cfg.design, 'set')
+            xstr{x_ind} = sprintf('%i[%i]', x_ind, cfg.design.set(x_ind));
+        else
+            xstr{x_ind} = sprintf('%i', x_ind);
+        end
     else
-        xstr{x_ind} = sprintf('%i', x_ind);
+        xstr{x_ind} = '';
     end
 end
+
+
 
 %% create train design (incl. labels)
 
@@ -189,6 +208,21 @@ else
     % keep fnames_char as they are (not cut)
 end
 
+% Do not show all file names if too many
+n_fnames = size(fnames_char,1);
+max_n_fnames = 16;
+if n_fnames > max_n_fnames
+    % In that case, showing them evenly spaced
+    fnames_shown = round(linspace(1,n_fnames-5,max_n_fnames));
+    fnames_shown = unique(fnames_shown);
+else
+    fnames_shown = 1:n_fnames;
+end
+
+fnames_not_shown = setdiff(1:n_fnames,fnames_shown(:));
+
+fnames_char(fnames_not_shown,:) = ' ';
+
 % add two extra rows, one empty, one with set
 fnames_char(end+1, :) = ' ';
 fnames_char(end, end-2:end) = 'Set';
@@ -233,6 +267,12 @@ image([show_test; set_row])
 title('Test Data')
 
 set(gca, 'YTick', 1:size(cfg.files.name, 1))
+yticklab = num2str((1:size(cfg.files.name, 1))');
+yticklab(fnames_not_shown,:) = ' ';
+if ~isempty(fnames_not_shown)
+    yticklab(fnames_not_shown(end),:) = char(num2str(fnames_not_shown(end)));
+end
+set(gca, 'YTickLabel', yticklab)
 
 % add file description on the right if available
 if isfield(cfg.files, 'descr')

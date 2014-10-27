@@ -51,11 +51,11 @@ cfg.results.setwise = 1;
 results = decoding(cfg);
 
 % next step: get results in statistical analysis
-
+load('D:\temp\output_stattest01\res_cfg.mat')
 cfg.stats.test = 'permutation';
 cfg.stats.tail = 'right';
-results = 'D:\temp\output_stattest01\res_accuracy_minus_chance.mat';
-reference = spm_select('fplist','D:\temp\output_stattest01','res_accuracy_minus_chance_set.*\.mat$');
+results = 'D:\temp\output_stattest01\res_accuracy_minus_chance.img';
+reference = spm_select('fplist','D:\temp\output_stattest01','res_accuracy_minus_chance_set.*\.img$');
 
 cfg.stats.output = 'accuracy_minus_chance';
 cfg.stats.results.write = 1;
@@ -63,4 +63,5 @@ cfg.stats.results.fpath = 'D:\temp\output_stattest01\stats';
 
 p = decoding_statistics(cfg,results,reference);
 
-% next steps: create results path (mkdir), create result
+
+

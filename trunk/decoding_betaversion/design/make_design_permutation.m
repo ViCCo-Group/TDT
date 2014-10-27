@@ -518,7 +518,7 @@ while sz < k
     [ignore,q] = sort(rand(round(1.5*k),n),2); % like randperm, but multiple times
     p = [p;q]; %#ok<AGROW>
     [ignore,ind] = unique(p,'rows','first');  % get unique entries
-    p = p(sort(ind),:); % re-sort everything not to get a bias
+    p = p(sort(ind),:); % re-sort everything not to get a bias (introduces bottleneck!)
     
     sz = size(p,1);
     

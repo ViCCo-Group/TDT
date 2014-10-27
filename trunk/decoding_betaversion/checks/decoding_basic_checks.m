@@ -288,7 +288,10 @@ if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
     else
         check1 = 0;
     end
-    check2 = strfind(cfg.results.output,'SVM_weights'); try check2 = cell2mat(check2); end
+    check2 = strfind(cfg.results.output,'SVM_weights');
+    check2 = [check2 strfind(cfg.results.output,'SVM_pattern')];
+    try check2 = cell2mat(check2); end
+    check2 = ~isempty(check2); 
     if check1 || check2
         warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. Classification results cannot be interpreted!');
     else

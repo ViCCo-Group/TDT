@@ -66,8 +66,8 @@ if exist('passed_data', 'var')
         checks_ok = 0;
     else
         for i_mask = 1:length(cfg.files.mask)
-            % check that mask-filename(s) are equal to cfg
-            if ~strcmp(cfg.files.mask{i_mask}, passed_data.files.mask{i_mask})
+            % check that mask-filename(s) are equal to cfg (if both are empty, then pass the check, too
+            if ~strcmp(cfg.files.mask{i_mask}, passed_data.files.mask{i_mask}) && ~isempty([cfg.files.mask{i_mask} passed_data.files.mask{i_mask}])
                 warning('decoding_load_data:passed_data_not_equal', 'Names of mask files in passed_data are not equal to names of mask files in cfg.files.mask (or they are at least not in the same order)')
                 checks_ok = 0;
             end
@@ -109,7 +109,7 @@ if exist('passed_data', 'var')
 
     else
         warning('decoding_load_data:passed_data_does_not_fit', 'Data in passed_data DOES NOT FIT data in cfg. Ignoring passed_data and reloading data.')
-        dispv(1, 'Data in passed_data DOES NOT FIT data in cfg. Ignoring passed_data and reloading data.')
+        dispv(1, 'Data in passed_data DOES NOT FIT data in cfg. Ignoring passed_data and reloading data. This may generate an error!')
         % throw away passed_data and load data in the rest of this function
         clear passed_data
     end

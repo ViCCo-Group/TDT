@@ -131,10 +131,10 @@ if use_kernel && strcmpi(cfg.feature_transformation.estimation,'across')
     cfg.decoding.use_kernel = 0;
 end
 
-% Using feature selection in the main function with a kernel method doesn't make sense
+% Using feature selection with a kernel method in the main function doesn't make sense
 if use_kernel && ~strcmpi(cfg.feature_selection.method,'none')
     newmethod = strrep(cfg.decoding.method,'_kernel','');
-    str = sprintf(['Use of feature selection and decoding method ''%s'' in the main function makes processing slower. ',...
+    str = sprintf(['Use of feature selection together with decoding method ''%s'' in the main function makes processing slower. ',...
                    'Method is now reverted to ''%s''.'],cfg.decoding.method,newmethod);
     warningv('DECODING_BASIC_CHECKS:KernelAndFeatureSelection',str)
     cfg.decoding.method = newmethod;
@@ -293,7 +293,7 @@ if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
     try check2 = cell2mat(check2); end
     check2 = ~isempty(check2); 
     if check1 || check2
-        warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. Classification results cannot be interpreted!');
+        warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. If you return classification results, they cannot be interpreted!');
     else
         error(['Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!',...
             ' If you really know what you are doing, set cfg.design.nonindependence = ''ok'' in your script.'])

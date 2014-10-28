@@ -1,5 +1,16 @@
-% check if decoding.m is in path, otherwise abort
+% This demo shows how a simple searchlight decoding runs on simulated 3D 
+% toy data. The toy data are Matlab matrices and no real fMRI or EEG data,
+% i.e. results do not necessarily generalize to real data.
+%
+% The script creates multiple volumes in the shape of an ellipsoid where 
+% all entries are filled with random Gaussian noise. For one class, one
+% central slice will read "TDT" which constitutes the effect.
+%
+% Martin, 2014/10/28
 
+clear variables
+
+% check if decoding.m is in path, otherwise abort
 if isempty(which('decoding.m'))
     error('Please add TDT to the matlab path')
 end
@@ -9,34 +20,19 @@ cfg = decoding_defaults;
 
 %% Set parameters
 
-run_feature_selection = 1; % should feature selection be executed or not?
-cfg.analysis = 'wholebrain'; % alternatives: 'searchlight', 'wholebrain' ('ROI' does not make sense here);
+cfg.analysis = 'searchlight';
 cfg.searchlight.radius = 2; % set searchlight size in voxels
 % Define whether you want to see the searchlight
 cfg.plot_selected_voxels = 0; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
+cfg.plot_design = 1;
 
-if strcmpi(cfg.analysis,'searchlight') || run_feature_selection
-    cfg.results.output = {'accuracy_minus_chance'};
-    cfg.decoding.method = 'classification_kernel';
-else
-    cfg.results.output = {'SVM_weights'};
-    cfg.decoding.method = 'classification';
-end
-
-if run_feature_selection
-    cfg.decoding.method = 'classification';
-    cfg.feature_selection.decoding.method = 'classification';
-    cfg.feature_selection.method = 'embedded';
-    cfg.feature_selection.embedded = 'RFE';
-    cfg.feature_selection.direction = 'backward';
-    cfg.feature_selection.n_vox = [5 10 20 40 80 150 300];
-    cfg.feature_selection.nested_n_vox = [5 10 20 40 80 150 300 600 1000 1500 2000 2500 3000];
-end
+cfg.results.output = {'accuracy_minus_chance'};
+cfg.decoding.method = 'classification_kernel';
 
 %% Set the output directory where data will be saved
 % cfg.results.dir = % e.g. 'toyresults'
 cfg.results.write = 0; % no results are written to disk
-cfg.plot_design = 0;
+
 
 %% Create simulated data
 
@@ -48,7 +44,7 @@ n_files = n_files_per_run * n_runs;
 label = repmat(kron([1 -1],ones(1,n_files_per_run/2)),1,n_runs)';
 chunk = kron(1:n_runs,ones(1,n_files_per_run))';
 
-sz = [64 64 16];
+sz = [64 64 16]; % please only change the z-dimension if any
 
 % Create brain mask (ellipsoid)
 [x,y,z] = ndgrid(linspace(-1,1,sz(1)),linspace(-1,1,sz(2)),linspace(-1,1,sz(3)));
@@ -59,8 +55,6 @@ mask_index = find(mask);
 tdt = false(sz);
 tdt(:,:,round(sz(3)/2)) = ~(double(imread('tdt.bmp'))/255);
 signal = snr*randn(sum(tdt(:)),1);
-
-% TODO: create correlated noise for TDT region
 
 % Start with noise everywhere
 data_orig = 1*randn([sz n_files]);
@@ -76,7 +70,40 @@ for i_vol = 1:n_files
     data_orig(:,:,:,i_vol) = cdat;
 end
 
+% TODO: create correlated noise for TDT region
+% TODO: create noise correlation within run
+% covariance can be prespecified as A = chol(V); where uncorrelated noise
+% X can be multiplied to achieve Y = A*X where var(Y) is going to be V
 
+%% Convert data to 2D matrix and mask
+data = reshape(data_orig,[prod(sz) n_files])';
+data = data(:,mask_index);
+
+%% Fill passed_data
+
+passed_data.data = data;
+passed_data.dim = sz;
+passed_data.mask_index = mask_index;
+
+[passed_data,cfg] = fill_passed_data(passed_data,cfg,label,chunk);
+
+%% Make design
+
+if strcmpi(cfg.analysis,'searchlight') || run_feature_selection
+    cfg.design = make_design_cv(cfg);
+elseif strcmpi(cfg.analysis,'wholebrain')
+    cfg.files.chunk = ones(size(cfg.files.chunk));
+    cfg.design = make_design_alldata(cfg);
+end
+
+%% Run
+results = decoding(cfg,passed_data);
+
+%% Convert to results volume
+
+resvol = nan(sz);
+resvol(mask_index) = results.accuracy_minus_chance.output;
+resplane = transform_vol(resvol);
 
 %% Plot univariate original data
 
@@ -105,59 +132,13 @@ szv = size(posplane);
 h1 = text(x,y,num2str((1:sum(posplane(:)))'));
 set(h1,'HorizontalAlignment','center','Color',[1 0.2 0],'FontWeight','bold');
 
+%% Plot results
 
-
-%% Convert data to 2D matrix and mask
-data = reshape(data_orig,[prod(sz) n_files])';
-data = data(:,mask_index);
-
-%% Fill passed_data
-
-passed_data.data = data;
-passed_data.dim = sz;
-passed_data.mask_index = mask_index;
-
-[passed_data,cfg] = fill_passed_data(passed_data,cfg,label,chunk);
-
-%% Make design
-
-if strcmpi(cfg.analysis,'searchlight') || run_feature_selection
-    cfg.design = make_design_cv(cfg);
-elseif strcmpi(cfg.analysis,'wholebrain')
-    cfg.files.chunk = ones(size(cfg.files.chunk));
-    cfg.design = make_design_alldata(cfg);
-end
-
-%% Run
-results = decoding(cfg,passed_data);
-
-%% Convert to results volume
-resvol = nan(sz);
-if strcmpi(cfg.analysis,'searchlight')
-    resvol(mask_index) = results.accuracy_minus_chance.output;
-    disp_range = [0.2 1];
-    ti = 'Searchlight results';
-else
-    if ~run_feature_selection
-        resvol(mask_index) = results.(cfg.results.output{1}).output{1}{1};
-        disp_range = [1e-10 1];
-        ti = 'SVM weights';
-    else
-        resvol = zeros(sz);
-        fs_index = results.feature_selection.fs_index;
-        for i = 1:length(fs_index)
-            resvol(mask_index(fs_index{i})) = resvol(mask_index(fs_index{i}))+1;
-        end
-        resvol(resvol==0) = NaN;
-        ti = 'Recursive feature elimination: # of CVs selected';
-    end
-end
-
-resplane = transform_vol(resvol);
-
-%% Plot results (get range for plotting)
 res = sort(resvol(mask_index))';
 res = res(~isnan(res));
+
+disp_range = [0.2 1];
+ti = sprintf('%s%s results',upper(cfg.analysis(1)),cfg.analysis(2:end));
 
 figure(fh)
 a2 = subplot(1,2,2);

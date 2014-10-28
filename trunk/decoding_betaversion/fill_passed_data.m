@@ -28,9 +28,6 @@
 
 % Martin 2014/10/18
 
-% TODO: when mask_index is passed and cfg.files.mask is filled, will
-% cfg.files.mask be used?
-
 function [passed_data,cfg] = fill_passed_data(passed_data,cfg,label,chunk)
 
 %% FILL CFG.FILES (FOR PASSED_DATA)
@@ -80,7 +77,7 @@ if ~isfield(passed_data,'mask_index')
     end
     if exist(msk,'file')
         warningv('Fill_passed_data:getMaskindFromMaskVol','Field passed_data.mask_index automatically filled with mask(s) provided in cfg.files.mask')
-        [mask_vol, mask_hdr, sz] = load_mask(cfg);
+        [mask_vol, mask_hdr, sz, mask_vol_each] = load_mask(cfg);
         passed_data.mask_index = find(mask_vol);
         if isfield(passed_data,'dim') && ~isempty(passed_data.dim)
             % do nothing
@@ -101,3 +98,21 @@ if ~isfield(passed_data,'dim')
     passed_data.dim = [NaN NaN NaN]; % this is not the dimensionality of passed_data.data, but the dimensionality of the volumes used
 end
 
+% Cross-check mask_index_each and masks.mask_data
+if isfield(passed_data,'masks') && isfield(passed_data.masks,'mask_data')
+    if ~isfield(passed_data,'mask_index_each')
+        for i_decodingstep = 1:length(passed_data.masks.mask_data)
+            passed_data.mask_index_each{i_decodingstep} = find(passed_data.masks.mask_data{i_decodingstep});
+        end
+    else
+        if length(passed_data.mask_index_each) ~= length(passed_data.masks.mask_data)
+            error('Both passed_data.mask_index_each and passed_data.masks.mask_data exist with different number of entries. Please check!')
+        end
+    end
+end
+
+% If necessary, adjust cfg.files.mask to contain the same number of masks as required
+if isfield(passed_data,'mask_index_each')
+    cfg.files.mask = cell(size(passed_data.mask_index_each));
+    passed_data.files.mask = cfg.files.mask;
+end

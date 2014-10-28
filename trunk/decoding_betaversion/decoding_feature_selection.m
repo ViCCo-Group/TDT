@@ -237,6 +237,7 @@ end
 fs_results.n_vox_steps = n_vox_steps;
 fs_results.output = output;
 fs_results.n_vox_selected = length(fs_index);
+fs_results.fs_index = fs_index; % this is the subindex of the mask index
 
 if nested_feature_selection_on
     fs_index = nested_fs_index(fs_index); % to return original index
@@ -283,11 +284,14 @@ end
 
 if ~isempty(strfind(cfg.feature_selection.decoding.method, '_kernel'))
     newmethod = strrep(cfg.feature_selection.decoding.method,'_kernel','');
-    str = sprintf(['Use of kernel methods in feature selection has not been implemented',... 
-                   '(and would only make sense for nested cross-validation in filter methods). ',...
-                   'Method is now reverted to ''%s''.'],newmethod);
-    warningv('BASIC_CHECKS:KernelAndFeatureSelection',str)
+    if ~isempty(strfind(cfg.decoding.method, '_kernel'))
+        str = sprintf(['Use of kernel methods in feature selection has not been implemented',...
+            '(and would only make sense for nested cross-validation in filter methods). ',...
+            'Method is now reverted to ''%s''.'],newmethod);
+        warningv('BASIC_CHECKS:KernelAndFeatureSelection',str)
+    end
     cfg.feature_selection.decoding.method = newmethod;
+    cfg.feature_selection.decoding.use_kernel = 0;
 end
 
 if ischar(n_vox)

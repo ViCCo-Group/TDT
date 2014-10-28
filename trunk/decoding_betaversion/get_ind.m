@@ -64,15 +64,19 @@ elseif strcmpi(cfg.analysis,'roi')
 
     if isfield(passed_data, 'masks')
         mask = passed_data.masks.mask_data{i_decodingstep};
+        mask_index_sub = find(mask);
+    elseif isfield(passed_data, 'mask_index_each')
+        mask_index_sub = passed_data.mask_index_each{i_decodingstep};
     else
         % load masks from file
         fname = mask_names{i_decodingstep};
         hdr = read_header(cfg.software,fname); % get headers of mask
         mask = read_image(cfg.software,hdr); % get mask
+        mask_index_sub = find(mask);
     end
         
     % Select indices that relate to the ROI within mask_indices
-    [c,indexindex] = intersect(mask_index,find(mask)); %#ok<ASGLU>
+    [c,indexindex] = intersect(mask_index,mask_index_sub); %#ok<ASGLU>
     
     if isempty(indexindex)
         error('There is no overlap between mask %s and the decoding data, check position of mask!',fname)

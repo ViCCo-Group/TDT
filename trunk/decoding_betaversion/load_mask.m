@@ -1,4 +1,4 @@
-% function [mask_vol,mask_hdr,sz,vol] = load_mask(cfg)
+% function [mask_vol,mask_hdr,sz,mask_vol_each] = load_mask(cfg)
 %
 % Subfunction for decoding.m
 % This function loads one or several masks from cfg.files.mask in which the

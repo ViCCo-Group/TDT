@@ -508,6 +508,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
                 results.feature_selection(i_decoding).n_vox_steps{i_step} = fs_results.n_vox_steps;
                 results.feature_selection(i_decoding).output{i_step} = fs_results.output;
                 results.feature_selection(i_decoding).curr_decoding = curr_decoding;
+                results.feature_selection(i_decoding).fs_index{i_step} = fs_results.fs_index;
             end
             % Step 3: Select features (unless 'all' is selected which would be double dipping)
             if ~strcmpi(cfg.feature_selection.estimation,'all')

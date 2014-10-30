@@ -143,7 +143,9 @@ end
 
 warningv('MAKE_DESIGN_PERMUTATION:beta_stage','This function is still in beta stage. Execute will necessary care!')
 
-disp('Creating permutation designs...')
+if nargin > 1
+    disp('Creating permutation designs...')
+end
 
 all_chunks = unique(cfg.files.chunk);
 all_labels = unique(cfg.files.label);
@@ -184,6 +186,8 @@ if ~exist('n_perms_select','var')
         n_perms_select = cfg.permute.n_perms_select;
     catch %#ok<*CTCH>
         disp(['Number of possible permutations for input data: ' num2str(n_perms)])
+        disp('Design not created, yet!')
+        try design = cfg.design; end %#ok<TRYNC>
         return
     end
 end
@@ -269,7 +273,7 @@ if n_perms <= max_n_perms
                 continue
             end
             tmp = all(repmat(original(i_iter,:),size(all_perms(i_iter:end,:),1),1)==inverted(i_iter:end,:),2);
-            tmp = [zeros(i_iter-1,1); tmp];
+            tmp = [zeros(i_iter-1,1); tmp]; %#ok<AGROW>
             remove_ind = remove_ind|tmp;
         end
         
@@ -515,9 +519,9 @@ p = [];
 sz = -inf;
 
 while sz < k
-    [ignore,q] = sort(rand(round(1.5*k),n),2); % like randperm, but multiple times
+    [ignore,q] = sort(rand(round(1.5*k),n),2); %#ok<ASGLU> % like randperm, but multiple times
     p = [p;q]; %#ok<AGROW>
-    [ignore,ind] = unique(p,'rows','first');  % get unique entries
+    [ignore,ind] = unique(p,'rows','first');  %#ok<ASGLU> % get unique entries
     p = p(sort(ind),:); % re-sort everything not to get a bias (introduces bottleneck!)
     
     sz = size(p,1);

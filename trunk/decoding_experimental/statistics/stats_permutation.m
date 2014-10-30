@@ -1,7 +1,11 @@
 % function p = stats_permutation(n_correct,reference,tail)
 % 
 % Function to calculate p-value for a permutation test.
-% The permutation sample needs to have been calculated already using XXXX.
+% The permutation sample needs to have been calculated already, e.g. using
+% make_design_permutation.m
+% The minimal p-value provided by this function is 1/(n+1) where n is the
+% number of existing permutations. For example, for 1000 permutations, the
+% minimal p-value is 0.00999.
 % The results of this function are valid only if dependencies that existed
 % in the original results also exist in the permutation. Example: When
 % permuting labels and having multiple chunks (e.g. runs), permutation is
@@ -49,29 +53,29 @@ switch lower(tail)
     case 'left'
 
         if exist('bsxfun','builtin') % New method for Matlab 7.4+ (fast)
-            p = sum(bsxfun(@ge,n_correct,reference),2)/sz_ref(2);
+            p = (sum(bsxfun(@ge,n_correct,reference),2)+1)/(sz_ref(2)+1);
         else
-            p = sum(repmat(n_correct,1,sz_ref(2))>=reference,2)/sz_ref(2);
+            p = (sum(repmat(n_correct,1,sz_ref(2))>=reference,2)+1)/(sz_ref(2)+1);
         end
         
     case 'right'
         
         if exist('bsxfun','builtin') % New method for Matlab 7.4+ (fast)
-            p = sum(bsxfun(@le,n_correct,reference),2)/sz_ref(2);
+            p = (sum(bsxfun(@le,n_correct,reference),2)+1)/(sz_ref(2)+1);
         else
-            p = sum(repmat(n_correct,1,sz_ref(2))<=reference,2)/sz_ref(2);
+            p = (sum(repmat(n_correct,1,sz_ref(2))<=reference,2)+1)/(sz_ref(2)+1);
         end
 
     case 'both'
 
         if exist('bsxfun','builtin') % New method for Matlab 7.4+ (fast)
-            p1 = sum(bsxfun(@ge,n_correct,reference),2)/sz_ref(2);
-            p2 = sum(bsxfun(@le,n_correct,reference),2)/sz_ref(2);
+            p1 = (sum(bsxfun(@ge,n_correct,reference),2)+1)/(sz_ref(2)+1);
+            p2 = (sum(bsxfun(@le,n_correct,reference),2)+1)/(sz_ref(2)+1);
             p = 2*min(p1,p2); % pick the smaller of both and multiply by 2 (because test is two-sided)
         else
             n_correctmat = repmat(n_correct,1,sz_ref(2));
-            p1 = sum(n_correctmat>=reference,2)/sz_ref(2);
-            p2 = sum(n_correctmat<=reference,2)/sz_ref(2);
+            p1 = (sum(n_correctmat>=reference,2)+1)/(sz_ref(2)+1);
+            p2 = (sum(n_correctmat<=reference,2)+1)/(sz_ref(2)+1);
             p = 2*min(p1,p2);
         end
         

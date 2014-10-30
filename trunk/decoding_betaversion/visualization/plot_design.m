@@ -61,7 +61,7 @@ max_label = max(cfg.design.label(:));
 %% create figure
 
 figure_position = get(0,'defaultFigurePosition');
-figure_position = round(figure_position .* [1 1 1.3 1] + [0 -0.5*figure_position(2) 0 +0.5*figure_position(2)] ); % increase width by 30% and height by 50%
+figure_position = round(figure_position .* [1 1 1.3 1] + [0 -0.4*figure_position(2) 0 +0.4*figure_position(2)] ); % increase width by 30% and height by 40%
 if isfield(cfg, 'fighandles') && isfield(cfg.fighandles, 'plot_design')
     % try to reuse the old figure handel
     try

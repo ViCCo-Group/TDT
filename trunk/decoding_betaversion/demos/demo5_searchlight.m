@@ -89,12 +89,8 @@ passed_data.mask_index = mask_index;
 
 %% Make design
 
-if strcmpi(cfg.analysis,'searchlight') || run_feature_selection
-    cfg.design = make_design_cv(cfg);
-elseif strcmpi(cfg.analysis,'wholebrain')
-    cfg.files.chunk = ones(size(cfg.files.chunk));
-    cfg.design = make_design_alldata(cfg);
-end
+cfg.design = make_design_cv(cfg);
+
 
 %% Run
 results = decoding(cfg,passed_data);

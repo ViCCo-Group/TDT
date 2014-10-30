@@ -149,7 +149,7 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight') && ~isperm
         if cfg.results.setwise
             n_sets = length(results.(outputname).set);
             for i_set = 1:n_sets
-                fname = sprintf('%s_set%i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
+                fname = sprintf('%s_set%04i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
                 resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
                 resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
                 resultsvol_set = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume
@@ -232,7 +232,7 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             if cfg.results.setwise
                 n_sets = length(results.(outputname).set);
                 for i_set = 1:n_sets
-                    fname = sprintf('%s_set%i_%s.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id,roi_names{i_roi});
+                    fname = sprintf('%s_set%04i_%s.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id,roi_names{i_roi});
                     resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
                     resultsvol_hdr.descrip = sprintf('%s decoding map of set %i',outputname,i_set);
                     curr_output = results.(outputname).set(i_set).output(i_roi);
@@ -313,7 +313,7 @@ for i_output = 1:n_outputs
         n_sets = length(results.(outputname).set);
         results_all = results;
         for i_set = 1:n_sets
-            fname = fullfile(fdir,sprintf('%s_set%i.mat', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id));
+            fname = fullfile(fdir,sprintf('%s_set%04i.mat', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id));
             dispv(2,'Saving results for set %i to %s', i_set, fname)
             results.(outputname).output = results.(outputname).set(i_set).output;
             results.(outputname) = rmfield(results.(outputname),'set');

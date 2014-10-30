@@ -61,7 +61,7 @@ z1 = round([2/5 3/5] *sz(3));
 [x,y,z] = ndgrid(x1(1):x1(2),y1(1):y1(2),z1(1):z1(2));
 roi1_index = sub2ind(sz,x(:),y(:),z(:));
 x2 = round([1/3 2/3] *sz(2));
-y2 = round([sz(1)/3+1 sz(1)]);
+y2 = round([sz(1)/3+2 sz(1)]);
 z2 = round([2/5 3/5] *sz(3));
 [x,y,z] = ndgrid(x2(1):x2(2),y2(1):y2(2),z2(1):z2(2));
 roi2_index = sub2ind(sz,x(:),y(:),z(:));
@@ -138,20 +138,25 @@ for iter = 2:length(snr)
     allresults(:,iter) = results.(cfg.results.output{1}).output;
 end
 
-figure
-plot(allresults)
+%% Plot univariate original data and overlay masks
 
-error('Work in progress, please in the meantime inspect allresults')
+diff_vol = nan(sz);
+datadiff = mean(data{3}(label==1,:)) - mean(data{3}(label~=1,:));
+diff_vol(mask_index) = datadiff;
 
-%% Plot univariate original data
+roivol1 = zeros(sz);
+roivol1(passed_data.mask_index_each{1}) = 1;
+roiplane1 = transform_vol(roivol1);
 
-diff_vol = mean(data_orig(:,:,:,label==1),4) - mean(data_orig(:,:,:,label~=1),4);
+roivol2 = zeros(sz);
+roivol2(passed_data.mask_index_each{2}) = -1;
+roiplane2 = transform_vol(roivol2);
 
 p0 = get(0,'defaultFigurePosition');
 p0 = p0 .* [0.5 1 1.5 1];
 fh = figure('Position',p0);
 
-a1 = subplot(1,3,1);
+a1 = subplot(1,2,1);
 volrange = 0.7*[nanmin(diff_vol(:)) nanmax(diff_vol(:))];
 ph1 = imagesc(transform_vol(diff_vol),volrange);
 
@@ -159,6 +164,20 @@ pa1 = get(a1,'Position');
 set(a1,'Position',pa1 .*[0.25 1 1.2 1])
 axis('off'), axis('square')
 title('Original data')
+
+hold on
+rh1 = imagesc(roiplane1);
+hold off
+alpha_data = zeros(size(roiplane1));
+alpha_data(roiplane1~=0) = 0.5;
+set(rh1,'alphadata',alpha_data)
+
+hold on
+rh2 = imagesc(roiplane2);
+hold off
+alpha_data = zeros(size(roiplane2));
+alpha_data(roiplane2~=0) = 0.5;
+set(rh2,'alphadata',alpha_data)
 
 % get volume for positioning slice numbers
 posvol = zeros(sz);
@@ -173,38 +192,29 @@ set(h1,'HorizontalAlignment','center','Color',[1 0.2 0],'FontWeight','bold');
 
 %% Plot results 1
 
-res = sort(resvol1(mask_index))';
-res = res(~isnan(res));
-
 figure(fh)
-a2 = subplot(1,3,2);
-minmax = res(ceil(disp_range * length(res)));
-ph = imagesc(resplane1,minmax);
+a2 = subplot(1,2,2);
+
+hold on
+colors = 1/255 * [201 143  54;
+                   29 175 226];
+ph1 = plot(allresults(1,:),'-','linewidth',3,'color',colors(1,:));
+ph2 = plot(allresults(1,:),'o','markeredgecolor',[0 0 0],'markerfacecolor',colors(1,:));
+ph3 = plot(allresults(2,:),'-','linewidth',3,'color',colors(2,:));
+ph4 = plot(allresults(2,:),'o','markeredgecolor',[0 0 0],'markerfacecolor',colors(2,:));
+
+axis([0 length(snr)+1 0 105])
+
+
+set(a2,'xtick',1:2:length(snr),'xticklabel',snr(1:2:end))
+
+hold on
 pa2 = get(a2,'Position');
 set(a2,'Position',pa2 .*[1 1 1.2 1])
-axis('square'), axis('off')
-ti = 'SVM weights';
+axis('square'), axis('on')
+ti = 'ROI decoding';
 title(ti)
 
-% position slice numbers
-h2 = text(x,y,num2str((1:sum(posplane(:)))'));
-set(h2,'HorizontalAlignment','center','Color',[1 0.2 0],'FontWeight','bold');
-
-%% Plot results 2
-
-res = sort(resvol2(mask_index))';
-res = res(~isnan(res));
-
-figure(fh)
-a2 = subplot(1,3,3);
-minmax = res(ceil(disp_range * length(res)));
-ph = imagesc(resplane2,minmax);
-pa2 = get(a2,'Position');
-set(a2,'Position',pa2 .*[1 1 1.2 1])
-axis('square'), axis('off')
-ti = 'Selected features in RFE (# of CVs)';
-title(ti)
-
-% position slice numbers
-h2 = text(x,y,num2str((1:sum(posplane(:)))'));
-set(h2,'HorizontalAlignment','center','Color',[1 0.2 0],'FontWeight','bold');
+legend([ph2 ph4],{'Small ROI','Large ROI'},'location','southwest')
+ylabel('Accuracy');
+xlabel('SNR');

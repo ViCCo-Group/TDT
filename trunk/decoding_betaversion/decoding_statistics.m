@@ -96,26 +96,20 @@
 % 14/10/26 Martin Hebart
 %
 
-% Important:
-% TODO: if results struct is loaded, then write p into it 
-% TODO: introduce possibility to pass and write as img-files, too
-% TODO: introduce possibility to write images as statistical images
-% TODO: introduce possibility to return z-value as stat, too
-% 
-
-% Less important:
+% TODO: allow writing ROIs as .img/.nii
+% TODO: use decoding_subindex when available (if only some searchlights are run)
 % TODO: implement overwrite check
 % TODO: allow passing cells as results.output for doing permutation tests
-% on weight maps
+%       on e.g. weight maps
 % TODO: possibly return empirical number that would have to be reached for
 %       statistical significance
 % TODO: introduce check that binomial test is only executed when cfg
-%   contains no cv method (i.e. test for independence of samples in
-%   decoding design!)
+%       contains no cv method (i.e. test for independence of samples in
+%       decoding design!)
 % TODO: implement multiple sets
-% TODO: make stats_binomial and stats_permutation have the same input
-% format, so new methods can be added easily using the same format (not so
-%   important)
+% TODO: create default passing method for adding new statistical methods
+% TODO: make sure that multiple sets are not used when setting up a
+%   permutation test (because the sets field is used for the permutations)
 
 % possible extensions: at the moment, stats_binomial allows only integer input,
 % but in fact sometimes they might be desired
@@ -123,8 +117,6 @@
 function [p,results] = decoding_statistics(cfg,results,reference)
 
 decoding_defaults;
-
-% TODO: Really important for later: use only subindex for writing multiple ROIs!!
 
 warningv('decoding_statistics:beta',...
     ['This function is a recent addition to the toolbox. Running in beta mode...',...
@@ -244,7 +236,7 @@ if cfg.stats.results.write
     save(matfname,'results_out')
     dispv(1,'Statistical results written to %s',matfname)
     
-    if cfg.stats.results.write == 2 % additionally write as .img or .nii file
+    if cfg.stats.results.write == 2 && strcmpi(cfg.analysis,'searchlight') % additionally write as .img or .nii file
         
         % Try to get a header from cfg, in this order
         for i = 1:4
@@ -273,7 +265,7 @@ if cfg.stats.results.write
             [trash trash2 ext] = fileparts(niftiname);
             resultsvol_hdr.fname = fullfile(fp,[fn(1:end-1) '_' outnames{i} '_' cfg.stats.tail ext]);
             resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3));
-            resultsvol(results_out.mask_index) = results_out.accuracy_minus_chance.(outnames{i});
+            resultsvol(results_out.mask_index) = results_out.(fname).(outnames{i});
             write_image(cfg.software,resultsvol_hdr,resultsvol);
             dispv(1,'Results volume written to %s',resultsvol_hdr.fname)
         end
@@ -281,6 +273,7 @@ if cfg.stats.results.write
     end
 end
 
+disp('Statistics completed.')
 
 %% Run basic checks
 %--------------------------------------
@@ -406,7 +399,17 @@ function results2 = load_results(cfg,results)
 
 if isstruct(results)
     results2 = results;
-    return % do nothing
+    % check if the results are contained in the set fields
+    if isfield(results.(cfg.stats.output),'set')
+        % move results from set results to generate n_perms results structs
+        results2.(cfg.stats.output) = rmfield(results2.(cfg.stats.output),'set');
+        for i_perm = 1:length(results.(cfg.stats.output).set)
+            results2(i_perm) = results2(1);
+            currset_output = results.(cfg.stats.output).set(i_perm).output;
+            results2(i_perm).(cfg.stats.output).output = currset_output;
+        end
+    end
+    return
 end
 
 if ischar(results)
@@ -464,6 +467,7 @@ elseif any(ismember({'.nii','.img'},fext))
         % use content of cfg.stats.output
         results2(i_file).(cfg.stats.output).output = passed_data.data(i_file,:)';
         results2(i_file).mask_index = passed_data.mask_index;
+        results2(i_file).mask_index_each = {passed_data.mask_index}; % this case can only be reached if we have one ROI
     end
             
 end

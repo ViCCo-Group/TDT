@@ -94,6 +94,10 @@
 % Version 12-4-2013, Dan Birman
 % 2013/09/08 Martin: Generalized to n designs entered as a cell matrix or
 % more inputs
+% 2014/09/08 Kai: Corrected bug in line 165 that used length of a matrix
+% instead of it's number of rows. Thus combining did not work when
+% different labels where used and more decoding sets than input files...
+%   clen = size(ocfg.design.label, 1);
 
 % TODO: change field cfg.files.set to match the final design!
 
@@ -162,7 +166,7 @@ for si = 1:length(cfg2.design.set) % si == set index
         % cfg2. This only happens once per run.
         z_inds = find(used_idx_cfg2==0);
         for z_ind = z_inds % Real position in cfg2 of this unused file
-            clen = length(ocfg.design.label);
+            clen = size(ocfg.design.label, 1);
             ocfg.design.label(clen+1,os_l) = cfg2.design.label(z_ind,si);
             ocfg.design.train(clen+1,os_l) = cfg2.design.train(z_ind,si);
             ocfg.design.test(clen+1,os_l) = cfg2.design.test(z_ind,si);

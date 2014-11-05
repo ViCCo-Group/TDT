@@ -55,7 +55,7 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
 % If there are several unbalanced chunks, use this function:
 % cfg.design = make_design_boot_cv(cfg,100,1); % the 1 keeps test data balanced, too
-% If you have a balanced design, use this function
+% If you have a balanced design with multiple chunks, use this function
 % cfg.design = make_design_cv(cfg);
 
 % If you used a bootstrap design, then you might speed up processing using

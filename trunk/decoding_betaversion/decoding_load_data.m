@@ -54,6 +54,17 @@ if ischar(cfg.files.name)
 end
 
 %% check if passed_data fits to cfg
+
+% check if passed_data was filled automatically, but forgotten to be provided by the user
+if isfield(cfg,'check') && isfield(cfg.check,'fill_passed_data_used') && cfg.check.fill_passed_data_used == 1
+    if ~exist('passed_data','var')
+        warningv('DECODING_LOAD_DATA:fillPassedDataUsed',...
+              ['passed_data was not provided as input argument to decoding, but was previously filled automatically.',...
+               'Probably, you forgot to pass it and receive an error. Pass\n decoding(cfg,passed_data)\n If passed_data is not needed, manually',...
+               'set the field cfg.check.fill_passed_data_used = 0.'])
+    end
+end
+
 % check if passed_data fits to cfg
 if exist('passed_data', 'var')
     dispv(1, 'Data for this decoding was passed as argument, checking that filenames of passed_data fit to filenames in cfg')

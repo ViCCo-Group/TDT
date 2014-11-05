@@ -116,3 +116,7 @@ if isfield(passed_data,'mask_index_each')
     cfg.files.mask = cell(size(passed_data.mask_index_each));
     passed_data.files.mask = cfg.files.mask;
 end
+
+% Pass this flag to cfg
+cfg.check.fill_passed_data_used = 1;
+dispv(1,'Setting field cfg.check.fill_passed_data_used = 1 . If you call decoding(cfg) and not decoding(cfg,passed_data), you will receive a warning. Reset the field to 0 if you want to call decoding(cfg).') 

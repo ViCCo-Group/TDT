@@ -229,6 +229,13 @@ if size(cfg.files.set,1) == 1
     cfg.files.set = cfg.files.set';
 end    
 
+chunk_length = length(cfg.files.chunk);
+label_length = length(cfg.files.label);
+
+if chunk_length ~= label_length
+    error('Number of chunks %i does not fit to number of labels %i. Please make sure both reflect the number of samples.',chunk_length,label_length)
+end
+
 set_numbers = unique(cfg.files.set);
 n_sets = length(set_numbers);
 

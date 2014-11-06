@@ -229,6 +229,10 @@ end
 
 n_files = length(cfg.files.chunk);
 
+if n_files ~= length(cfg.files.label)
+    error('Number of chunks %i does not fit to number of labels %i. Please make sure both reflect the number of samples.',n_files,length(cfg.files.label))
+end
+
 counter = 0;
 design.label = [];
 design.set = [];

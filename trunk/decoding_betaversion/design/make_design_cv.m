@@ -181,6 +181,10 @@ n_sets = length(set_numbers);
 
 n_files = length(cfg.files.chunk);
 
+if n_files ~= length(cfg.files.label)
+    error('Number of chunks %i does not fit to number of labels %i. Please make sure both reflect the number of samples.',n_files,length(cfg.files.label))
+end
+
 % design.train = zeros(n_files, n_steps);
 % design.test = zeros(n_files, n_steps);
 % design.label = repmat(cfg.files.label, 1, n_steps);

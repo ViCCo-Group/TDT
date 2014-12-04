@@ -37,7 +37,7 @@ if ~any(sz==1) || ndims(sz)>2
     error('Wrong dimensionality of input variable n_correct. Please enter an nx1 vector.')
 end
 
-if sz(1)==1
+if sz(1)==1 && sz(2)~=1
     n_correct = n_correct';
     reference = reference';
     warningv('STATS_PERMUTATION:FLIP','Input variable n_correct was an 1xn vector. Flipping n_correct and reference...')

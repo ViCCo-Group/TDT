@@ -72,11 +72,13 @@ switch lower(tail)
             p1 = (sum(bsxfun(@ge,n_correct,reference),2)+1)/(sz_ref(2)+1);
             p2 = (sum(bsxfun(@le,n_correct,reference),2)+1)/(sz_ref(2)+1);
             p = 2*min(p1,p2); % pick the smaller of both and multiply by 2 (because test is two-sided)
+            p = min(p,1); % since it's a Fisher p-value it can lead to values larger than 1, this corrects for this fact.
         else
             n_correctmat = repmat(n_correct,1,sz_ref(2));
             p1 = (sum(n_correctmat>=reference,2)+1)/(sz_ref(2)+1);
             p2 = (sum(n_correctmat<=reference,2)+1)/(sz_ref(2)+1);
             p = 2*min(p1,p2);
+            p = min(p,1); % since it's a Fisher p-value it can lead to values larger than 1, this corrects for this fact.
         end
         
     otherwise

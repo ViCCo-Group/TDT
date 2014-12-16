@@ -3,10 +3,11 @@ CONTENTS
 ========
 
 1. GENERAL
-2. ADVANTAGES OF THE TOOLBOX
-3. FUNCTIONALITY OF THE TOOLBOX AND BASICS
-4. INSTALLING THE TOOLBOX
-5. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
+2. HOW TO CITE
+3. ADVANTAGES OF THE TOOLBOX
+4. FUNCTIONALITY OF THE TOOLBOX AND BASICS
+5. INSTALLING THE TOOLBOX
+6. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
 
 
 ==========
@@ -24,6 +25,9 @@ in your Matlab command window.
 If you want a tutorial or create your own decoding script, 
 edit the decoding_tutorial.m
 
+If you want a more extended tutorial with many examples, please read our 
+publication (see "2. HOW TO CITE").
+
 For more details on all currently available options, type
 > help decoding
 or
@@ -38,8 +42,19 @@ Please report any bugs to
 martin.hebart@bccn-berlin.de or
 kai.goergen@bccn-berlin.de
 
+==============
+2. HOW TO CITE
+==============
+
+If you used the toolbox, the best favor you can do us is to cite it. Please use
+the following reference:
+Martin N Hebart*, Kai Görgen* and John-Dylan Haynes (2014). The Decoding Toolbox 
+(TDT): A versatile software package for multivariate analyses of functional 
+imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
+* Martin N Hebart and Kai Görgen contributed equally to this work.
+
 ============================
-2. ADVANTAGES OF THE TOOLBOX
+3. ADVANTAGES OF THE TOOLBOX
 ============================
 
 The advantages of it are:
@@ -74,7 +89,7 @@ a custom-made correlation function which is up to 20x faster than that
 provided by Matlab).
 
 ==========================================
-3. FUNCTIONALITY OF THE TOOLBOX AND BASICS
+4. FUNCTIONALITY OF THE TOOLBOX AND BASICS
 ==========================================
 
 Typically, in brain image analyses you would like to know whether some 
@@ -106,7 +121,7 @@ Then, average over the resulting output images. Alternatively, write your
 own routine (see HOWTOEXTEND.txt) 
 
 =========================
-4. INSTALLING THE TOOLBOX
+5. INSTALLING THE TOOLBOX
 =========================
 
 1. ADD IMAGE PROCESSING SOFTWARE (Default: SPM8)
@@ -122,7 +137,7 @@ Simply extract the toolbox add it to your matlab path.
 
 
 ============================================
-5. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
+6. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
 ============================================
 
 Some people experience problems with the mex-files of libsvm that we 

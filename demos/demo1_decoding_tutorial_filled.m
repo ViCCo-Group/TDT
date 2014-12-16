@@ -25,7 +25,7 @@ if cfg.testmode, display('Testmode'), keyboard, end
 % Add path to this toolbox
 % If this function is in same path as the toolbox, simply comment the line
 % (then the path will be set automatically).
-addpath(['/Users/kai/Documents/!Projekte/Decoding_Toolbox/trunk/decoding_betaversion/'])
+addpath(['/Users/kai/Documents/!Projekte/Decoding_Toolbox/trunk/decoding_toolbox/'])
 
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 

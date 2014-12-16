@@ -15,6 +15,8 @@
 % to perform a standard decoding analysis (searchlight, ROI, or wholebrain)
 % on your specified data.
 %
+% Please see LICENSE.txt on how to cite us (Hebart, Görgen, et al, 2014).
+%
 % REQUIRED INPUT:
 %   cfg: Structure containing all necessary configuration information
 %       Required fields:
@@ -205,7 +207,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/12/11 3.0'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2014/12/16 3.0. Cite: Hebart, Görgen, et al, 2014 (see LICENSE.txt)'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

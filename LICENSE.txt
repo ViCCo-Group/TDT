@@ -8,7 +8,7 @@ The Decoding Toolbox is licensed under the GNU General Public Licence as publish
 
 If you use this software in a publication, please acknowledge its use by adding the following (or similar) lines to your manuscript:
 
-"Multivariate classification analyses were performed using The Decoding Toolbox (Hebart et al., 2015)."
+"Multivariate classification analyses were performed using The Decoding Toolbox (Hebart, Görgen et al., 2014)."
 
 The reference is:
 Martin N Hebart*, Kai Görgen* and John-Dylan Haynes (2014). The Decoding Toolbox (TDT): A versatile software package for multivariate analyses of functional imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
@@ -16,7 +16,7 @@ Martin N Hebart*, Kai Görgen* and John-Dylan Haynes (2014). The Decoding Toolbox
 
 If you want to use parts of its code in publicly available software, please add the following information to the code:
 
-"This code has been taken from The Decoding Toolbox (Hebart et al., 2015)."
+"This code has been taken from The Decoding Toolbox (Hebart, Görgen et al., 2014)."
 
 The authors take no responsibility for any misuse of this software or any programming mistakes.
 

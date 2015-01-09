@@ -1,3 +1,27 @@
+* 3.01 - 2015/01/09
+- Official Version accompanying our accepted PAPER!
+
+Martin N Hebart*, Kai Goergen* and John-Dylan Haynes (2015). The Decoding Toolbox 
+(TDT): A versatile software package for multivariate analyses of functional 
+imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
+* Martin N Hebart and Kai Goergen contributed equally to this work.
+
+This version is equivalent to 3.0 that was available to the reviewers except for very minor modifications.
+
+Major changes to previous version:
+- The main toolbox folder has been renamed from
+     decoding_betaversion/
+  to
+     decoding_toolbox/
+  because we do not really consider the toolbox as beta anymore
+  For backward compatibility reasons, you might simply add a symbolic link 
+  “decoding_betaversion” that points to “decoding_toolbox”. This should work.
+- A LOT OF OTHER COOL STUFF (e.g. some statistics were added)
+
+
+—— END OF OFFICIAL BETA PHASE ——
+
+
 * beta 2.7 - 2014/07/14
 - results stored in .mat now always reported as struct
 - introduced feature_transformation as additional step that can be carried 

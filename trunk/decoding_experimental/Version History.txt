@@ -1,5 +1,0 @@
-Major Changes between versions:
-
-V 1.1 beta:
-- Removed option zAUC from decoding_transform_results.m . This is a statistic for individual subjects' and may be confused with a z-transformed AUC. The AUC is - however - approximately normally distributed.
-- Adjusted AUC to give results in percent.

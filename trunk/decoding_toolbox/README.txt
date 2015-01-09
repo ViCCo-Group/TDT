@@ -48,10 +48,10 @@ kai.goergen@bccn-berlin.de
 
 If you used the toolbox, the best favor you can do us is to cite it. Please use
 the following reference:
-Martin N Hebart*, Kai Görgen* and John-Dylan Haynes (2014). The Decoding Toolbox 
+Martin N Hebart*, Kai Goergen* and John-Dylan Haynes (2015). The Decoding Toolbox 
 (TDT): A versatile software package for multivariate analyses of functional 
 imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
-* Martin N Hebart and Kai Görgen contributed equally to this work.
+* Martin N Hebart and Kai Goergen contributed equally to this work.
 
 ============================
 3. ADVANTAGES OF THE TOOLBOX

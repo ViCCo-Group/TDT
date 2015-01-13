@@ -10,16 +10,13 @@ switch lower(cfg.decoding.method)
             error('Newtonsvm takes only -1 and 1 as label, but other labels are present in training set. Aborting')
         end
         % train newton svm
-        try
-            model = nsvm_train(labels_train,data_train,cfg.decoding.train.newton_nu);
-        catch e
-            % check if no nu has been defined
-            if strcmp('Reference to non-existent field ''newton_nu''.', e.message)
-                error('Newton-SVM is used as decoding software, but no nu-parameter is provided in cfg.decoding.train.newton_nu. Please provide nu (e.g. cfg.decoding.train.newton_nu = 0; see nsvm_train.m for details)');
-            else
-                rethrow e
-            end
+        if isnumeric(cfg.decoding.train.classification.model_parameters) && cfg.decoding.train.classification.model_parameters <= 0
+            % do nothing
+        else
+            error('newton_svm needs a nu parameter. Please set cfg.decoding.train.classification.model_parameters = -1; for easy method and = 0; for hard method.')
         end
+        model = nsvm_train(labels_train,data_train,cfg.decoding.train.classification.model_parameters);
+        
         if isempty(model), error('nsvm_train returned an empty model - please check that nsvm_train is working properly'), end
         
     case 'classification_kernel'

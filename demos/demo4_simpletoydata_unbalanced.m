@@ -4,7 +4,7 @@
 fpath = fileparts(fileparts(mfilename('fullpath')));
 addpath(fpath)
 
-clear all
+clear variables
 dbstop if error % if something goes wrong
 
 res_fig = figure;
@@ -62,12 +62,20 @@ cfg.files.label = labels;
 cfg.files.chunk = [];
 for ri = 1:nruns
     curr_run = ri * ones(set1.fact + set2.fact ,1);
-    cfg.files.chunk = [cfg.files.chunk curr_run] ;
+    cfg.files.chunk = [cfg.files.chunk; curr_run];
 end
 
+all_chunks = unique(cfg.files.chunk);
+all_labels = unique(cfg.files.label);
+
 % save a description
+ct = zeros(length(all_labels),length(all_chunks));
 for ifile = 1:length(cfg.files.label)
-    cfg.files.name(ifile) = {sprintf('class%i_run%i', cfg.files.label(ifile), cfg.files.chunk(ifile))};
+    curr_label = cfg.files.label(ifile);
+    curr_chunk = cfg.files.chunk(ifile);
+    f1 = all_labels==curr_label; f2 = all_chunks==curr_chunk;
+    ct(f1,f2) = ct(f1,f2)+1;
+    cfg.files.name(ifile) = {sprintf('class%i_run%i_%i', curr_label, curr_chunk, ct(f1,f2))};
 end
 
 % add an empty mask

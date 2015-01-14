@@ -75,7 +75,7 @@ for output_ind = 1:length(result_outputs)
                     curr_outputfile = nan;
                 end
             end
-        catch e
+        catch  %#ok<CTCH>
             dispv(1, 'Could not get resultfile for %s from cfg.results.resultname, trying next option', curr_output)
             curr_outputfile = nan;
         end
@@ -132,8 +132,8 @@ for output_ind = 1:length(result_outputs)
                 error('Field results.%s does not exist although it should exist now, no idea why', curr_output)
             end
             
-        catch e
-            e
+        catch %#ok<CTCH>
+            disp(lasterror) %#ok<LERR>
             warning('read_resultdata:failed_loading_data', 'FAILED loading data for %s from %s', curr_output, curr_outputfile);
         end
         
@@ -148,9 +148,9 @@ if nargout > 2
     try
         display('Loading original data (can be useful for methods that need the original data, e.g. as support vectors')
         [passed_data, cfg] = decoding_load_data(cfg);
-    catch e
+    catch
         warning('Loading original data from cfg.files failed. Adding something that decoding.m will accept as passed_data might also work, but that''s not implemented at the moment. The easiest way is probably to reload the original data (check & update path in cfg.files.mask & cfg.files.name)')
-        rethrow(e)
+        error(lasterror)
     end
     
     display('Adding loaded results as field to passed data, so that we can use it for transformations later')

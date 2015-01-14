@@ -55,7 +55,7 @@ for field_ind = 1:length(fields)
             curr_data = passed_data.loaded_results.(curr_field).output(i_decoding).(curr_field){i_step};
             decoding_out.(curr_field) = curr_data;
 %             eval(['decoding_out. ' curr_field ' = passed_data.loaded_results.' curr_field '.output(i_decoding).' curr_field '{i_step};'])
-        catch e
+        catch %#ok<CTCH>
             if strcmp(curr_field, 'decision_values')
                 if isempty(decision_value_warning_shown)
                     warningv('get_decoding_out_from_passed_data:decision_values_naming_inconsistent', 'decision_values naming inconsistency in prior versions, remove on the long run')
@@ -63,7 +63,7 @@ for field_ind = 1:length(fields)
                 end
                 decoding_out.decision_values = passed_data.loaded_results.decision_values.output(i_decoding).decision_value{i_step};
             else
-                rethrow(e)
+                rethrow(lasterror) %#ok<LERR>
             end
         end 
     else

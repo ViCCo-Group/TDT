@@ -48,8 +48,8 @@ function save_fig(filename, cfg)
     try
         dispv(2, '%s', ['Saving figure as ' filename '.fig'])
         saveas(gcf, filename, 'fig')
-    catch e
-        e
+    catch %#ok<CTCH>
+        disp(lasterror) %#ok<LERR>
         warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
     end
 

@@ -48,9 +48,9 @@ for cf_ind = 1:length(check_fields)
                      'This is ok, because it has been acknowledged that by the user: cfg.' check_fields{cf_ind} '.check_datatrans_ok = true'])
             end
         end
-    catch e
+    catch %#ok<CTCH>
         error_string = [error_string 'Could not check if cfg.' check_fields{cf_ind} '.method==''none''. probably it does not exist. Detailed error below:' char(10)];
-        error_string = [error_string e.message char(10) char(10)];
+        error_string = [error_string lasterror char(10) char(10)]; %#ok<LERR>
     end
 end
 

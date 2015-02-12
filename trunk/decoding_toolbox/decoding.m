@@ -207,7 +207,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/01/09 3.01. Cite: Hebart, Goergen, et al, 2015 (see LICENSE.txt)'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/02/12 3.02. Cite: Hebart, Goergen, et al, 2015 (see LICENSE.txt)'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

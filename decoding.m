@@ -221,11 +221,11 @@ dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 try
     if cfg.plot_design == 1 % plot + save fig, save hdl
         cfg.fighandles.plot_design = plot_design(cfg);
-        save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
+        save_fig(fullfile(cfg.results.dir, 'design'), cfg, cfg.fighandles.plot_design); 
         drawnow;
     elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
         fighdl = plot_design(cfg, 0); 
-        save_fig(fullfile(cfg.results.dir, 'design'), cfg); 
+        save_fig(fullfile(cfg.results.dir, 'design'), cfg, fighdl); 
         close(fighdl); clear fighdl
     end
 catch
@@ -620,9 +620,9 @@ cfg.progress.endtime = datestr(now);
 % Endtime shows user that job is over
 try
     if cfg.plot_design
-        plot_design(cfg,1); 
+        fighdl = plot_design(cfg,1); 
         if cfg.results.write
-            save_fig(fullfile(cfg.results.dir, 'design'), cfg);
+            save_fig(fullfile(cfg.results.dir, 'design'), cfg, fighdl);
         end
     end
 catch %#ok<*CTCH>

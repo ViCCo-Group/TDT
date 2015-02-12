@@ -13,16 +13,21 @@
 %       the figure as png and eps. See print.m for more formats.
 %       Other input types will be ignored (e.g. numbers), and the default
 %       file formats will be used.
+%   fighdl: Figure handle will be used if provided.
 %
 % OUTPUT
 %   Files that saved the current figure under filename.*
 
-function save_fig(filename, cfg)
+function save_fig(filename, cfg, fighdl)
 
     if ~exist('cfg', 'var')
         cfg = [];
     end
 
+    if ~exist('fighdl', 'var')
+        fighdl = gcf;
+    end
+    
     if isfield(cfg,'results') && isfield(cfg.results,'write') && cfg.results.write == 0
         return
     end
@@ -47,26 +52,26 @@ function save_fig(filename, cfg)
     % Save as FIG
     try
         dispv(2, '%s', ['Saving figure as ' filename '.fig'])
-        saveas(gcf, filename, 'fig')
+        saveas(fighdl, filename, 'fig')
     catch %#ok<CTCH>
         disp(lasterror) %#ok<LERR>
         warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
     end
 
     % prevent resizing the figure
-    set(gcf,'PaperPositionMode','auto')
+    set(fighdl,'PaperPositionMode','auto')
     % prevent changing the background color
-    set(gcf, 'InvertHardCopy', 'off');
+    set(fighdl, 'InvertHardCopy', 'off');
     % get old color for recovery
-    oldcolor = get(gcf, 'color');
+    oldcolor = get(fighdl, 'color');
     % but set background to white
-    set(gcf, 'color', 'white');    
+    set(fighdl, 'color', 'white');    
     
     for f_ind = 1:length(formats)
         curr_format = formats{f_ind};
         try
             dispv(2, '%s', ['Saving figure as ' filename '.* as ' curr_format])
-            print(curr_format, filename)
+            print(fighdl, curr_format, filename)
         catch %#ok<CTCH>
             warningv('SAVE_FIG:SavingFigureFormattedFailed',['Saving as ' curr_format ' failed'])
         end
@@ -74,5 +79,5 @@ function save_fig(filename, cfg)
     dispv(2, 'Saving figure done')    
 
     % set background back
-    set(gcf, 'color', oldcolor);  
+    set(fighdl, 'color', oldcolor);  
 end

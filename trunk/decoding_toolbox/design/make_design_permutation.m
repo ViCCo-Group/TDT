@@ -144,7 +144,7 @@ end
 warningv('MAKE_DESIGN_PERMUTATION:beta_stage','This function is still in beta stage. Execute will necessary care!')
 
 if nargin > 1
-    disp('Creating permutation designs...')
+    dispv(1,'Creating permutation designs...')
 end
 
 all_chunks = unique(cfg.files.chunk);
@@ -260,7 +260,7 @@ if n_perms <= max_n_perms
     % If two labels, then remove symmetry if it is worth it
     if length(all_labels) == 2 && size(all_perms,1) < 10000
         
-        disp('Removing symmetric permutations (this may take a while depending on the number of iterations...)')
+        dispv(1,'Removing symmetric permutations (this may take a while depending on the number of iterations...)')
         
         original = all_perms;
         inverted = zeros(size(original));

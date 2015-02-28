@@ -33,7 +33,7 @@ for i_label = 1:n_labels
     curr_predicted_labels = predicted_labels(labelfilt);
     curr_n_true = sum(labelfilt);
     for j_label = 1:n_labels
-        output(i_label,j_label) = 100 * sum(curr_predicted_labels==labels(j_label))/curr_n_true; % deactivate me if you want raw results
+        output(i_label,j_label) = 100 * (1/curr_n_true) * sum(curr_predicted_labels==labels(j_label)); % deactivate me if you want raw results
 %         output(i_label,j_label) = sum(curr_predicted_labels==labels(j_label)); % activate me if you want raw results
     end
 end

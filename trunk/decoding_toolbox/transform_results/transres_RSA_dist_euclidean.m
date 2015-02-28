@@ -7,5 +7,5 @@ function output = transres_RSA_dist_euclidean(decoding_out,chancelevel,cfg,data)
 %
 % 2013 Martin H.
 
-tmp = sum(data.*data,2);
-output = {sqrt(bsxfun(@plus,tmp,tmp')-(2*data)*data')};
+SS = sum(data.*data,2);
+output = {sqrt(bsxfun(@plus,SS,SS')-(2*data)*data')};

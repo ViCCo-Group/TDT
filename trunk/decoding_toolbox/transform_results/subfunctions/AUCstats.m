@@ -31,8 +31,8 @@ spec_labels = true_labels == labels(2);
 n1 = sum(sens_labels);
 n2 = sum(spec_labels);
 
-sensitivity = cumsum(sens_labels)/n1;
-specificity = cumsum(spec_labels)/n2;
+sensitivity = (1/n1)*cumsum(sens_labels);
+specificity = (1/n2)*cumsum(spec_labels);
 
 % handle thresholds (if multiple items present)
 % [ignore,true_ind] = unique(decision_values); 
@@ -47,7 +47,7 @@ specificity = [0 ; specificity ; 1];
 
 % compute the area under the "curve"
 % AUC = trapz(specificity, sensitivity);
-AUC = sum((specificity(2:end) - specificity(1:end-1)).*(sensitivity(2:end) + sensitivity(1:end-1)))/2;
+AUC = (1/2)*sum((specificity(2:end) - specificity(1:end-1)).*(sensitivity(2:end) + sensitivity(1:end-1)));
 
 % given you want to see the ROC
 if plot_on

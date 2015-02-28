@@ -2,7 +2,7 @@ function [cfg,data_train_trans,data_test_trans,score] = transfeat_PCA(cfg,data_t
 
 if exist('princomp','file')
     [PC_coeff,data_train_trans,score] = princomp(data_train,'econ');
-    score = score/sum(score); % variance in percent
+    score = (1/sum(score)) * score; % variance in percent
     data_test_trans = data_test * PC_coeff;
     [n_samp,n_feat] = size(data_train);
     if n_samp<=n_feat % TODO: check if it should be < or <=
@@ -14,7 +14,7 @@ if exist('princomp','file')
 else
     [PC_coeff,PC_cov] = eig(cov(data_train));
     score = diag(PC_cov); % PC variance
-    score = score/sum(score); % variance in percent
+    score = (1/sum(score)) * score; % variance in percent
     data_train_trans = data_train * PC_coeff;
     data_test_trans = data_test * PC_coeff;
 end

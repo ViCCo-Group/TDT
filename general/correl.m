@@ -17,8 +17,8 @@ if sz(2) ~= 1
     sz = sz([2 1]);
 end
 
-x0 = x - sum(x,1)/sz(1); % here sum is faster than mean
-y0 = y - sum(y,1)/sz(1);
+x0 = x - (1/sz(1))*sum(x,1); % here sum is faster than mean
+y0 = y - (1/sz(1))*sum(y,1);
 r = (x0./norm(x0))' * (y0./norm(y0));
 
 r = r-1+1; % corrects for rounding error

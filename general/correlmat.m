@@ -15,7 +15,7 @@
 function r = correlmat(x,y)
 
 sz = size(x,1);
-x0 = bsxfun(@minus,x,sum(x,1)/sz); % here sum is faster than mean
+x0 = bsxfun(@minus,x,(1/sz)*sum(x,1)); % here sum is faster than mean
 
 if nargin == 1
     
@@ -26,7 +26,7 @@ if nargin == 1
     
 else
     
-    y0 = bsxfun(@minus,y,sum(y,1)/sz); % here sum is faster than mean
+    y0 = bsxfun(@minus,y,(1/sz)*sum(y,1)); % here sum is faster than mean
     
     r = x0'*y0;
     normx = (sum(x0.^2,1)).^(-1/2); % L2-norm

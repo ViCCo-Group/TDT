@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %
-% The Decoding Toolbox, Version: 3.01, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.03, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -161,6 +161,8 @@
 % previously identical training data
 
 % HISTORY
+% 2015-03-02 Martin
+%   Added LDA as classifier and GUI
 % 2014-07-31 Kai
 %   Added possibility to skip calculating decoding again and use loaded
 %   data instead (Flag: cfg.decoding.use_loaded_results = 1; result data in
@@ -207,7 +209,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/02/12 3.02. Cite: Hebart, Goergen, et al, 2015 (see LICENSE.txt)'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/03/02 3.03. Cite: Hebart, Goergen, et al, 2015 (see LICENSE.txt)'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

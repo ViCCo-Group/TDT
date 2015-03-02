@@ -8,6 +8,10 @@ function decoding_gui
 
 %% first check if path of TDT in toolbox path exists  
 cfg = decoding_defaults;
+if ~exist('spm.m','file')
+    error('SPM is not on the Matlab path. Please add a version of SPM first (e.g. by clicking on "Set Path" and selecting the path where SPM is saved) and try again.')
+end
+cfg.software = spm('ver');
 check_software(cfg.software)
 
 spm_path = fileparts(which('spm'));

@@ -17,6 +17,8 @@
 % 2009 Martin H.
 
 % History:
+% 2015-03-02 Martin:
+% - retain original sorting of labels
 % 2014-01-19 Martin:
 % - made compatible with multiple classes
 % - enabled passing more output
@@ -48,8 +50,8 @@ function [predicted_labels decision_values opt] = correlation_classifier(labels_
 data_train = model.data_train;
 labels_train = model.labels_train;
 
-unique_labels_train = uniqueq(labels_train); % this also sorts labels
-unique_labels_test = uniqueq(labels_test); % this also sorts labels
+unique_labels_train = uniqueq(labels_train); % sorts labels!
+unique_labels_test = uniqueq(labels_test); % sorts labels!
 
 n_labels_train = size(unique_labels_train,1);
 n_labels_test = size(unique_labels_test,1);

@@ -40,6 +40,9 @@
 % Adjust size of each axis to get "real" shape of ROI, not distorted along
 % the smaller/longer axis
 %
+% Keep figure and projections of brain. Redraw only on separate handles the
+% patch and the searchlight/ROI projections.
+%
 % Speed-Up - Ideas for searchlights: 
 %   - only update the SL, i.e. remove voxels that are not there any longer, 
 %       and add voxels that are new
@@ -98,7 +101,7 @@ n_vox = size(P,1);
 
 % TODO: Check if we are dealing with one or several connected components
 
-% BEGINING OF CHECK (doesn't work properly for rois, so deactivated)
+% BEGINNING OF CHECK (doesn't work properly for rois, so deactivated)
 % % Check if voxel is visible and remove voxels that are not
 % removeind = false(n_vox,1);
 % for i = 1:n_vox
@@ -129,7 +132,16 @@ clf(fighdl)
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);
-axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
+
+set(gca,'XLim',[0.5 sz(1)+0.5],...
+        'Ylim',[0.5 sz(2)+0.5],...
+        'Zlim',[0.5 sz(3)+0.5],...
+        'XLimMode','manual',...
+        'YLimMode','manual',...
+        'ZLimMode','manual',...
+        'view',[-37.5,30]);
+    
+% axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
 set(gca, 'XTick', [1, sz(1)])
 set(gca, 'YTick', [1, sz(2)])
 set(gca, 'ZTick', [1, sz(3)])

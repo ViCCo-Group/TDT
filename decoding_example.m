@@ -20,7 +20,7 @@
 %   the searchlight (in voxels).
 % cfg: If a cfg is provided, these values will be used when starting the
 %   example. However, all values that are specified by the other parameters
-%   will overwrite this (use this e.g. if you use a different the the
+%   will overwrite this (use this e.g. if you want different than the 
 %   standard default settings).
 % ROI-files: If you want to specify ROI files, set 
 %   cfg.files.mask = {'ROI1.img', 'ROI2.nii'} % etc

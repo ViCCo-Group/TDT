@@ -120,6 +120,7 @@ decoding.prog     = @decoding_example_wrapper;
 
 function results = decoding_example_wrapper(job)
 
+cfg = [];
 decoding_type_num = job.decoding_type;
 
 switch decoding_type_num

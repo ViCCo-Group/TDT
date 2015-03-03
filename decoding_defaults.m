@@ -47,8 +47,8 @@ defaults.software = 'SPM8'; % what software to use to access brain images
 % display options
 defaults.verbose = 1; % Verbosity (0 to 2)
 defaults.plot_design = 1; % decide whether you want to save the design as 
-                          % image. We highly recommend to do so, because
-                          % then you can immediately see how your design
+                          % image. We  recommend to do so, because
+                          % you can immediately see how your design
                           % looks (this prevents a lot of errors).
                           % Possible values:
                           %     0: no plotting (not recommended)
@@ -57,7 +57,7 @@ defaults.plot_design = 1; % decide whether you want to save the design as
 % default.plot_design_formats = {'-dpng', '-depsc2'}; % list all formats
                           %         that you want to save the figure as
                           %             (see "doc print" for possible file
-                          %             formats, and don't forget the
+                          %             formats)
 
 defaults.plot_selected_voxels = 0; % a value of n means that the currently 
                                % selected voxels (e.g. a searchlight, ROI, 
@@ -99,8 +99,8 @@ defaults.decoding.method = 'classification_kernel'; % classification using the k
 defaults.decoding.software = 'libsvm'; % libsvm as a standard
 defaults.decoding.kernel.function = @(X,Y) X*Y'; % for kernel method linear kernel as default
 defaults.decoding.kernel.pass_vectors = 0; % if 1, original data vectors will be passed
-                                           % additionally to the kernelas data_train./_test.vectors .
-                                           % might be useful if you e.g. need the  dimension of the 
+                                           % in addition to the kernel as data_train./_test.vectors .
+                                           % might be useful if you e.g. need the dimension of the 
                                            % original data
 
 % parameters (in defaults for libsvm)
@@ -128,7 +128,7 @@ defaults.decoding.test.regression.model_parameters = '-q';
 %    although it might make your results uninterpretable, add to your
 %    script
 %       cfg.files.imagerotation_unequal = 'ok'
-%    ALSO HERE DO NOT SET THIS AS A DEFAULT, because you might forget about
+%    ALSO DO NOT SET THIS AS A DEFAULT HERE, because you might forget about
 %    it later, only change it in the script!
 
 % Results specific defaults

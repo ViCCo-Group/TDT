@@ -1,4 +1,16 @@
+% function newvol = transform_vol(vol)
+%
+% Transforms a 3D volume to a number of axial 2D slices (i.e. along
+% dimensions 1 and 2)
+%
+% Martin Hebart (2009)
+%
+
 function newvol = transform_vol(vol)
+
+if ndims(vol)~=3
+    error('Input must be 3D!')
+end
 
 sz = size(vol);
 

@@ -5,7 +5,9 @@
 %   labels: nx1 vector of labels
 %   data:   pxn matrix of data
 %   param: struct variable with the following optional fields
-%           .shrinkage: 'none', 'pinv', 'lw' (Ledoit-Wolf, spherize), 'lw2' (Ledoit-Wolf, retain variances, tends to make results worse)
+%           .shrinkage: 'none', 'pinv', 'lw' (Ledoit-Wolf, spherizes), 
+%               'lw2' (Ledoit-Wolf, retain variances), 'oas' (Oracle
+%               approximating shrinkage, Chen et al., spherizes)
 %               (if you want to use your own shrinkage, see explanation below)
 %           .sigma: passed pre-calculated covariance matrix (ignores field
 %               .shrinkage
@@ -51,13 +53,15 @@ if ~isfield(param,'sigma') % if sigma wasn't passed
             [param.sigma,model.lambda] = covshrink_lw(data);
         case 'lw2'
             [param.sigma,model.lambda] = covshrink_lw2(data);
+        case 'oas'
+            [param.sigma,model.lambda] = covshrink_oas(data);
         otherwise
             fhandle = str2func(['@(x) covshrink_' param.shrinkage '(x)']);
             try
                 [param.sigma,model.lambda] = fhandle(data);
-            catch
+            catch %#ok<CTCH>
                 disp(lasterr) %#ok<LERR>
-                error('Error trying method covshrink_%s. Maybe function was not on path.',param.shrinkage)
+                error('Error trying method covshrink_%s. Either function is not on path, it is not used correctly, or it has errors.',param.shrinkage)
             end
     end
     

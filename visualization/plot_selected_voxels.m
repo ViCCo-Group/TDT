@@ -128,6 +128,8 @@ for i = 1:n_vox
     large_faces_matrix(xpos,:) = faces_matrix + (i-1)*8;
 end
 
+% Tried to speed-up by clearing only the child, but didn't speed-up
+% Ideally, load only the values that patch loads and replace them
 clf(fighdl)
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...

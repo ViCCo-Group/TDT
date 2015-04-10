@@ -30,20 +30,20 @@ try
 
         case 'classification'
             if isstruct(data_test), error('Classification wiithout kernel needs the data in vector format'), end
-            [predicted_labels accuracy decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.classification.model_parameters); %#ok<*ASGLU>
+            [predicted_labels, accuracy, decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.classification.model_parameters); %#ok<*ASGLU>
         
         case 'classification_kernel'
             % libsvm needs labels for each input, if a kernel is given, thus we
             % add (1:size(data_test,1))' as first column to input data
-            [predicted_labels accuracy decision_values] = svmpredict(labels_test,[(1:size(data_test.kernel,1))'  data_test.kernel],model,cfg.decoding.test.classification_kernel.model_parameters);
+            [predicted_labels, accuracy, decision_values] = svmpredict(labels_test,[(1:size(data_test.kernel,1))'  data_test.kernel],model,cfg.decoding.test.classification_kernel.model_parameters);
 
         case 'regression'
             if isstruct(data_test), error('Regression without kernel needs the data in vector format'), end
-            [predicted_labels accuracy decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.regression.model_parameters);
+            [predicted_labels, accuracy, decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.regression.model_parameters);
 
     end
 
-    if isempty(predicted_labels), error('libsvm''s svmpredict returned empty predictions - please check that svmpredict is working properly or that the model was passed properly'), end
+    if isempty(predicted_labels), error('libsvm''s svmpredict returned empty predictions - please check your design, whether the model was passed properly, or whether you are using the correct version of svmpredict.'), end
     
     decoding_out.predicted_labels = predicted_labels;
     decoding_out.true_labels = labels_test;

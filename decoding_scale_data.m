@@ -89,6 +89,8 @@ if exist('bsxfun','builtin') % New method for Matlab 7.4+ (fast)
     
 else % Old method for < Matlab 7.4 (slow)
     
+    % TODO: replace repmat by ones(size(data,1),1) --> faster
+    
     switch lower(cfg.scale.method)
         case 'min0max1'
             minmat = repmat(scaleparams.samples_min,size(data,1),1);

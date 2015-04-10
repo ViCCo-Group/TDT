@@ -176,6 +176,13 @@ cfg.searchlight.spherical = 0;
 % output [default], 2: high output).
 cfg.verbose = 1;
 
+% Choose the method you want to perform (classification or regression). If
+% your classifier supports the kernel method (currently only libsvm), then
+% you can also choose classification_kernel (our default).
+cfg.decoding.method = 'classification_kernel'; % this is our default anyway.
+% cfg.decoding.method = 'classification'; % this is slower, but sometimes necessary
+% cfg.decoding.method = 'regression'; % choose this for regression
+
 % Define which measures/transformations you like to get as ouput
 % You have the option to get different measures of the decoding. For
 % example, you can get the accuracy for each voxel, the accuracy minus
@@ -186,14 +193,17 @@ cfg.verbose = 1;
 % functions).
 
 cfg.results.output = 'accuracy_minus_chance';
-% This value does not need to be set here, it is just for illustrative
-% purposes. For multiple outputs, use cell arrays, e.g. 
+% This value is already the default, i.e. you could remove it if you only
+% want this value. % For a regression analysis, you would like to 'corr' or
+% better 'zcorr'. For multiple outputs, use cell arrays, e.g.
 % cfg.results.output = {'accuracy_minus_chance', 'AUC_minus_chance'};
 % For more options, again check "help decoding_transform_results" or look
 % at the transres_* functions in the transform_results folder.
 
 % parameters for libsvm (linear SV classification, cost = 1, no screen output)
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
+% parameters for libsvm (linear SV regression, cost = 1, no screen output)
+% cfg.decoding.train.classification.model_parameters = '-s 4 -t 0 -c 1 -b 0 -q'; 
 
 %% Not necessary, but nice: Decide what you want to plot
 

@@ -91,7 +91,15 @@ if ~strcmpi(cfg.feature_selection.method,'none') && (~isfield(cfg.feature_select
     cfg.feature_selection.decoding.fhandle_test = str2func([cfg.feature_selection.decoding.software '_test']); % this format allows variable input
 end
 
-% try the most simple decoding possible (only if libsvm is used)
+% Make sure that all labels are integers when the method is classification or classification_kernel
+method = cfg.decoding.method;
+if (strcmpi(method,'classification') || strcmpi(method,'classification_kernel')) && any(cfg.design.label(:)~=round(cfg.design.label(:)))
+    error(['cfg.decoding.method = %s, but not all labels are integers (i.e. whole numbers). ',...
+           'Change labels to whole numbers if you want to run %s. If you want to run a regression, set the method to ''regression''. ',...
+           'In that case don''t forget to change cfg.results.output = ''corr'' or ''zcorr''.'],method,method)
+end
+
+% try the simplest decoding possible (only if libsvm is used)
 if strcmpi(cfg.decoding.software,'libsvm')
     [working, libsvm_path] = check_libsvm(cfg);
     if ~working

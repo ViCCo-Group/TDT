@@ -1,3 +1,10 @@
+* 3.04 - 2015/04/14
+- Updated decoding_tutorial and FAQ.txt and added a missing function for 
+passing data without classification.
+
+* 3.03 - 2015/03/02
+- Introduced LDA as additional classifier and graphical user interface.
+
 * 3.01 - 2015/01/09
 - Official Version accompanying our accepted PAPER!
 
@@ -15,7 +22,7 @@ Major changes to previous version:
      decoding_toolbox/
   because we do not really consider the toolbox as beta anymore
   For backward compatibility reasons, you might simply add a symbolic link 
-  “decoding_betaversion” that points to “decoding_toolbox”. This should work.
+  “decoding_betaversion�? that points to “decoding_toolbox�?. This should work.
 - A LOT OF OTHER COOL STUFF (e.g. some statistics were added)
 
 

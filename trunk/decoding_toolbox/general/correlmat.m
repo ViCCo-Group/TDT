@@ -36,7 +36,7 @@ else
     
 end
 
-ind = abs(r)>1;
+ind = find(abs(r)>1);
 r(ind) = r(ind)./abs(r(ind));
 
 r = r-1+1; % corrects for rounding error
@@ -70,7 +70,7 @@ r = r+1-1;
 %     
 % end
 % 
-% ind = abs(r)>1;
+% ind = find(abs(r)>1);
 % r(ind) = r(ind)./abs(r(ind));
 %
 % r = r-1+1; % corrects for rounding error

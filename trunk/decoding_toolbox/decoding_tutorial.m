@@ -4,8 +4,8 @@
 % Every decoding analysis needs a cfg structure as input. This structure 
 % contains all information necessary to perform a decoding analysis. All
 % values that you don't set are automatically assigned using the function
-% 'decoding_defaults' (for all possible parameters, see decoding.m and
-% decoding_defaults.m).
+% 'decoding_defaults' (for a list of all possible parameters, see
+% decoding.m and decoding_defaults.m).
 %
 % If you want to know the defaults now, enter:
 %   cfg = decoding_defaults;
@@ -238,6 +238,36 @@ display_design(cfg);
 % Fingers crossed it will not generate any error messages ;)
 results = decoding(cfg);
 
+% This will generate some results that are written, some of which are used
+% only for sanity checks:
+% (a) your decoding results as res_XX.nii or res_XX.img files
+% (b) a res_XX.mat file containing all information in the images and more
+% (c) a cfg.mat file containing the settings
+% (d) the decoding design as an image in multiple formats
+% (e) res_filedetails.txt and res_warnings.mat as sanity checks
+%
+% If your output contains more than one value per voxel, then (a) is not
+% written. If you did a ROI or wholebrain analysis and want to extract the
+% exact numerical results, you can do so by loading the result from (b)
+% and navigating to the field results.accuracy_minus_chance.output or
+% whatever your output is. For searchlight analyses the voxel locations are
+% currently only provided as indices.
+
+%% Sixth, inspect the results visually or do statistics
+% Visual inspection of searchlight results can be done e.g. using software
+% such as MRIcron: Open a background image, select your decoding results
+% (typically res_accuracy_minus_chance.img) as overlay and set the range
+% between 5 and e.g. 20. Increase the lower value until you can see blobs
+% that may look meaningful. These regions may contain information. For
+% statistical analysis at the group-level, normalize and smooth your images
+% if not done previously and run a classical second-level t-test against 0
+% 
+% ROI or wholebrain analysis:
+% See right below "results = decoding(cfg);" for visual inspection. For
+% statistical analysis at the group-level, extract all decoding results and
+% do a t-test either with Matlab, SPSS or the software of your choice.
+%
+% For subject-level statistics, run help decoding_statistics.
 %% Some more hints for potentially useful features
 
 % All of these need to be specified BEFORE calling decoding(cfg), of

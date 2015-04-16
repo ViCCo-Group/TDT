@@ -8,6 +8,14 @@
 % of the string (e.g. '*name*' will include all regressor names that contain
 % the string 'name', and 'name*' only those regressor names starting with
 % 'name').
+% If you want to use all conditions and assign labels and run numbers
+% automatically, then set labelnames = [] and labels = []. In that case
+% each unique regressor name will receive a unique label (-1 and 1 for two
+% classes, and 1 to n for n classes), excluding regressors with names R1,
+% R2, etc. (e.g. motion regressors or other additional regressors) and
+% those with names "SPM constant". Please note that in the automatic case
+% you would need to manually add the field xclass if you want to do
+% cross-decoding.
 %
 % INPUT:
 %   cfg: configuration file (see decoding.m)
@@ -18,7 +26,7 @@
 %       You can also pass a regular expression (see doc regexp). For this,
 %       start the labelname with 'regexp:'. Example:
 %           labelnames{1} = 'regexp:^cond1 bin[(1)(2)]$'
-%               will find all regressors mathing '^cond1 bin[(1)(2)]$'
+%               will find all regressors matching '^cond1 bin[(1)(2)]$'
 %
 %   labels: 1xn vector containing the label for each labelname, e.g. [-1;1]
 %   regressor_names: 2xn or 3xn cell array, containing information about
@@ -26,7 +34,8 @@
 %       regressor_names is created by the function design_from_spm.
 %       It contains for each file in cfg.files (same order):
 %           regressor_names(1,:) - Class name from SPM, and bin_ number, if
-%               a FIR model was used.
+%               a FIR model or temporal and / or dispersion derivatives
+%               were used.
 %           regressor_names(2,:) - Run/Session number of regressor.
 %           regressor_names(3,:) [OPTIONAL] - Full name of SPM regressor
 %   beta_dir: Directory where images are stored that are used for decoding
@@ -58,8 +67,11 @@
 %           regressor names from SPM (more or less)
 %
 %
-% by Martin Hebart 11/06/12, Update Kai 13/04/16, Update Martin 13/06/12
+% by Martin Hebart 11/06/12, Update Martin 15/04/16, Update Kai 13/04/16, Update Martin 13/06/12
 
+% Update Martin 15/04/16
+%   Introduced possibility to pass neither label names nor labels and
+%   automatically create the corresponding entries for cfg.files.
 % Update Kai 13/09/19
 %   Introduced the possitility to use regexp directly, when string starts
 %   with 'regexp:'
@@ -72,7 +84,7 @@
 
 function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
 
-cfg2 = decoding_defaults(cfg); % keep separate just in case we don't want to set all fields yet
+cfg2 = decoding_defaults(cfg); % adds path and gets some required settings (keep separate just in case we don't want to set all fields yet)
 
 cfg.files.name = [];
 cfg.files.chunk = [];
@@ -81,14 +93,7 @@ cfg.files.set = [];
 cfg.files.xclass = [];
 cfg.files.descr = {}; % contains the regressor names from SPM (more or less)
 
-if length(labelnames) ~= length(labels)
-    if length(labelnames)==1 && length(labelnames{1}) == length(labels)
-        warningv('DECODING_DESCRIBE_DATA:CELL','Label names were passed as cells in a cell (e.g. {labelnames}), rather than just as a 1xn cell vector. Changing automatically!')
-        labelnames = labelnames{1};
-    else
-        error('Label names have to be of equal size than label numbers!')
-    end
-end
+labels_provided = ~(isempty(labelnames) && isempty(labels));
 
 % check if beta_dir is a directory or a cellstr (in this case, assume it's the name of the input files directly)
 if iscellstr(beta_dir)
@@ -110,6 +115,18 @@ else
         if isempty(beta_names)
             error('No img/nii-files starting with ''beta'' found in %s',beta_dir)
         end
+    end
+end
+
+%% Typical case
+if labels_provided
+
+if length(labelnames) ~= length(labels)
+    if length(labelnames)==1 && length(labelnames{1}) == length(labels)
+        warningv('DECODING_DESCRIBE_DATA:CELL','Label names were passed as cells in a cell (e.g. {labelnames}), rather than just as a 1xn cell vector. Changing automatically!')
+        labelnames = labelnames{1};
+    else
+        error('Label names have to be of equal size than label numbers!')
     end
 end
 
@@ -162,3 +179,57 @@ cfg.files.chunk = cfg.files.chunk';
 cfg.files.label = cfg.files.label';
 cfg.files.set = cfg.files.set';
 cfg.files.xclass = cfg.files.xclass';
+
+%% if no labels have been provided, automatically fill everything
+else
+    
+    if exist('xclass','var') && ~isempty(xclass)
+        error('Cannot deal with input variable xclass when no labels or label names have been provided (enter "help decoding_describe_data" for more details).')
+    end        
+    
+    ind = regexp(regressor_names(1,:),'(^R\d+$|^SPM constant$)');
+    try label_index = find(cellfun(@isempty,ind));
+        % catch for users without cellfun
+    catch, label_index = zeros(1,length(ind)); for i = 1:length(ind), label_index(i) = isempty(ind{i}); end, label_index = find(label_index); %#ok<CTCH>
+    end
+    
+    cfg.files.name = beta_names(label_index,:);
+    if ischar(cfg.files.name), cfg.files.name = num2cell(cfg.files.name,2); end
+    cfg.files.chunk = [regressor_names{2,label_index}]';
+    
+    % Loop over all betas to figure out labels, but exclude nuisance regressors
+    curr_label = 0;
+    labels = zeros(size(cfg.files.chunk));
+    orig_index = label_index;
+    while 1
+        
+        if isempty(label_index)
+            break
+        else
+            curr_label = curr_label + 1;
+        end
+        
+        % find all regressors with the same label
+        reg_ind = regexp(regressor_names(1,:),regressor_names(1,label_index(1)));
+        try curr_ind = find(~cellfun(@isempty,reg_ind));
+            % catch for users without cellfun
+        catch, curr_ind = zeros(1,length(reg_ind)); for i = 1:length(curr_ind), curr_ind(i) = ~isempty(reg_ind{i}); end, curr_ind = find(curr_ind); %#ok<CTCH>
+        end
+        
+        labels(curr_ind) = curr_label;
+        
+        % reduce index
+        label_index = setdiff(label_index,curr_ind);
+        
+    end
+    labels = labels(orig_index);
+    if length(uniqueq(labels))==2
+       labels(labels==1) = -1;
+       labels(labels==2) =  1;
+    end
+    cfg.files.label = labels;
+        
+    % Set other fields
+    cfg.files.set = cfg.files.set';
+    cfg.files.xclass = cfg.files.xclass';
+end 

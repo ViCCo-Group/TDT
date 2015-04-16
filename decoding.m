@@ -580,8 +580,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         else
             % do standard testing
             % e.g. when software is libsvm, then:
-            % decoding_out(i_step) =
-            % libsvm_test(labels_test,data_test,cfg,model);
+            % decoding_out(i_step) = libsvm_test(labels_test,data_test,cfg,model);
             decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model); %#ok<AGROW>
         end
             
@@ -590,7 +589,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     %%%%%%%%%%%%%%%%%%%
     % Generate output %
     % This is where result transformations are called 
-    % (so they can use  all decoding steps of the current voxel at once)
+    % (so they can use all decoding steps of the current voxel at once)
     results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,current_data);
 
 end % End decoding iterations (e.g. voxel)

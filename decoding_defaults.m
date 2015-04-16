@@ -42,7 +42,18 @@ defaults.report = []; % init field
 defaults.testmode = 0; % Test mode off
 defaults.analysis = 'searchlight'; % standard analysis, alternative values: 
                                    % 'ROI', 'wholebrain'
-defaults.software = 'SPM8'; % what software to use to access brain images
+defaults.software = 'SPMauto'; % what software to use to access brain images 
+%   ('SPMauto' will automatically choose the SPM version on the path, but
+%   only here in the defaults!)
+if strcmpi(defaults.software,'SPMauto')
+    try
+    tmp = regexp(spm('ver'),'\s+','split');
+    defaults.software = tmp{1};
+    catch
+        defaults.software = 'none';
+    end
+end
+
 
 % display options
 defaults.verbose = 1; % Verbosity (0 to 2)

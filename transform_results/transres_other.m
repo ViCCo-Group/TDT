@@ -1,6 +1,7 @@
 % output = transres_other(decoding_out, varargin)
 % 
-% This function returns other output that was generated
+% This function returns other output that was generated (in the field
+% decoding_out.opt)
 %
 % To use it, use
 %

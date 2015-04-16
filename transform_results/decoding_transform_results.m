@@ -1,6 +1,6 @@
 % function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,data)
 %
-% This function caculates a lot of different result measures defined by
+% This function calculates a lot of different result measures defined by
 % METHOD.
 %
 % FURTHER METHODS: Type

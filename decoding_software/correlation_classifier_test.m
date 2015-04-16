@@ -5,7 +5,7 @@ if isstruct(data_test), error('This method requires training vectors in data_tes
 switch lower(cfg.decoding.method)
     
     case 'classification'
-        [predicted_labels decision_values opt] =  correlation_classifier(labels_test,data_test,model);
+        [predicted_labels,decision_values,opt] =  correlation_classifier(labels_test,data_test,model);
         
     case 'classification_kernel'
         % Develop: If you implement this, adapt error at the beginning

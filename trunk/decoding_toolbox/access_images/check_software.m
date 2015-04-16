@@ -27,7 +27,10 @@ else
             error('Check returned that cfg.software == %s is NOT available.\n Please check if you need it to your path.', software)
         end
     else
-        % no check function available, assume it works
-        error('Could not find a %s.m to check whether cfg.software == %s works.\nPlease check that cfg.software is correct and in your path.', fname, software)
+        if strcmpi(software,'none')
+            error('No software selected for reading and writing to images. Add SPM to your path or manually set the field of cfg.software to your software of choice.')        else
+            % no check function available, assume it works
+            error('Could not find a %s.m to check whether cfg.software == %s works.\nPlease check that cfg.software is correct and in your path.', fname, software)
+        end
     end
 end

@@ -1,4 +1,4 @@
-% function save_fig(filename, cfg)
+% function save_fig(filename, cfg, fighdl)
 %
 % This function serves to save a figure (the current axis) as
 % matlab-figure + other formats (if desired).
@@ -32,8 +32,13 @@ function save_fig(filename, cfg, fighdl)
         return
     end
     
+    % backward compatibility
+    if isfield(cfg, 'plot_design')
+        cfg.plot_design_formats = cfg.plot_design;
+    end
+    
     if isfield(cfg, 'plot_design_formats')
-        if iscell(cfg.plot_design) && ischar(cfg.plot_design{1})
+        if iscell(cfg.plot_design_formats) && ischar(cfg.plot_design_formats{1})
             formats = cfg.plot_design_formats;
         end
     end

@@ -185,6 +185,9 @@
 %   cfg.feature_selection.direction = 'backward'; % this is later set automatically for RFE, but for other methods you need to set it manually
 %   cfg.feature_selection.n_vox = [5 10 25 50 75 100];
 %   cfg.feature_selection.nested_n_vox = 5:100;
+%
+% See also DECODING, DECODING_DEFAULTS, DECODING_SCALE_DATA,
+% DECODING_PARAMETER_SELECTION, DECODING_FEATURE_TRANSFORMATION
 
 % TODO list:
 %   - introduce random forests for feature ranking

@@ -63,6 +63,9 @@
 % data_test_trans: Transformed testing data
 %
 % 2014/01/12 Martin Hebart
+%
+% See also DECODING, DECODING_DEFAULTS, DECODING_SCALE_DATA,
+% DECODING_FEATURE_SELECTION, DECODING_PARAMETER_SELECTION
 
 function [cfg,data_train_trans,data_test_trans] = decoding_feature_transformation(cfg,data_train,data_test)
 

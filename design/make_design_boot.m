@@ -48,7 +48,7 @@
 %   design.set: 1xn vector, describing the set number of each CV step.
 %   design.function: Information about function used to create design
 %
-%
+% See also MAKE_DESIGN_BOOT_CV
 
 % Martin 2013/09/08
 

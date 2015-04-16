@@ -31,6 +31,8 @@
 %             dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
 %             calculated)
+%
+% See also LOAD_MASK
 
 % Kai, 2012-03-12
 

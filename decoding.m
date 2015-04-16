@@ -153,7 +153,10 @@
 % taken instead of reading both from files. Some checks are done to
 % make sure that the data fits to the filenames. See HOWTOUSEPASSEDDATA.txt
 % on how to use it.
-
+%
+% See also DECODING_DEFAULTS, DECODING_SCALE_DATA,
+% DECODING_FEATURE_SELECTION, DECODING_PARAMETER_SELECTION,
+% DECODING_FEATURE_TRANSFORMATION
 
 % TODO: repeatedly calculating i_train and i_test across searchlights doesn't
 % make sense. Best externalize this which could also be passed to feature

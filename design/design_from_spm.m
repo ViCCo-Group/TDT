@@ -21,6 +21,8 @@
 % regressor_names(3, :) - full name of the SPM regressor
 %
 % by Martin Hebart & Kai Görgen, 2012/03/01, Update 13/04/16 Kai
+%
+% See also DECODING_DESCRIBE_DATA
 
 % History:
 % 2013/08/14 Martin

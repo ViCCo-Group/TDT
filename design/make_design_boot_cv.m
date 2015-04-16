@@ -43,7 +43,7 @@
 %   design.set: 1xn vector, describing the set number of each CV step.
 %   design.function: Information about function used to create design
 %
-%
+% See also MAKE_DESIGN_BOOT
 
 % TODO: make indexing more efficient (useful for permutations)
 % TODO: allow multiple sets to be used

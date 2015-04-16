@@ -7,6 +7,8 @@
 % interest analysis).
 %
 % Martin Hebart, 2011/01/10 
+%
+% See also DECODING_LOAD_DATA
 
 function [mask_vol,mask_hdr,sz,mask_vol_each] = load_mask(cfg)
 

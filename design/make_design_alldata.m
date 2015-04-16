@@ -26,6 +26,8 @@
 %   design.test: same as in design.train, but this time for all test images
 %   design.set: 1xn vector, describing the set number of each CV step
 %   design.function: Information about function used to create design
+%
+% See also MAKE_DESIGN_RSA
 
 function design = make_design_alldata(cfg)
 

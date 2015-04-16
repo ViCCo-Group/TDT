@@ -59,7 +59,9 @@
 % data_train: Training data (either vectors of actual data or data.kernel 
 % containing the kernel matrix)
 % i_train_external: Index of training data (from function decoding.m)
-
+%
+% See also DECODING, DECODING_DEFAULTS, DECODING_SCALE_DATA,
+% DECODING_FEATURE_SELECTION, DECODING_FEATURE_TRANSFORMATION
 
 % Martin Hebart, 12/02/08
 

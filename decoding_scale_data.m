@@ -43,6 +43,9 @@
 %    [scaleparams]: when needed scaling parameters for action 'test'
 %
 % Martin H. 2010/05/12
+%
+% See also DECODING, DECODING_DEFAULTS, DECODING_FEATURE_SELECTION,
+% DECODING_PARAMETER_SELECTION, DECODING_FEATURE_TRANSFORMATION
 
 % restructured Martin H. 2010/07/25
 % TODO: introduce column scaling (would need to change position of scaling

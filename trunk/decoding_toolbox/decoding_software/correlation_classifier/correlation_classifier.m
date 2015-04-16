@@ -1,4 +1,4 @@
-% function [predicted_labels decision_values opt] = correlation_classifier(labels_test,data_test,model)
+% function [predicted_labels,decision_values,opt] = correlation_classifier(labels_test,data_test,model)
 %
 % This function uses a Haxby style MVPA analysis where multivoxel patterns
 % *within* one class are simply correlated and tested against another 
@@ -39,7 +39,7 @@
 % etc for more classes. Since all use the same model, the maximal
 % correlation always wins
 
-function [predicted_labels decision_values opt] = correlation_classifier(labels_test,data_test,model)
+function [predicted_labels,decision_values,opt] = correlation_classifier(labels_test,data_test,model)
 
 % Output correlation matrix: columns are train indices, rows are test indices.
 % TODO: also pass unique labels to know what columns and rows are referred

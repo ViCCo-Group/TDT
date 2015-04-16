@@ -5,12 +5,12 @@ if isstruct(data_test), error('This method requires training vectors in data_tra
 switch lower(cfg.decoding.method)
 
     case 'classification'
-        [predicted_labels accuracy decision_values] = predict(labels_test,sparse(data_test),model,cfg.decoding.test.regression.model_parameters);
+        [predicted_labels,accuracy,decision_values] = predict(labels_test,sparse(data_test),model,cfg.decoding.test.regression.model_parameters);
     case 'classification_kernel'
         % Develop: If you implement this, adapt error at the beginning
         error('predict doesn''t work with passed kernels - please use libsvm or another method instead.')        
     case 'regression'
-        [predicted_labels accuracy decision_values] = svmpredict(labels_test,sparse(data_test),model,cfg.decoding.test.regression.model_parameters);
+        [predicted_labels,accuracy,decision_values] = svmpredict(labels_test,sparse(data_test),model,cfg.decoding.test.regression.model_parameters);
         
 end
 

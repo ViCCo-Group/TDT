@@ -1,11 +1,12 @@
-% This functions call is depricated.
+% This function call is deprecated.
 %
 % Because this function does not prepare a decoding, but describes the
 % data, it is now called decoding_describe_data.m. 
 % Otherwise nothing changed.
 %
-% For convinience this function calls decoding_describe_data() for you.
-
+% For convenience this function calls decoding_describe_data() for you.
+%
+% See also DECODING_DESCRIBE_DATA
 
 % function cfg = decoding_prepare_design(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
 

@@ -91,7 +91,7 @@
 %       cfg.stats.output = 'accuracy_minus_chance';
 %       p = decoding_statistics(cfg,results,chancelevel);
 %
-% See also: decoding_statistics2
+% See also DECODIGN_STATISTICS2
 
 % 14/10/26 Martin Hebart
 %

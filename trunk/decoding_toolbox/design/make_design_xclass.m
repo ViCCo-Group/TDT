@@ -169,7 +169,8 @@
 %      1
 % ------------------------------------
 % By: Martin Hebart, 2011/09/05
-
+%
+% See also MAKE_DESIGN_XCLASS_CV, SORT_DESIGN
 
 
 function design = make_design_xclass(cfg)

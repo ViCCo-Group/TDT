@@ -14,6 +14,8 @@
 % Copying will only occur in the unlikely event that result files with
 % the same name are created between this initial check in decoding.m and
 % when they should be saved here.
+%
+% See also DECODNG
 
 % by Martin Hebart and Kai Görgen
 %

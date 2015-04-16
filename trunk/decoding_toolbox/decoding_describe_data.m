@@ -68,6 +68,8 @@
 %
 %
 % by Martin Hebart 11/06/12, Update Martin 15/04/16, Update Kai 13/04/16, Update Martin 13/06/12
+%
+% SEE ALSO DESIGN_FROM_SPM
 
 % Update Martin 15/04/16
 %   Introduced possibility to pass neither label names nor labels and

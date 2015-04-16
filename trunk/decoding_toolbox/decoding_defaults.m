@@ -10,6 +10,8 @@
 %  cfg = decoding_defaults(cfg)
 %       Puts default values to all fields that are not defined in the
 %       passed cfg (UPDATES cfg).
+%
+% See also DECODING
 
 % Martin H. 2011/03
 

@@ -24,6 +24,8 @@
 %   standard default settings).
 % ROI-files: If you want to specify ROI files, set 
 %   cfg.files.mask = {'ROI1.img', 'ROI2.nii'} % etc
+%
+% See also DECODING
 
 % Martin H.
 % History: 

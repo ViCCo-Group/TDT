@@ -117,6 +117,8 @@
 %   make_design_boot_cv.m
 %
 % By: Kai Goergen & Martin Hebart, 2010/06/13
+%
+% See also MAKE_DESIGN_BOOT_CV, MAKE_DESIGN_XCLASS, MAKE_DESIGN_PERMUTATION
 
 % History:
 % - througing error if cfg.files.xclass is not empty

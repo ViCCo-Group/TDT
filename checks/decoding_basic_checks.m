@@ -120,7 +120,7 @@ use_kernel = ~isempty(strfind(cfg.decoding.method, '_kernel'));
 cfg.decoding.use_kernel = use_kernel;
 if use_kernel
     dispv(1, 'Using a "_kernel" decoding method.')
-    dispv(2, sprintf('\nThis means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nmethods of TDT to be selected'))
+    dispv(2, sprintf('This means that the kernel is only calculated once for each voxel/ROI,\nand then a submatrix of the kernel is passed to training and test methods \ninstead of the data. This might increase speed, but does not allow all\nmethods of TDT to be selected'))
 else
     dispv(2, 'Using normal method')    
 end
@@ -239,7 +239,17 @@ if problem && n_steps == 1
          'one decoding step. This might be a problem when using correlation, ',...
          'AUC, sensitivity, specificity and similar measures!'],problem)
 end
-    
+
+% Get number of sets
+n_sets = length(unique(cfg.design.set));
+
+% Run check that results are returned setwise when running a permutation design
+try %#ok<TRYNC>
+    if isfield(cfg.design.function.permutation) && cfg.results.setwise == 0
+        error('Using a permutation design with cfg.results.setwise == 0. This will make the results uninterpretable. Please set cfg.results.setwise = 1')
+    end
+end
+
 if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
     error(['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation '''. Unknown if you want to scale or not! Set both to ''none'' or both to a different value than ''none''!'])
 %     warningv('DECODING_BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
@@ -250,7 +260,6 @@ if ischar(cfg.results.output)
 end
 
 % check if masks exist, and maybe correct it. Otherwise set it to "auto"
-
 if isfield(cfg.files, 'mask')
     if ischar(cfg.files.mask)
         cfg.files.mask = num2cell(cfg.files.mask,2);
@@ -286,31 +295,36 @@ if isfield(cfg.parameter_selection,'parameters') && (strcmpi(cfg.decoding.softwa
         end
     end
 end
-        
+
+
 % Checking for independence of training and test data
-if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
-    disp('Positions of Entries in Training- & Testset:')
-    disp(cfg.design.train ~= 0 & cfg.design.test ~= 0)
-    if isfield(cfg.design,'nonindependence')
-        check1 = strcmpi(cfg.design.nonindependence,'ok');
-    else
-        check1 = 0;
-    end
-    check2 = strfind(cfg.results.output,'SVM_weights');
-    check2 = [check2 strfind(cfg.results.output,'SVM_pattern')];
-    try check2 = cell2mat(check2); end
-    check2 = ~isempty(check2); 
-    if check1 || check2
-        warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. If you return classification results, they cannot be interpreted!');
-    else
-        error(['Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!',...
-            ' If you really know what you are doing, set cfg.design.nonindependence = ''ok'' in your script.'])
-    end
+if isfield(cfg.design,'train_eq_test') && cfg.design.train_eq_test == 1; % this may avoid the call to the non-independence check, but should never be set manually!
+    warningv('DECODING_BASIC_CHECKS:TRAINEQTEST','cfg.design.train_eq_test == 1. You are assuming that training data equals test data. If this assumption is wrong, then your results are not interpretable!')
 else
-    dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
+    if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)
+        disp('Positions of Entries in Training- & Testset:')
+        disp(cfg.design.train ~= 0 & cfg.design.test ~= 0)
+        if isfield(cfg.design,'nonindependence')
+            check1 = strcmpi(cfg.design.nonindependence,'ok');
+        else
+            check1 = 0;
+        end
+        check2 = strfind(cfg.results.output,'SVM_weights');
+        check2 = [check2 strfind(cfg.results.output,'SVM_pattern')];
+        try check2 = cell2mat(check2); end
+        check2 = ~isempty(check2);
+        if check1 || check2
+            warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. If you return classification results, they cannot be interpreted!');
+        else
+            error(['Trainingset & Testset are not independent! Some entries from the training set are also used in the testset! Please check!',...
+                ' If you really know what you are doing, set cfg.design.nonindependence = ''ok'' in your script.'])
+        end
+    else
+        dispv(2,'  Check for double entries in Training- & Testset: No double entries found.')
+    end
 end
 
-% Check if training data is balanced (test data does not matter)
+% Check if training data is balanced (problematic!) and test data (may matter)
 check_imbalance(cfg);
 
 if ischar(cfg.files.name)
@@ -330,10 +344,6 @@ end
 
 if ~strcmpi(cfg.scale.method,'none') && numel(cfg.scale.cutoff) ~= 2
     error('Wrong number of entries for field ''cfg.scale.cutoff''.')
-end
-
-if length(unique(cfg.design.set)) == 1
-    cfg.results.setwise = 0;
 end
 
 if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selection.filter,'external') 
@@ -383,9 +393,8 @@ if cfg.results.write
             end
             
             % If setwise check all files
-            if cfg.results.setwise
+            if cfg.results.setwise && n_sets > 1
                 set_numbers = unique(cfg.design.set);
-                n_sets = length(set_numbers);
                 for i_set = 1:n_sets
                     output_fname = fullfile(dir_output,sprintf('%s_set%i%s', cfg.results.resultsname{i_output}, set_numbers(i_set), ext{ext_ind}));
                     check_write(output_fname,cfg.results.overwrite)
@@ -398,23 +407,41 @@ if cfg.results.write
 end
 
 
-%% Subfunction: Check for unbalanced training data
+%% Subfunction: Check for unbalanced training data (not allowed) and unbalanced test data (potentially problematic)
 function check_imbalance(cfg)
 dispv(2, 'Checking for imbalances in cfg.design.train')
 for decoding_step = 1:size(cfg.design.train, 2)
     curr_labels = cfg.design.label(:, decoding_step);
-    curr_training_labels = curr_labels(cfg.design.train(:, decoding_step) == 1);
-    unique_labels = unique(curr_training_labels);
-    n_each_label = zeros(length(unique_labels),1);
-    for label_ind = 1:length(unique_labels)
-        n_each_label(label_ind) = sum(curr_training_labels == unique_labels(label_ind));
+    curr_train_labels = curr_labels(cfg.design.train(:,decoding_step) == 1);
+    curr_test_labels = curr_labels(cfg.design.test(:,decoding_step) == 1);
+    unique_train_labels = unique(curr_train_labels);
+    unique_test_labels = unique(curr_test_labels);
+    n_each_train_label = zeros(length(unique_train_labels),1);
+    n_each_test_label = zeros(length(unique_test_labels),1);
+    for label_ind = 1:length(unique_train_labels)
+        n_each_train_label(label_ind) = sum(curr_train_labels == unique_train_labels(label_ind));
     end
-    if any(diff(n_each_label) ~= 0)
+    for label_ind = 1:length(unique_test_labels)
+        n_each_test_label(label_ind) = sum(curr_test_labels == unique_test_labels(label_ind));
+    end
+    % Run check for training data
+    if any(diff(n_each_train_label) ~= 0)
         message_str = sprintf('Unbalanced training data detected in cfg.design.train(:, %i).', decoding_step);
         if isfield(cfg.design, 'unbalanced_data') && strcmpi(cfg.design.unbalanced_data, 'ok')
             warningv('DECODING:CheckUnbalancedDataOk', [message_str, ' You decided this is ok, because cfg.design.unbalanced_data = ''ok''']);
         else
             error('DECODING:CheckUnbalancedDataOk', [message_str, ' If this is ok, set cfg.design.unbalanced_data = ''ok'''])
+        end
+    end
+    % Run check for test data
+    if any(diff(n_each_test_label) ~= 0)
+        message_str = sprintf('Unbalanced test data in cfg.design.test(:, %i).', decoding_step);
+        dispv(1,message_str)
+        test = [strfind(cfg.results.output,'accuracy') strfind(cfg.results.output,'accuracy_minus_chance')];
+        if any([test{:}])
+            warningv('DECODING:CheckUnbalancedTestData','You are returning accuracy or accuracy_minus_chance. These results may be uninterpretable due to test data imbalance.')
+        else
+            dispv(1,'This does not matter as long as your results measure returns unbiased results (e.g. balanced_accuracy).')
         end
     end
 end

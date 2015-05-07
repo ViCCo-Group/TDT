@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %
-% The Decoding Toolbox, Version: 3.04, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.06, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -125,7 +125,7 @@
 %       skipped, and data from passed_data.loaded_results will be used
 %       instead.
 %   cfg.results.overwrite: Overwrite existing result file(s) [default = 0]
-%   cfg.results.setwise: Save results of each set separately [default = 0]
+%   cfg.results.setwise: Save results of each set separately [default = 1]
 %   cfg.results.filestart: Manually define start of output filename [default: 'res']
 %   cfg.sn: Provide subject number for status messages
 %   cfg.verbose: How much output should be printed to the screen
@@ -163,7 +163,7 @@
 % selection and parameter selection. This would also simplify the check for
 % previously identical training data
 
-% HISTORY
+% HISTORY (only major changes)
 % 2015-03-02 Martin
 %   Added LDA as classifier and GUI
 % 2014-07-31 Kai
@@ -181,7 +181,7 @@
 %   Added passed_data.masks.mask_data{} to provide ROI data.
 % 2013-09-05 Kai
 %   Changed Kernel passing, now: data_train.kernel/data_test.kernel.
-%   Pervious version had too much potential for confusion. 
+%   Previous version had too much potential for confusion. 
 %   Original data vectors can be passed additionally using 
 %   cfg.decoding.kernel.pass_vectors.
 % 2013-04-23 Kai
@@ -212,14 +212,14 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/04/13 3.04. Cite: Hebart, Goergen, et al, 2015 (see LICENSE.txt)'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/05/07 3.06. Cite: Hebart, Goergen, Haynes, 2015 (see LICENSE.txt)'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 
 %% Basic checks
 
-[cfg, n_files, n_steps] = decoding_basic_checks(cfg,nargout);
+[cfg, n_files, n_steps] = decoding_basic_checks(cfg,nargout); %#ok<ASGLU>
 
 %% Plot and save design as graphics if requested
 
@@ -297,7 +297,7 @@ end
 
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
-n_sets = length(unique(cfg.design.set));
+cfg.design.n_sets = length(unique(cfg.design.set));
 results = {};
 
 % Set kernel method if used
@@ -337,7 +337,7 @@ for i_output = 1:n_outputs
         % use number of voxels to allocate space independent of number of
         % decodings (because cfg.searchlight.subset allows to choose fewer
         % voxels, but we want in the end an image that has the same
-        % dimension as the original image
+        % dimension as the original image)
         n_dim = length(mask_index);  % n_voxel = length(mask_index)
     else
         % otherwise, get as many output dimensions as decodings (no subset
@@ -348,8 +348,8 @@ for i_output = 1:n_outputs
     % Preallocation
     results.(outname).output = zeros(n_dim,1);
 
-    if cfg.results.setwise
-        for i_set = 1:n_sets
+    if cfg.results.setwise && cfg.design.n_sets > 1
+        for i_set = 1:cfg.design.n_sets
             results.(outname).set(i_set).output = zeros(n_dim,1);
         end
     end
@@ -569,8 +569,6 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         %    TEST DATA    %
         %%%%%%%%%%%%%%%%%%%
 
-        % TODO: introduce column scaling (mean removal, zscore, etc.)
-
         % Do scaling on test data if requested
         if scaling_across_on
             data_test = decoding_scale_data(cfg,data_test,scaleparams); % if skip_training is active, scaleparams from previous iteration are used
@@ -579,7 +577,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Test Estimated Model
         if cfg.decoding.use_loaded_results
             % get decoding_out from passed_data
-            decoding_out(i_step) = get_decoding_out_from_passed_data(cfg,labels_test,passed_data,i_decoding,mask_index(curr_decoding),i_step);
+            decoding_out(i_step) = get_decoding_out_from_passed_data(cfg,labels_test,passed_data,i_decoding,mask_index(curr_decoding),i_step); %#ok<AGROW>
         else
             % do standard testing
             % e.g. when software is libsvm, then:

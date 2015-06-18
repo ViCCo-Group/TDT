@@ -148,7 +148,7 @@ if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight') && ~isperm
         results.(outputname).(outputname).fname = resultsvol_hdr.fname;
         
         % Save set results (i.e.: should each set be saved separately?)
-        if cfg.results.setwise
+        if cfg.results.setwise && cfg.design.n_sets > 1
             n_sets = length(results.(outputname).set);
             for i_set = 1:n_sets
                 fname = sprintf('%s_set%04i.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id);
@@ -231,7 +231,7 @@ if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             end
             
             % Save set results (i.e.: should each set be saved separately?)
-            if cfg.results.setwise
+            if cfg.results.setwise && cfg.design.n_sets > 1
                 n_sets = length(results.(outputname).set);
                 for i_set = 1:n_sets
                     fname = sprintf('%s_set%04i_%s.img', cfg.results.resultsname{i_output}, results.(outputname).set(i_set).set_id,roi_names{i_roi});
@@ -311,7 +311,7 @@ for i_output = 1:n_outputs
     end
     
     % Save set results (should each set be saved separately?)
-    if cfg.results.setwise
+    if cfg.results.setwise && cfg.design.n_sets > 1
         n_sets = length(results.(outputname).set);
         results_all = results;
         for i_set = 1:n_sets

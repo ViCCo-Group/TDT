@@ -19,13 +19,6 @@ function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,
 
 n_outputs = length(cfg.results.output);
 
-if cfg.results.setwise
-    unique_sets = uniqueq(cfg.design.set(:));
-    n_sets = length(unique_sets);
-else
-    n_sets = 1;
-end
-
 % in case chance-level is not provided (which should only happen for
 % parameter selection or feature selection where it doesn't really matter
 chancelevel = 1/results.n_cond_per_step * 100; % chancelevel in percent    
@@ -72,7 +65,11 @@ for i_output = 1:n_outputs
 
     results.(outname).output(curr_decoding) = output;
 
-    if cfg.results.setwise
+    if cfg.results.setwise && cfg.design.n_sets > 1
+        
+        unique_sets = uniqueq(cfg.design.set(:));
+        n_sets = cfg.design.n_sets;
+        
         for i_set = 1:n_sets
             current_set = unique_sets(i_set);
             set_ind = cfg.design.set == current_set;

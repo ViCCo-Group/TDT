@@ -6,7 +6,7 @@
 %
 % For a graphical representation, see plot_design.m
 %
-% See also: plot_design.m
+% See also PLOT_DESIGN
 
 % Potential improvements
 %
@@ -17,8 +17,7 @@ function table = display_design(cfg)
 %% check if input is design subfield
 if ~isfield(cfg, 'design')
     if isfield(cfg, 'train') && isfield(cfg, 'test')
-        str = sprintf('Seems you called diplay_design(cfg.defaults).\nUse display_design(cfg) if possible.');
-        warning(str)
+        warning('Seems you called display_design(cfg.design). Use display_design(cfg) if possible. File names will not be printed.')
         % save design in cfg.design for this function
         cfg.design = cfg;
     else
@@ -28,12 +27,12 @@ end
 
 % add dummy entries for files
 if ~isfield(cfg, 'files')
-    cfg.files.name(1:size(cfg.design.train, 1), 1) = {'.files not found'};
+    cfg.files.name(1:size(cfg.design.train, 1), 1) = {'.file not found'};
 end
 
 
 %% print the design in a readable form
-nrows = length(cfg.files.name);
+% nrows = length(cfg.files.name);
 % data
 if size(cfg.files.name, 1) == 1
     % flip
@@ -44,6 +43,7 @@ end
 fnames = cfg.files.name;
 fnames_char = char(fnames);
 n_str = size(fnames_char,2); % maximum string length
+n_match = n_str;
 for i_str = 1:n_str
     match = strncmp(fnames{1},fnames(2:end),i_str);
     if ~all(match)
@@ -66,7 +66,7 @@ filename_str = char([{'files.name'}; {'---'}; fnames_char; {'---'}; {'design.set
 
 % set
 if isfield(cfg.design, 'set')
-    set_str = char([{num2str(cfg.design.set)}]);
+    set_str = char({num2str(cfg.design.set)});
 else
     set_str = ' ';
 end
@@ -82,7 +82,7 @@ tabs = repmat(sprintf('\t'), size(filename_str, 1),1); % prepare tabs for hdr + 
 table = [filename_str, tabs, train_str, tabs, test_str, tabs, label_str];
 
 % add file.descr if available
-if isfield(cfg.files, 'descr')
+if isfield(cfg.files, 'descr') && ~isempty(cfg.files.descr)
     descr_str = char([{'files.descr'}; {'---'}; char(cfg.files.descr'); {'---'}; {''}]);
     table = [descr_str, tabs, table];
 end
@@ -96,12 +96,12 @@ if isfield(cfg, 'progress') && isfield(cfg.progress, 'starttime')
         curr_text = [curr_text ', Endtime: No endtime'];
     end
 else
-    curr_text = ['Start & Endtime not available'];
+    curr_text = 'Start & Endtime not available';
 end
 table = char([{table}; {curr_text}]);
 
 % add result folder if available
-try
+try %#ok<TRYNC>
     table = char([{table}; ['cfg.results.dir: ' cfg.results.dir]]);
 end
 

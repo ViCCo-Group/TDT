@@ -141,7 +141,7 @@ if ~exist('combine','var')
     end
 end
 
-warningv('MAKE_DESIGN_PERMUTATION:beta_stage','This function is still in beta stage. Execute will necessary care!')
+warningv('MAKE_DESIGN_PERMUTATION:beta_stage','This function is still in beta modus. Execute with necessary care!')
 
 if nargin > 1
     dispv(1,'Creating permutation designs...')
@@ -382,7 +382,11 @@ if combine
     design.set = kron(1:n_perms_select,ones(1,n_steps_orig)); % make multiple sets out of it
     design.train = horzcat(design_orig.train); 
     design.test = horzcat(design_orig.test);
-    disp('Combining designs. Please manually set cfg.results.setwise = 1.')
+    if isfield(cfg,'results') && isfield(cfg.results,'setwise') && cfg.results.setwise ~= 1
+        warningv('cfg.results.setwise = 0. PLEASE MAKE SURE TO SET IT TO 1 BEFORE RUNNING THE PERMUTATION DESIGN.')
+    else
+        disp('Combining designs. Please make sure cfg.results.setwise = 1 and remains that way before running the permutation design.')
+    end
 end
         
 disp('done.')

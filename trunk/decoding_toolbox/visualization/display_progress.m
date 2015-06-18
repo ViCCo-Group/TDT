@@ -1,22 +1,31 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Display progress (how far is the analysis?)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function [msg_length] = display_progress(cfg,cnt,n_decodings,start_time,msg_length)
+%
+% Function to display progress and the estimated time to go in The Decoding
+% Toolbox (i.e. how far is the analysis?).
+
+% MH 2015/06/18: introduced prev_time to get more accurate estimation of
+% time to go if other processes start while analysis is running or if
+% analysis is paused on the fly
 
 function [msg_length] = display_progress(cfg,cnt,n_decodings,start_time,msg_length)
 
 global warningv_active % was a warning shown in between? (otherwise message will be truncated)
+persistent prev_time   % how much time has elapsed since last call?
 
 if cnt == 1
     fprintf('\nStarting time: %s',datestr(start_time));
 end
 
 if n_decodings > 50
-    display_values = [1 2 5 10 15 20 30 40 50 100 200 300 400 500 n_decodings]; % display progress of these voxels - afterwards at each 1000 steps
+    % display progress of these iterations - afterwards at each 1000 steps
+    display_values = [1 2 5 10 15 20 30 40 50 100 200 300 400 500 n_decodings];
 else
     display_values = 1:n_decodings;
 end
 
-if any(display_values == cnt) || mod(cnt,1000) == 0
+is1000 = mod(cnt,1000) == 0;
+
+if any(display_values == cnt) || is1000
 
     if isfield(cfg, 'sn')
         message = sprintf('Subject: %02d %s: %d/%d', cfg.sn, cfg.analysis, cnt, n_decodings);
@@ -27,12 +36,17 @@ if any(display_values == cnt) || mod(cnt,1000) == 0
     end
     
     % add estimated time to go
-    p = cnt / n_decodings * 100;
-    el_time = now - start_time;
+    t0 = now;
+    el_time = t0 - start_time;
     el_time_str = datestr(el_time, 'dd HH:MM:SS');
     if str2double(el_time_str(1:2)) == 0, el_time_str = el_time_str(4:end); end
-    est_time = (el_time / p) * 100;
-    est_time_left = est_time - el_time;
+    if ~is1000 || cnt == 1000 % if less than 1000 iterations, base estimation on all previous
+        est_time =  n_decodings/cnt * el_time;
+    else % otherwise base on most recent 1000 only
+        est_time =  el_time + (n_decodings-cnt)/1000 * (t0 - prev_time); 
+    end
+    prev_time = t0; % update
+    est_time_left = est_time - el_time; % how long we think it will still take
     est_time_left_str = datestr(est_time_left, 'dd HH:MM:SS');
     if str2double(est_time_left_str(1:2)) == 0, est_time_left_str = est_time_left_str(4:end); end    
     est_finish = start_time + est_time;

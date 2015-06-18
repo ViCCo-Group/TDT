@@ -15,10 +15,10 @@ if n ~= n2
     error('the first dimension of x and y need to be the same')
 end
 
-if exist('bsxfun','builtin')
+try % if exist('bsxfun','builtin')
     x = bsxfun(@minus,x,1/n * sum(x,1));
     y = bsxfun(@minus,y,1/n * sum(y,1));
-else
+catch
     mx = 1/n * sum(x,1);
     my = 1/n * sum(y,1);
     o = ones(1,n);

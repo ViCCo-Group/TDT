@@ -2,14 +2,14 @@
 The Decoding Toolbox (TDT) beta
 ===============================
 
-Copyright (c) 2009-2015 Martin N. Hebart and Kai Goergen
+2009-2015 Martin N. Hebart and Kai Goergen
 
 The Decoding Toolbox is licensed under the GNU General Public Licence as 
 published by the Free Software Foundation. The toolbox and/or any of its 
-parts that are not third party software may be adjusted and/or redistributed. 
-No part of it may be made publicly available in other programs without 
-acknowledgment of the authors (see below). Explicit agreement of the authors 
-is needed for commercial use of this software.
+parts that are not third party software may be adjusted and/or 
+redistributed under the following conditions:
+(1) The GNU General Public License is used for any parts of our code that are used or adjusted
+(2) This use or adjustment does not impose a conflict on the GNU General Public License.
 
 If you use this software in a publication, please acknowledge its use by 
 adding the following (or similar) lines to your manuscript:
@@ -23,13 +23,20 @@ Toolbox (TDT): A versatile software package for multivariate analyses of
 functional imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
 * Martin N Hebart and Kai Goergen contributed equally to this work.
 
-If you want to use parts of its code in publicly available software, please 
-add the following information to the code:
+If you want to use parts of its code for your own software distribution, please add the following information 
+to the code:
 
 "This code has been taken from The Decoding Toolbox (Hebart, Goergen, & Haynes, 2015)."
 
-The authors take no responsibility for any misuse of this software or any 
-programming mistakes.
+Please e-mail us if you want to re-distribute the code, so we can inform you
+in the case we find relevant programming mistakes.
+
+Important note: The authors take no responsibility for any misuse of this 
+software or any programming mistakes.
+
+Should any part of this license disagree with the GNU General Public License,
+then only the corresponding part is considered obsolete, but does not impact
+the remaining license.
 
 The toolbox contains the following third-party software:
 

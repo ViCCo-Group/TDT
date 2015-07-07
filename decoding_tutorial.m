@@ -64,7 +64,8 @@ labelname2 = FILLTHISOUT;
 
 % Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
 % Alternatively, you can specify (multiple) ROI masks as a cell or string 
-% matrix).
+% matrix). You can also pass one file with multiple integer values that
+% correspond to different (non-overlapping) masks.
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
 cfg.files.mask = FILLTHISOUT;

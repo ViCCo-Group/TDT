@@ -1,4 +1,4 @@
-% function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz)
+% function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,mask_index_each,sz)
 %
 % This is a subfunction of The Decoding Toolbox. It determines number of 
 % times a full classification is performed (e.g. number of searchlights or 
@@ -6,7 +6,7 @@
 %
 % Martin Hebart & Kai Görgen, 2013
 
-function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz)
+function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,mask_index_each,sz)
 
 if strcmpi(cfg.analysis,'searchlight')
     if ~isfield(cfg.searchlight,'subset')
@@ -63,7 +63,7 @@ if strcmpi(cfg.analysis,'searchlight')
 
 
 elseif strcmpi(cfg.analysis,'roi')
-    n_decodings = numel(cfg.files.mask); % number of ROI masks
+    n_decodings = length(mask_index_each); % number of ROI masks
     decoding_subindex = 1:n_decodings;
     
 elseif strcmpi(cfg.analysis,'wholebrain')

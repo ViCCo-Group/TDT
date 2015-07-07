@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data] = decoding(cfg, passed_data)
 %
-% The Decoding Toolbox, Version: 3.06, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.10, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -164,6 +164,9 @@
 % previously identical training data
 
 % HISTORY (only major changes)
+% 2015-07-07 Martin
+%   Added multi-ROI capability and possibility to write as nii-nifti
+%   (previously: img-nifti only)
 % 2015-03-02 Martin
 %   Added LDA as classifier and GUI
 % 2014-07-31 Kai
@@ -212,7 +215,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/05/07 3.06. Cite: Hebart, Goergen, Haynes, 2015 (see LICENSE.txt)'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/07/07 3.10. Cite: Hebart, Goergen, Haynes, 2015 (see LICENSE.txt)'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
@@ -264,6 +267,7 @@ end
 % unpack all fields from passed_data to shorten names in this function
 data = passed_data.data;
 mask_index = passed_data.mask_index;
+mask_index_each = passed_data.mask_index_each;
 sz = passed_data.dim;
 
 %% Check if result data should be used to only calculate transformations
@@ -293,7 +297,7 @@ if strcmpi(cfg.scale.estimation,'all')
 end
 
 % Get number of decodings for searchlight and number of ROIs for ROI (and 1 for wholebrain)
-[n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz);
+[n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,mask_index_each,sz);
 
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
@@ -303,32 +307,26 @@ results = {};
 % Set kernel method if used
 use_kernel = cfg.decoding.use_kernel;
 
-% Prepare searchlight template (if needed, sl_template will be empty for other methods)
+% Prepare searchlight template (sl_template will be empty for other methods than searchlight)
 [cfg,sl_template] = decoding_prepare_searchlight(cfg);
 
 % Save analysis type
-results.analysis = cfg.analysis;
+results.analysis        = cfg.analysis;
 % Save number of conditions (e.g. to get the chancelevel later)
-results.n_cond = cfg.design.n_cond;
+results.n_cond          = cfg.design.n_cond;
 results.n_cond_per_step = cfg.design.n_cond_per_step;
 % Save mask_index
-results.mask_index = mask_index;
+results.mask_index      = mask_index;
 % Save all mask indices separately (useful if several masks are provided)
-if isfield(passed_data, 'mask_index_each')
-    results.mask_index_each = passed_data.mask_index_each;
-else
-    % seems we have only one mask
-    results.mask_index_each{1} = results.mask_index;
-end
+results.mask_index_each = passed_data.mask_index_each;
 % Save number of decodings that could be performed
-results.n_decodings = n_decodings;
+results.n_decodings     = n_decodings;
+% save data info (voxel dimensions, size)
+results.datainfo        = cfg.datainfo;
 % Save subindices if they are provided
 if isfield(cfg.searchlight,'subset')
     results.decoding_subindex = decoding_subindex;
 end
-% save data info (voxel dimensions, size)
-results.datainfo = cfg.datainfo;
-
 
 for i_output = 1:n_outputs
     outname = char(cfg.results.output{i_output}); % char necessary to get name of objects

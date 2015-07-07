@@ -23,6 +23,8 @@ cfg.results.dir =
 % Set the filename of your brain mask (or your ROI masks as cell array) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
+% You can also use a mask file with multiple masks inside that are
+% separated by different integer values (a "multi-mask")
 % If you have no brain mask or this does not make sense for you, just
 % remove the line or pass ''
 cfg.files.mask = 

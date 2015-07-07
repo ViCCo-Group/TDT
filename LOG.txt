@@ -1,3 +1,11 @@
+* 3.10 - 2015/07/07
+- introduced possibility to use multi-mask (multiple ROI masks in one file, indexed by integers)
+- will also write as one file if one mask file is provided
+- adapted decoding_load_data.m, load_mask.m, decoding_write_results.m and get_n_decodings.m for that purpose
+- removed unneccessary if-clause in decoding.m
+- added info to template scripts and tutorial
+- updated license file.
+
 * 3.06 - 2015/05/07
 - Added a check for unbalanced test data.
 

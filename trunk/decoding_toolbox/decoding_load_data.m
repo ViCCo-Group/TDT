@@ -21,8 +21,8 @@
 %       .mask_index: indices of those voxels that were selected by all
 %             masks minus those that are nan in the input data.
 %       .mask_index_each: indices of those voxels that were selected by
-%             each mask separately (1xn cell array), only when several
-%             masks were provided
+%             each mask separately, for only one mask identical to 
+%             mask_index (1xn cell array)
 %       .files: Contains file information as in cfg.files, especially
 %             filenames of datafiles (.name) and mask(s) (.mask)
 %       .hdr: a header from either a mask or a data file (if
@@ -274,7 +274,7 @@ end
 
 %% test function for this function
 function test_decoding_load_data(cfg)
-% maybe get this out later
+% maybe move this elsewhere later
 % to start with, create a cfg that contains masks and data files 
 % (not part of this function now)
 
@@ -312,7 +312,7 @@ passed_data2.files.name{1} = 'anything';
 % to have a testcase, though
 
 
-%% also try what happens if all voxels should be used
+% also try what happens if all voxels should be used
 cfg2 = cfg;
 cfg2.files.mask = 'all voxels';
 [passed_data, cfg] = decoding_load_data(cfg2);

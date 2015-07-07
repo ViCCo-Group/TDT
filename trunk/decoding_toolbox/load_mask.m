@@ -10,8 +10,11 @@
 %
 % See also DECODING_LOAD_DATA
 
+% 15/07/03: introduced possibility to supply multiple masks in one mask volume
+
 function [mask_vol,mask_hdr,sz,mask_vol_each] = load_mask(cfg)
 
+%% Read mask(s)
 mask_names = cfg.files.mask;
 if ischar(mask_names) % to deal with different types of input
     mask_names = num2cell(mask_names,2);
@@ -20,6 +23,7 @@ n_masks = numel(mask_names);
 
 dispv(1,'Loading mask(s):');
 
+% load header to get dimensionality
 mask_fname = mask_names{1};
 mask_hdr = read_header(cfg.software,mask_fname);
 sz = mask_hdr.dim(1:3);
@@ -36,7 +40,34 @@ for i_mask = 1:n_masks
     dispv(1,'%s',fname)
 end
 
-% Convert to logical
+%% Check if a multi-mask was supplied (i.e. one volume with multiple non-overlapping ROI masks)
+% if the values are not all 0, 1, and NaN, it might be a multi-mask
+tmp = unique(mask_vol_each(:));
+if ~all(tmp==1|tmp==0|isnan(tmp))
+    % if we have only one mask file
+    if n_masks == 1
+        % get overall mask
+        mask_vol = read_image(cfg.software,hdr);
+        % get unique values
+        mask_num = unique(mask_vol(:));
+        mask_num(isnan(mask_num)|mask_num==0) = []; % remove 0 and NaN
+        % if all are integer values, we have a multi-mask and can overwrite the existing mask
+        if all(~mod(mask_num,1)) 
+            n_masks = length(mask_num);
+            dispv(1,'Reading multi-mask with %i different masks.',n_masks)
+            mask_vol_each = zeros([sz n_masks]);
+            for i_mask = 1:n_masks
+                mask_vol_each(:,:,:,i_mask) = mask_vol==mask_num(i_mask);
+            end
+        else % if a mask with non-binary values has been supplied, throw warning
+            warningv('LOAD_MASK:multipleValuesInMask','At least one mask contained values other than 0 and 1. Possibly check if the mask files have been selected correctly. Setting all non-zero values to 1. To avoid this warning, convert masks to 0 and 1 values only.')
+        end
+    else % if multiple masks with non-binary values have been supplied, throw warning
+        warningv('LOAD_MASK:multipleValuesInMask','At least one mask contained values other than 0 and 1. Possibly check if the mask files have been selected correctly. Multiple multi-masks are not allowed. Setting all non-zero values to 1. To avoid this warning, convert masks to 0 and 1 values only.')
+    end
+end
+
+%% Convert to logical
 mask_vol_each(isnan(mask_vol_each)) = 0;
 mask_vol_each = logical(mask_vol_each);
 

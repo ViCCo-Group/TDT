@@ -68,6 +68,9 @@ elseif strcmpi(cfg.analysis,'roi')
     elseif isfield(passed_data, 'mask_index_each')
         mask_index_sub = passed_data.mask_index_each{i_decodingstep};
     else
+        if length(mask_names) > i_decodingstep
+            error('Cannot load mask %i from file. Probably you are using a multi-mask. Try passing mask_index_each using passed_data.',i_decodingstep)
+        end
         % load masks from file
         fname = mask_names{i_decodingstep};
         hdr = read_header(cfg.software,fname); % get headers of mask
@@ -79,7 +82,11 @@ elseif strcmpi(cfg.analysis,'roi')
     [c,indexindex] = intersect(mask_index,mask_index_sub); %#ok<ASGLU>
     
     if isempty(indexindex)
-        error('There is no overlap between mask %s and the decoding data, check position of mask!',fname)
+        if exist('fname','var')
+            error('There is no overlap between mask %s and the decoding data. Remove the mask from your input or check the mask position!',fname)
+        else
+            error('There is no overlap between mask %i and the decoding data. Remove the mask from your input or check the mask position!',i_decodingstep)
+        end
     end
         
 elseif strcmpi(cfg.analysis,'wholebrain')

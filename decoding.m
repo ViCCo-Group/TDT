@@ -1,6 +1,6 @@
-% function [results, cfg, passed_data] = decoding(cfg, passed_data)
+% function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version: 3.10, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.30, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -75,6 +75,8 @@
 %   cfg: returns the configuration file that was used in the decoding.
 %   passed_data: all brain imaging data is necessary to pass to decoding.m
 %        to perform another analyses using the same data.
+%   misc: miscellaneous data or parameters that can be passed separately (usually
+%       quite large, e.g. residuals)
 %
 %
 % All other input is provided in decoding_defaults unless changed.
@@ -154,6 +156,11 @@
 % make sure that the data fits to the filenames. See HOWTOUSEPASSEDDATA.txt
 % on how to use it.
 %
+% misc (optional):
+% Contains miscellaneous data that can be passed (it is
+% passed separately from passed_data, because misc can become quite large
+% (e.g. when residuals are used).
+%
 % See also DECODING_DEFAULTS, DECODING_SCALE_DATA,
 % DECODING_FEATURE_SELECTION, DECODING_PARAMETER_SELECTION,
 % DECODING_FEATURE_TRANSFORMATION
@@ -164,6 +171,14 @@
 % previously identical training data
 
 % HISTORY (only major changes)
+% 2015-07-21 Martin
+%   Added misc as new input (e.g. for passing residuals)
+%   Allow scaling of each chunk separately
+%   Allow scaling using covariance of residuals
+%   New function decoding_load_misc to load e.g. residuals
+%   New function residuals_from_spm in case residuals haven't been written
+%       to files
+%   Improved readability of main function
 % 2015-07-07 Martin
 %   Added multi-ROI capability and possibility to write as nii-nifti
 %   (previously: img-nifti only)
@@ -198,7 +213,7 @@
 %   explanation what is what below.
 
 %% Main start
-function [results, cfg, passed_data] = decoding(cfg, passed_data)
+function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 
 %% Prepare decoding analysis
 
@@ -215,7 +230,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/07/07 3.10. Cite: Hebart, Goergen, Haynes, 2015 (see LICENSE.txt)'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/07/21 3.30. Cite: Hebart, Goergen, Haynes, 2015 (see LICENSE.txt)'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
@@ -226,21 +241,7 @@ dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 
 %% Plot and save design as graphics if requested
 
-try
-    if cfg.plot_design == 1 % plot + save fig, save hdl
-        cfg.fighandles.plot_design = plot_design(cfg);
-        save_fig(fullfile(cfg.results.dir, 'design'), cfg, cfg.fighandles.plot_design); 
-        drawnow;
-    elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
-        fighdl = plot_design(cfg, 0); 
-        save_fig(fullfile(cfg.results.dir, 'design'), cfg, fighdl); 
-        close(fighdl); clear fighdl
-    end
-catch
-    warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
-end
-% show design as text
-try display_design(cfg); catch, warningv('DECODING:PrintDesignFailed', 'Failed to print design to screen'), end
+tdt_plot_design_init(cfg);
 
 %% Open file to write all filenames that we load
 
@@ -256,12 +257,12 @@ end
 
 %% Load masked data
 
-if ~exist('passed_data', 'var')
-    % load data
-    [passed_data, cfg] = decoding_load_data(cfg);
-else
+if exist('passed_data', 'var') && ~isempty(passed_data)
     % check that passed_data fits to cfg, otherwise load data from files
     [passed_data, cfg] = decoding_load_data(cfg, passed_data);
+else
+    % load data the standard way
+    [passed_data, cfg] = decoding_load_data(cfg);
 end
 
 % unpack all fields from passed_data to shorten names in this function
@@ -270,23 +271,13 @@ mask_index = passed_data.mask_index;
 mask_index_each = passed_data.mask_index_each;
 sz = passed_data.dim;
 
+%% If requested, load miscellaneous data (e.g. residuals or raw data)
+if ~exist('misc','var'), misc = []; end
+misc = decoding_load_misc(cfg, passed_data, misc);
+
 %% Check if result data should be used to only calculate transformations
-% By default, calculate the data, if not specified otherwise
-if ~isfield(cfg.decoding, 'use_loaded_results') || cfg.decoding.use_loaded_results == 0
-    cfg.decoding.use_loaded_results = 0; % set default
-else
-    % check that passed_data contains the loaded results
-    if ~isfield(passed_data, 'loaded_results')
-        error('cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1), but no result data is passed in passed_data.loaded_results. See read_resultdata.m on how to use this feature.')
-    end
-    % check that mask_index agrees
-    if ~isequal(mask_index, passed_data.loaded_results.mask_index)
-        error('mask_index in decding does not fit to passed_data.loaded_results.mask_index')
-    end
-    
-    warningv('decoding:loaded_results_experimental', 'cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1). This features is still experimental. Use with care.')
-    display('Skip calculating data and using results from passed_data.loaded_results instead.')
-end
+
+cfg = tdt_check_transform_only(cfg,passed_data,mask_index);
 
 %% Prepare the decoding
 
@@ -302,7 +293,6 @@ end
 % Initialize results vectors
 n_outputs = length(cfg.results.output);
 cfg.design.n_sets = length(unique(cfg.design.set));
-results = {};
 
 % Set kernel method if used
 use_kernel = cfg.decoding.use_kernel;
@@ -310,49 +300,8 @@ use_kernel = cfg.decoding.use_kernel;
 % Prepare searchlight template (sl_template will be empty for other methods than searchlight)
 [cfg,sl_template] = decoding_prepare_searchlight(cfg);
 
-% Save analysis type
-results.analysis        = cfg.analysis;
-% Save number of conditions (e.g. to get the chancelevel later)
-results.n_cond          = cfg.design.n_cond;
-results.n_cond_per_step = cfg.design.n_cond_per_step;
-% Save mask_index
-results.mask_index      = mask_index;
-% Save all mask indices separately (useful if several masks are provided)
-results.mask_index_each = passed_data.mask_index_each;
-% Save number of decodings that could be performed
-results.n_decodings     = n_decodings;
-% save data info (voxel dimensions, size)
-results.datainfo        = cfg.datainfo;
-% Save subindices if they are provided
-if isfield(cfg.searchlight,'subset')
-    results.decoding_subindex = decoding_subindex;
-end
-
-for i_output = 1:n_outputs
-    outname = char(cfg.results.output{i_output}); % char necessary to get name of objects
-    
-    if strcmp(cfg.analysis, 'searchlight')
-        % use number of voxels to allocate space independent of number of
-        % decodings (because cfg.searchlight.subset allows to choose fewer
-        % voxels, but we want in the end an image that has the same
-        % dimension as the original image)
-        n_dim = length(mask_index);  % n_voxel = length(mask_index)
-    else
-        % otherwise, get as many output dimensions as decodings (no subset
-        % selection possible at the moment)
-        n_dim = n_decodings;
-    end
-
-    % Preallocation
-    results.(outname).output = zeros(n_dim,1);
-
-    if cfg.results.setwise && cfg.design.n_sets > 1
-        for i_set = 1:cfg.design.n_sets
-            results.(outname).set(i_set).output = zeros(n_dim,1);
-        end
-    end
-    clear n_dim
-end
+% Initialize results vector and save some information to results, including mask_index and n_decodings
+results = tdt_prepare_results(cfg,mask_index,passed_data,n_decodings,n_outputs,decoding_subindex);
 
 
 %% PERFORM Decoding Analysis
@@ -365,6 +314,8 @@ start_time = now;
 % Preloading
 msg_length = [];
 previous_fs_data = []; % init
+kernel = []; % init
+model = []; % init
 
 % init states of parameter_selection, feature_selection, and scaling
 feature_transformation_all_on = strcmpi(cfg.feature_transformation.estimation,'all');
@@ -372,6 +323,7 @@ feature_transformation_across_on = strcmpi(cfg.feature_transformation.estimation
 parameter_selection_on = ~strcmpi(cfg.parameter_selection.method,'none');
 feature_selection_on = ~strcmpi(cfg.feature_selection.method,'none');
 scaling_across_on = strcmpi(cfg.scale.estimation,'across');
+scaling_separate_on = strcmpi(cfg.scale.estimation,'separate');
 
 % Warn if test mode
 if cfg.testmode
@@ -392,6 +344,10 @@ elseif cfg.verbose == 2
     'If you want to weight all decoding steps equally, please use cfg.results.setwise=1 and cfg.design.set = 1:length(cfg.design.set) and average over the resulting output images']))
 end
 
+if scaling_separate_on
+    dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation)
+end
+
 lasttime = now; % for updating figures
 
 % Start
@@ -410,17 +366,13 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template,passed_data);
     current_data = data(:,indexindex);
     
-    if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
-        if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')
-            cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI Online ROI (cfg.plot_selected_voxels=0 for more speed)');
-        end
-        try
-            % plot searchlight with brain projection
-            cfg.fighandles.plot_selected_voxels = plot_selected_voxels(mask_index(indexindex), sz, data(1, :), mask_index, [], cfg.fighandles.plot_selected_voxels);
-        catch
-            warningv('DECODING:PlotSelectedVoxelsFailed', 'plot_selected_voxels failed');
-        end
+    % Scale current data if it is done separately
+    if scaling_separate_on
+        current_data = tdt_scale_separate(cfg,current_data,misc,indexindex);
     end
+    
+    % Plot selected voxels online if requested
+    cfg = tdt_plot_selected_voxels(cfg, i_decoding, n_decodings, mask_index, indexindex, sz, data(1, :));
 
     % Data transformation (e.g. PCA) if requested
     if feature_transformation_all_on
@@ -433,11 +385,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     previous_trainlabels = []; % init
     
     if use_kernel
-        % if all decoding steps use the same data, calculating the
-        % kernel only once and then passing the training and test
-        % part of the kernel is in most cases faster than calculating
-        % a kernel in every step. As default, a linear kernel is used
-        % (@(X,Y) X*Y' ; see decoding_defaults);
+        % kernel passing is most often much faster for cross-validation.
+        % default is linear kernel (see decoding_defaults)
         kernel = cfg.decoding.kernel.function(current_data,current_data);
     end
 
@@ -449,26 +398,9 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         % Get indices for testing
         i_test = find(cfg.design.test(:, i_step) > 0);
 
-        % Get data for training & testing at current position
-        if use_kernel
-            % in each step, set the kernel-submatrix containing the
-            % training entries as training data
-            data_train.kernel = kernel(i_train, i_train);
-            % get submatrix with kernel entries between test and train
-            % examples from the kernel -- this is the way a kernel is
-            % used. No leak between training data and the test data.
-            data_test.kernel = kernel(i_test, i_train);
-            % additionally pass original data vectors, if selected
-            if cfg.decoding.kernel.pass_vectors
-                data_train.vectors = current_data(i_train, :);
-                data_test.vectors = current_data(i_test, :);
-            end
-        else
-            % no kernel used, set the training vectors as training data
-            data_train = current_data(i_train, :);
-            data_test = current_data(i_test, :);
-        end
-  
+        % Separate current data in training and test data
+        [data_train,data_test] = tdt_get_train_test(cfg,current_data,kernel,use_kernel,i_train,i_test);
+        
         labels_train = cfg.design.label(i_train, i_step);
         labels_test = cfg.design.label(i_test, i_step);
 
@@ -538,18 +470,20 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             if i_decoding == 1 && i_step == 1, dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation), end
             [data_train,scaleparams] = decoding_scale_data(cfg,data_train);
         end
-
+                
+        % TODO: add decoding_prepare_classification here if we want to pass
+        % a regularization parameter or the such using misc
+        % if ~skip_training
+        %     cfg = decoding_prepare_classification(cfg,misc,mask_index(indexindex));
+        % end            
+        
         % Development Remark: Additional KERNEL calculation might go here, 
         % if feature selection or scaling on training data is used. Passing
         % a kernel might still be faster for certain methods/more
         % convenient if nothing needs to be changed.
         
         if skip_training
-            if cfg.decoding.use_loaded_results
-                % we use loaded results instead of train and test, so no 
-                % model is set here
-                model = [];
-            else
+            if ~cfg.decoding.use_loaded_results
                 % use model from previous step
                 model = decoding_out(i_step-1).model;
             end
@@ -618,6 +552,157 @@ cfg.progress.endtime = datestr(now);
    
 %% plot & save design again at the end (to show that job is finished)
 % Endtime shows user that job is over
+tdt_plot_design_final(cfg);
+
+
+%% END OF MAIN FUNCTION
+
+
+%% SUBFUNCTIONS
+
+function tdt_plot_design_init(cfg)
+
+try
+    if cfg.plot_design == 1 % plot + save fig, save hdl
+        cfg.fighandles.plot_design = plot_design(cfg);
+        save_fig(fullfile(cfg.results.dir, 'design'), cfg, cfg.fighandles.plot_design); 
+        drawnow;
+    elseif cfg.plot_design == 2 % only save fig, plot invisible, dont save hdl
+        fighdl = plot_design(cfg, 0); 
+        save_fig(fullfile(cfg.results.dir, 'design'), cfg, fighdl); 
+        close(fighdl); clear fighdl
+    end
+catch
+    warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
+end
+
+% show design as text
+try display_design(cfg); catch, warningv('DECODING:PrintDesignFailed', 'Failed to print design to screen'), end
+
+%%
+function cfg = tdt_check_transform_only(cfg,passed_data,mask_index)
+
+% By default, calculate the data, if not specified otherwise
+if ~isfield(cfg.decoding, 'use_loaded_results') || cfg.decoding.use_loaded_results == 0
+    cfg.decoding.use_loaded_results = 0; % set default
+else
+    % check that passed_data contains the loaded results
+    if ~isfield(passed_data, 'loaded_results')
+        error('cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1), but no result data is passed in passed_data.loaded_results. See read_resultdata.m on how to use this feature.')
+    end
+    % check that mask_index agrees
+    if ~isequal(mask_index, passed_data.loaded_results.mask_index)
+        error('mask_index in decding does not fit to passed_data.loaded_results.mask_index')
+    end
+    
+    warningv('decoding:loaded_results_experimental', 'cfg specifies that loaded results should be used instead of recomputing them (cfg.decoding.use_loaded_results = 1). This features is still experimental. Use with care.')
+    display('Skip calculating data and using results from passed_data.loaded_results instead.')
+end
+
+%%
+function results = tdt_prepare_results(cfg,mask_index,passed_data,n_decodings,n_outputs,decoding_subindex)
+
+% initialize results vector
+results = {};
+
+% Save analysis type
+results.analysis        = cfg.analysis;
+% Save number of conditions (e.g. to get the chancelevel later)
+results.n_cond          = cfg.design.n_cond;
+results.n_cond_per_step = cfg.design.n_cond_per_step;
+% Save mask_index
+results.mask_index      = mask_index;
+% Save all mask indices separately (useful if several masks are provided)
+results.mask_index_each = passed_data.mask_index_each;
+% Save number of decodings that could be performed
+results.n_decodings     = n_decodings;
+% save data info (voxel dimensions, size)
+results.datainfo        = cfg.datainfo;
+% Save subindices if they are provided
+if isfield(cfg.searchlight,'subset')
+    results.decoding_subindex = decoding_subindex;
+end
+
+for i_output = 1:n_outputs
+    outname = char(cfg.results.output{i_output}); % char necessary to get name of objects
+    
+    if strcmp(cfg.analysis, 'searchlight')
+        % use number of voxels to allocate space independent of number of
+        % decodings (because cfg.searchlight.subset allows to choose fewer
+        % voxels, but we want in the end an image that has the same
+        % dimension as the original image)
+        n_dim = length(mask_index);  % n_voxel = length(mask_index)
+    else
+        % otherwise, get as many output dimensions as decodings (no subset
+        % selection possible at the moment)
+        n_dim = n_decodings;
+    end
+
+    % Preallocation
+    results.(outname).output = zeros(n_dim,1);
+
+    if cfg.results.setwise && cfg.design.n_sets > 1
+        for i_set = 1:cfg.design.n_sets
+            results.(outname).set(i_set).output = zeros(n_dim,1);
+        end
+    end
+    clear n_dim
+end
+
+%%
+
+function data = tdt_scale_separate(cfg,data,misc,miscindex)
+
+use_misc = ~isempty(misc);
+
+uchunk  = uniqueq(cfg.files.chunk);
+for i_chunk = 1:length(uchunk)
+    dataind  = cfg.files.chunk==uchunk(i_chunk);
+    if use_misc
+        residind = cfg.files.residuals.chunk==uchunk(i_chunk);
+        data(dataind,:) = decoding_scale_data(cfg,data(dataind,:),[],misc.residuals(residind,miscindex));
+    else
+        data(dataind,:) = decoding_scale_data(cfg,data(dataind,:));
+    end
+end
+
+%%
+function cfg = tdt_plot_selected_voxels(cfg, i_decoding, n_decodings, mask_index, indexindex, sz, currdata)
+
+if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
+    if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')
+        cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI Online ROI (cfg.plot_selected_voxels=0 for more speed)');
+    end
+    try
+        % plot searchlight with brain projection
+        cfg.fighandles.plot_selected_voxels = plot_selected_voxels(mask_index(indexindex), sz, currdata, mask_index, [], cfg.fighandles.plot_selected_voxels);
+    catch
+        warningv('DECODING:PlotSelectedVoxelsFailed', 'plot_selected_voxels failed');
+    end
+end
+
+%%
+function [data_train,data_test] = tdt_get_train_test(cfg,current_data,kernel,use_kernel,i_train,i_test)
+
+% Get data for training & testing at current position
+if use_kernel
+    % get relevant parts of kernel
+    data_train.kernel = kernel(i_train, i_train);
+    data_test.kernel = kernel(i_test, i_train);
+    % additionally pass original data vectors, if selected
+    if cfg.decoding.kernel.pass_vectors
+        data_train.vectors = current_data(i_train, :);
+        data_test.vectors = current_data(i_test, :);
+    end
+else
+    % no kernel used, set the training vectors as training data
+    data_train = current_data(i_train, :);
+    data_test = current_data(i_test, :);
+end
+
+%%
+function tdt_plot_design_final(cfg)
+
 try
     if cfg.plot_design
         fighdl = plot_design(cfg,1); 
@@ -628,5 +713,3 @@ try
 catch %#ok<*CTCH>
     warningv('DECODING:PlotDesignFailed', 'Failed to plot design')
 end
-
-%% END OF MAIN FUNCTION

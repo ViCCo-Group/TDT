@@ -8,6 +8,8 @@
 %
 % 2015/04/14 Martin Hebart
 
+% TODO: check if sqrt(max(...,0)) can be replaced by real(sqrt(...)) which
+% could be faster
 
 function dist = euclidean(X)
 

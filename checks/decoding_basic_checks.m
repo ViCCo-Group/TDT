@@ -125,9 +125,14 @@ else
     dispv(2, 'Using normal method')    
 end
 
-% Using a precomputed kernel doesn't work for scaling across
-if use_kernel && strcmpi(cfg.scale.estimation,'across')
-    error('Cannot use scaling method ''across'' for "_kernel" methods. It does not make sense, because a kernel must be calculated in this case in every step anyway (which is the same what normal methods do, but slower). Manually set cfg.decoding.method = ''classification'' (if classification is performed).');
+% Using a precomputed kernel doesn't work for scaling across or separate
+if use_kernel && (strcmpi(cfg.scale.estimation,'across') || strcmpi(cfg.scale.estimation,'separate'))
+    newmethod = strrep(cfg.decoding.method,'_kernel','');
+    str = sprintf(['Use of scaling method ''%s'' and decoding method ''%s'' does not make sense, because a kernel must calculated in this case in every step anyway.',...
+                   'Method is now reverted to ''%s'' (which will be slower).'],cfg.scale.estimation,cfg.decoding.method,newmethod);
+    warningv('DECODING_BASIC_CHECKS:KernelAndScaling',str)
+    cfg.decoding.method = newmethod;
+    cfg.decoding.use_kernel = 0;
 end
 
 if use_kernel && strcmpi(cfg.feature_transformation.estimation,'across')

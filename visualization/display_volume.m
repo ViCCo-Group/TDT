@@ -37,8 +37,10 @@ if ischar(vol)
     hdr = read_header(cfg.software, fname);
     vol = read_image(cfg.software, hdr);
     % use filename as title
-    [p, fn, ext] = fileparts(fname);
-    title_str = [fn, ext];
+    title_str = [fname];
+    % could also take only filename, but full path seems helpful
+    % [p, fn, ext] = fileparts(fname);
+    % title_str = [fn, ext sprintf('\n')];
 end
 
 %% Get dimension of data
@@ -66,7 +68,7 @@ nRows = round(sqrt(sz(3))*factor);
 nColumns = ceil(sz(3)/nRows);
 % get data scaling
 clim = [min(vol(:)) max(vol(:))];
-title_str = [title_str sprintf(' datarange (%f, %f)', clim)];
+title_str = [title_str sprintf('. Datarange [%g, %g]. ', clim)];
 
 % create figure or use passed one
 if ~exist('fig_handle', 'var')
@@ -99,6 +101,7 @@ end
 colorbar('Location', 'East'); % use last subplot from loop as peer
 
 % add title
+title_str = [title_str char(10) 'Data from volume only, ignoring affine transformation (in hdr.mat).'];
 switch mode
     case 'subplots'
         try

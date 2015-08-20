@@ -7,13 +7,13 @@ function decoding_out = passdata_test(labels_test,data_test,cfg,model)
 
 switch lower(cfg.decoding.method)
     
-    case 'none'
+    case {'passdata', 'none'} % none is old, kept for backward compatibility
         % do nothing except return an empty result vector
         decoding_out.vectors_test = data_test;
         decoding_out.labels_test = labels_test;       
         decoding_out.chunk_test = cfg.files.chunk;
         
-    case 'none_kernel'
+    case {'passdata_kernel', 'none_kernel'} % none is old, kept for backward compatibility
         % do nothing except return an empty result vector
         decoding_out.kernel_test = data_test;
         decoding_out.labels_test = labels_test;         
@@ -21,7 +21,7 @@ switch lower(cfg.decoding.method)
         
     otherwise
         error(...
-           ['The "none" decoding software (cfg.decoding.software = ''passdata'') ', ...
+           ['The (former "none") decoding software (cfg.decoding.software = ''passdata'') ', ...
            'only takes cfg.decoding.method = ''passdata'', to avoid confusions. ', ...
            'The currently set method is cfg.decoding.method = %s ', ...
            'for cfg.decoding.software = %s. ', ...

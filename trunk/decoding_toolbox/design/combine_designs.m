@@ -118,6 +118,10 @@ end
 cfg1 = all_cfg{1};
 cfg2 = all_cfg{2};
 
+if ~(isfield(cfg1,'files') && isfield(cfg1.files,'name')) || ~(isfield(cfg2,'files') && isfield(cfg2.files,'name'))
+    error('combine_designs requires field cfg.files.name in all designs to assign fields together. If you need to fill them with dummy entries, choose unique names that are repeated across designs.')
+end
+    
 dispv(1, 'COMBINE_DESIGNS ignores all the values in cfg2 except for cfg2.files and cfg2.design . This is normal behavior, but we just inform you about it.');
 
 if ~length(cfg1.files.name)==length(cfg2.files.name)

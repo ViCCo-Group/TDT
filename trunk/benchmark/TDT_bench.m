@@ -5,13 +5,13 @@ tests.multiple = 0; % multiple results
 tests.writematonly = 0;
 tests.nowrite = 0;
 tests.wholebrain = 0; % include weights
-tests.roi = 1; % testing one and multiple ROIs
+tests.roi = 0; % testing one and multiple ROIs
 tests.roi_setwise = 0; % testing same analysis with setwise settings
 tests.sl_setwise = 0; % testing classical searchlight with setwise settings
 tests.fs_filter = 0;
-tests.fs_embedded = 0;
-tests.fs_multilevel = 0;
-tests.parameter_selection = 0; % testing basic parameter selection assumptions
+tests.fs_embedded = 1;
+tests.fs_multilevel = 1;
+tests.parameter_selection = 1; % testing basic parameter selection assumptions
 
 %% Possibly, manually deactivate all non-base Matlab toolboxes before running this! And run with an old Matlab version!
 
@@ -53,7 +53,7 @@ if tests.basic
 %     cfg.files = rmfield(cfg.files,'mask'); % checked: running analysis without providing mask works just as well
     results = decoding(cfg);
         
-    fnames = spm_select('fplistrec',fdir,['^' cfg.results.filestart '.*\.img$']);
+    fnames = spm_select('fplistrec',fdir,['^' cfg.results.filestart '_accuracy_minus_chance.*\.img$']);
     [all_same, diff_vol, diff_ind] = compare_volumes(fnames);
     if ~all_same
         error('Some voxels are not the same as the reference. Please check!')
@@ -83,12 +83,12 @@ if tests.subset
     % first test get_n_decodings for searchlight subsets
     load(fullfile(fdir,'reference','mask_index_full.mat'))
     load(fullfile(fdir,'reference','sz.mat'))
-    [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,sz);
+    [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,mask_index,sz);
     
     % Do same with coordinates to see if results are identical
     [M(:,1) M(:,2) M(:,3)] = ind2sub(sz,mask_index);
     cfg.searchlight.subset = M(cfg.searchlight.subset,:);
-    [n_decodings2,decoding_subindex2] = get_n_decodings(cfg,mask_index,sz);
+    [n_decodings2,decoding_subindex2] = get_n_decodings(cfg,mask_index,mask_index,sz);
     
     if n_decodings2 ~= n_decodings || ~isequal(decoding_subindex,decoding_subindex2)
         error('Difference between methods detected!')
@@ -398,7 +398,7 @@ if tests.sl_setwise
     clear cfg M
     cfg = defaults;
     cfg.design.set(:) = [1:4 4:-1:1]; %use funny order
-    cfg.results.filestart = 'SL10mm_makedesigncv_kernel_setwise';
+    cfg.results.filestart = 'SL10mm_makedesigncv_setwise';
     cfg.results.dir = fullfile(fdir,'results');
     cfg.searchlight.unit = 'mm';
     cfg.searchlight.radius = 10;
@@ -424,9 +424,9 @@ if tests.fs_filter
     cfg.verbose = 2;
     cfg.results.overwrite = 1;
     cfg.plot_design = 0;
-    cfg.decoding.method = 'classification_kernel';
+    cfg.decoding.method = 'classification';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance'};
     
     cfg.feature_selection.method = 'filter';
     cfg.feature_selection.filter = 'external';
@@ -450,15 +450,15 @@ if tests.fs_embedded
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification_kernel';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance'};
     
     cfg.feature_selection.method = 'embedded';
     cfg.feature_selection.embedded = 'RFE';
     cfg.feature_selection.optimization_criterion = 'select_peak';
-    %     cfg.feature_selection.n_vox = [1 5 10 20:5000];
+    cfg.feature_selection.n_vox = [1 5 10 20:5000];
 
 % Using option 'none' and doing only high-level RFE: works
-%     cfg.feature_selection.nested_n_vox = 'none'; % checked: works
+    cfg.feature_selection.nested_n_vox = 'none'; % checked: works
 
 % Providing nested_n_vox seems to work (but not 100% sure)
 %     cfg.feature_selection.nested_n_vox = [1:20]; % checked: seems to work
@@ -490,7 +490,7 @@ if tests.fs_multilevel
     cfg.plot_design = 0;
     cfg.decoding.method = 'classification_kernel';
     cfg.results.write = 2;
-    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
+    cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance'};
     
     cfg.feature_selection.feature_selection.method = 'filter';
     cfg.feature_selection.feature_selection.filter = 'external';

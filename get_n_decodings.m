@@ -9,7 +9,7 @@
 function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,mask_index_each,sz)
 
 if strcmpi(cfg.analysis,'searchlight')
-    if ~isfield(cfg.searchlight,'subset')
+    if ~isfield(cfg.searchlight,'subset') || isempty(cfg.searchlight.subset)
         % use all voxels
         n_decodings = length(mask_index); % number of voxels
         decoding_subindex = 1:n_decodings;
@@ -21,9 +21,9 @@ if strcmpi(cfg.analysis,'searchlight')
 
         % Check if format is correct
         if subset_sz(2) ~= 3 && subset_sz(2) ~= 1
-            error(['Size of input to cfg.searchlight.subset is %ix%i. If you provided indices, ',...
-                'set cfg.searchlight.subset = cfg.searchlight.subset''. If you wanted to provide ',...
-                'coordinates, ones nx3 as input (see ''help decoding'' for more information)'],subset_sz(1),subset_sz(2));
+            error(['Size of input to cfg.searchlight.subset is %ix%i. If you provided indices, provide them as 1xn vector',...
+                'instead of nx1 vectore (e.g. transpose input by adding cfg.searchlight.subset = cfg.searchlight.subset'').', ...
+                'If you wanted to provide coordinates, use nx3 as input (see ''help decoding'' for more information)'],subset_sz(1),subset_sz(2));
         end
 
         % if provided as vector

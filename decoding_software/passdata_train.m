@@ -7,13 +7,13 @@ function model = passdata_train(labels_train,data_train,cfg)
 
 switch lower(cfg.decoding.method)
     
-    case 'none'
+    case {'passdata', 'none'} % none is old, kept for backward compatibility
         % do nothing except return an data and labels as model
         model.vectors_train = data_train;
         model.labels_train = labels_train;
         model.chunk_train = cfg.files.chunk;
         
-    case 'none_kernel'
+    case {'passdata_kernel', 'none_kernel'} % none is old, kept for backward compatibility
         % do nothing except return an data and labels as model
         model.kernel_train = data_train;
         model.labels_train = labels_train; 
@@ -21,7 +21,7 @@ switch lower(cfg.decoding.method)
         
     otherwise
         error(...
-           ['The "none" decoding software (cfg.decoding.software = ''passdata'') ', ...
+           ['The "pass_data" (former "none") decoding software (cfg.decoding.software = ''passdata'') ', ...
            'only takes cfg.decoding.method = ''passdata'' or ''passdata_kernel'', to avoid confusions. ', ...
            'The currently set method is cfg.decoding.method = %s ', ...
            'for cfg.decoding.software = %s. ', ...

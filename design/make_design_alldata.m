@@ -2,7 +2,7 @@
 %
 % Function to generate design matrix with all data as training and test
 % data. This is useful e.g. for creating a weight map from all data. Please
-% remember to set cfg.
+% remember to set cfg.design.nonindependence = 'ok'
 %
 % IN
 %   cfg.files.chunk: a vector, one chunk number for each file in

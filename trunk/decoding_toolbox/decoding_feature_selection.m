@@ -200,6 +200,7 @@ nested_feature_selection_on = ~strcmpi(cfg.feature_selection.feature_selection.m
 if nested_feature_selection_on
     nested_cfg = cfg;
     nested_cfg.feature_selection = cfg.feature_selection.feature_selection; % otherwise endless loop
+    nested_cfg.feature_selection = inherit_settings(nested_cfg.feature_selection,cfg,'analysis','software','verbose','decoding');
     nested_cfg.feature_selection = decoding_defaults(nested_cfg.feature_selection);
     [nested_fs_index,nested_fs_results,fs_data] = decoding_feature_selection(nested_cfg,fs_data);
     fs_results.nested = nested_fs_results;
@@ -279,6 +280,10 @@ if ~isfield(cfg.feature_selection,'n_vox')
                 'in which to search. Type ''help decoding_feature_selection'' for details.'])
 else
     n_vox = cfg.feature_selection.n_vox;
+end
+
+if ischar(cfg.feature_selection.results.output)
+    cfg.feature_selection.results.output = num2cell(cfg.feature_selection.results.output,2);
 end
 
 if length(cfg.feature_selection.results.output) > 1

@@ -218,9 +218,10 @@ function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %% Prepare decoding analysis
 
 cfg = decoding_defaults(cfg); % set defaults
-cfg.feature_transformation = decoding_defaults(cfg.feature_transformation);
-cfg.parameter_selection = decoding_defaults(cfg.parameter_selection);
-cfg.feature_selection = decoding_defaults(cfg.feature_selection);
+cfg.feature_transformation = inherit_settings(cfg.feature_transformation,cfg,'analysis','software','verbose','decoding');
+cfg.parameter_selection    = inherit_settings(cfg.parameter_selection,cfg,'analysis','software','verbose','decoding');
+cfg.feature_selection      = inherit_settings(cfg.feature_selection,cfg,'analysis','software','verbose','decoding');
+cfg.feature_selection      = decoding_defaults(cfg.feature_selection);
 
 cfg.progress.starttime = datestr(now);
 

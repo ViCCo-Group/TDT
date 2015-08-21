@@ -37,7 +37,7 @@ if ischar(vol)
     hdr = read_header(cfg.software, fname);
     vol = read_image(cfg.software, hdr);
     % use filename as title
-    title_str = [fname];
+    title_str = fname;
     % could also take only filename, but full path seems helpful
     % [p, fn, ext] = fileparts(fname);
     % title_str = [fn, ext sprintf('\n')];
@@ -46,7 +46,7 @@ end
 %% Get dimension of data
 sz = size(vol);
 if length(sz) < 3
-    warning('The data is not 3D, trying to plot it anyway (as one slice)')
+    warning('The data is not 3D, trying to plot it anyway (as one slice)');
     sz(end+1:3) = 1; % fill up to 3 dimensions
 elseif length(sz) > 3
     error('The function only displays 1 3d volume at the moment')
@@ -77,6 +77,8 @@ else
     figure(fig_handle);
     set(gcf, 'name', title_str);
 end
+
+colormap('bone');
 
 % plot (as subplots)
 switch mode
@@ -115,7 +117,6 @@ switch mode
             t = title(title_str);
 end
 set(t, 'Interpreter', 'None')
-colormap('bone')
 
 %% Help function: newvol = tranform_vol(vol) for plain mode
 % function newvol = transform_vol(vol)

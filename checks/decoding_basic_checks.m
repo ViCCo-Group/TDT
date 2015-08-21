@@ -8,6 +8,7 @@
 % Second, some parameters are set that are later needed.
 
 % History 
+% Kai (2015/21/08): Automatic check for mask.img if not provided
 % Martin (2014/16/06): Allowing only Matlab versions > 7.3 (all others have
 %   not been tested)
 % Martin (2014/01/24): Changed check for writing results, results are now 
@@ -269,9 +270,42 @@ if isfield(cfg.files, 'mask')
     if ischar(cfg.files.mask)
         cfg.files.mask = num2cell(cfg.files.mask,2);
     end
-else % mask does not exist, set it to auto
-    dispv(1, 'No mask file detected, using all voxels')
-    cfg.files.mask = {'all voxels'}; % will generate a mask later (using all voxels)
+else % mask not specified, check if all input files come from one directory and if this contains a mask.img, else use all voxels
+    set_auto = 1; % by default, set mask to 'all voxels'
+    try % if something doesnt work we, we dont care, and just use the auto version below
+        dispv(1, 'No mask specified in cfg.file.mask, checking if all images are from the same directory')
+        [p1, fn, ext] = fileparts(cfg.files.name{1}); % directory of first file
+        % check if all other files are in the same directory
+        all_from_same_directory = 1; % init
+        for file_ind = 2:length(cfg.files.name)
+            [p, fn, ext] = fileparts(cfg.files.name{file_ind});
+            if ~strcmp(p1, p) % if directory is not the same as for first file, break
+                dispv(2, 'Not all inputfiles are from the same directory, thus not checking for mask.img')
+                all_from_same_directory = 0;
+                break
+            end
+        end
+        
+        if all_from_same_directory
+            % all images are from the same directory
+            % check if the directory contains a mask.img
+            potential_mask_img = fullfile(p1, 'mask.img');
+            if exist(potential_mask_img, 'file')
+                cfg.files.mask = potential_mask_img;
+                dispv(1, 'All files in same directory that contains a mask.img. Setting cfg.files.mask=%s', cfg.files.mask)
+                set_auto = 0; % do nothing more 
+            else
+                dispv(2, 'All files from same directory but no mask.img in this directory, so switching to auto. Directory was: %s', p1)
+            end
+        end
+    catch
+        warningv('mask_img_detection_failed', 'Something did not work with automatic detection of mask.img, using all voxels')
+    end
+
+    if set_auto % set it to auto
+        dispv(1, 'No mask file detected, using all voxels')
+        cfg.files.mask = {'all voxels'}; % will generate a mask later (using all voxels)
+    end
 end
 
 results_out_flag = output_arguments >= 1; % flag showing whether the results are returned from the function

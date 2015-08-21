@@ -111,6 +111,11 @@ if strcmpi(cfg.decoding.software,'libsvm')
     end
 end
 
+% Make outputs cell array
+if ischar(cfg.results.output)
+    cfg.results.output = num2cell(cfg.results.output,2);
+end
+
 % For feature transformation, only one of these fields can be entered, not both
 if isfield(cfg.feature_transformation,'n_vox') && isfield(cfg.feature_transformation,'critical_value')
     error('It is only possible to provide either the field cfg.feature_transformation.n_vox or the field cfg.feature_transformation.critical_value, but not both')
@@ -170,15 +175,21 @@ end
 
 if ~strcmpi(cfg.feature_selection.method,'none')
     warningv('DECODING_BASIC_CHECKS:FeatureSelectionIsBeta','We have only little feedback from users about feature selection so far. Running in beta stage!')
+    if ischar(cfg.feature_selection.results.output)
+        cfg.feature_selection.results.output = num2cell(cfg.feature_selection.results.output,2);
+    end
     if isfield(cfg.feature_selection.results,'output') && numel(cfg.feature_selection.results.output)>1
-        error(['More than one output selected in nested CV for feature selection.\n',...
-            'Change field ''cfg.feature_selection.results.output'' to one entry. only.'])
+        error(['More than one output selected in nested CV for feature selection. ',...
+            'Change field ''cfg.feature_selection.results.output'' to one entry only.'])
     end
 end
 
 if ~strcmpi(cfg.parameter_selection.method,'none')
+    if ischar(cfg.parameter_selection.results.output)
+        cfg.parameter_selection.results.output = num2cell(cfg.parameter_selection.results.output,2);
+    end
     if isfield(cfg.parameter_selection.results,'output') && numel(cfg.parameter_selection.results.output)>1
-        error(['More than one output selected in nested CV for parameter selection.\n',...
+        error(['More than one output selected in nested CV for parameter selection. ',...
             'Change field ''cfg.parameter_selection.results.output'' to one entry. only.'])
     end
 end
@@ -259,10 +270,6 @@ end
 if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
     error(['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation '''. Unknown if you want to scale or not! Set both to ''none'' or both to a different value than ''none''!'])
 %     warningv('DECODING_BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
-end
-
-if ischar(cfg.results.output)
-    cfg.results.output = num2cell(cfg.results.output,2);
 end
 
 % check if masks exist, and maybe correct it. Otherwise set it to "auto"

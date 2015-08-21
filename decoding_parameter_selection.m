@@ -153,13 +153,9 @@ if ~iscell(parameter_range)
     parameter_range = num2cell(parameter_range,1);
 end
 
-% Possible mismatch between different levels of the function
-if cfg.decoding.use_kernel
-    cfg.parameter_selection.decoding.kernel.function = cfg.decoding.kernel.function;
+if ischar(cfg.parameter_selection.results.output)
+    cfg.parameter_selection.results.output = num2cell(cfg.parameter_selection.results.output,2);
 end
-
-cfg.parameter_selection.decoding.method = cfg.decoding.method;
-
 
 %% Create all combinations in nested function
 function all_combinations = allperms(all_combinations,parameter_range)
@@ -175,11 +171,9 @@ end
 if isempty(all_combinations)
     all_combinations = parameter_range{1};
 else
-    
     sz = size(all_combinations,2);
     all_combinations = repmat(all_combinations,1,length(parameter_range{1}));
     all_combinations = [all_combinations; sort(repmat(parameter_range{1},1,sz))];
-    
 end
 
 if length(parameter_range)>1

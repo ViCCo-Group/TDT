@@ -261,7 +261,7 @@ end
 n_sets = length(unique(cfg.design.set));
 
 % Run check that results are returned setwise when running a permutation design
-try %#ok<TRYNC>
+try
     if isfield(cfg.design.function.permutation) && cfg.results.setwise == 0
         error('Using a permutation design with cfg.results.setwise == 0. This will make the results uninterpretable. Please set cfg.results.setwise = 1')
     end
@@ -277,17 +277,17 @@ if isfield(cfg.files, 'mask')
     if ischar(cfg.files.mask)
         cfg.files.mask = num2cell(cfg.files.mask,2);
     end
-else % mask not specified, check if all input files come from one directory and if this contains a mask.img, else use all voxels
+else % mask not specified, check if all input files come from one directory and if this contains a mask.img/.nii, else use all voxels
     set_auto = 1; % by default, set mask to 'all voxels'
-    try % if something doesnt work we, we dont care, and just use the auto version below
+    try % if something doesn't work, we don't care and just use the auto version below
         dispv(1, 'No mask specified in cfg.file.mask, checking if all images are from the same directory')
-        [p1, fn, ext] = fileparts(cfg.files.name{1}); % directory of first file
+        [p1, fn, ext] = fileparts(cfg.files.name{1}); %#ok<*NASGU,*ASGLU> % directory of first file
         % check if all other files are in the same directory
         all_from_same_directory = 1; % init
         for file_ind = 2:length(cfg.files.name)
             [p, fn, ext] = fileparts(cfg.files.name{file_ind});
             if ~strcmp(p1, p) % if directory is not the same as for first file, break
-                dispv(2, 'Not all inputfiles are from the same directory, thus not checking for mask.img')
+                dispv(2, 'Not all inputfiles are from the same directory, so not checking for mask.img/.nii')
                 all_from_same_directory = 0;
                 break
             end
@@ -295,9 +295,12 @@ else % mask not specified, check if all input files come from one directory and 
         
         if all_from_same_directory
             % all images are from the same directory
-            % check if the directory contains a mask.img
+            % check if the directory contains a mask.img/.nii
             potential_mask_img = fullfile(p1, 'mask.img');
-            if exist(potential_mask_img, 'file')
+            if ~exist(potential_mask_img, 'file') % it might also be a .nii file
+                potential_mask_img = fullfile(p1, 'mask.nii');
+            end
+            if exist(potential_mask_img,'file')
                 cfg.files.mask = potential_mask_img;
                 dispv(1, 'All files in same directory that contains a mask.img. Setting cfg.files.mask=%s', cfg.files.mask)
                 set_auto = 0; % do nothing more 
@@ -305,8 +308,8 @@ else % mask not specified, check if all input files come from one directory and 
                 dispv(2, 'All files from same directory but no mask.img in this directory, so switching to auto. Directory was: %s', p1)
             end
         end
-    catch
-        warningv('mask_img_detection_failed', 'Something did not work with automatic detection of mask.img, using all voxels')
+    catch %#ok<*CTCH>
+        warningv('mask_img_detection_failed', 'Something did not work with automatic detection of mask.img/.nii, using all voxels')
     end
 
     if set_auto % set it to auto
@@ -357,7 +360,7 @@ else
         end
         check2 = strfind(cfg.results.output,'SVM_weights');
         check2 = [check2 strfind(cfg.results.output,'SVM_pattern')];
-        try check2 = cell2mat(check2); end
+        try check2 = cell2mat(check2); end %#ok<*TRYNC>
         check2 = ~isempty(check2);
         if check1 || check2
             warningv('DECODING_BASIC_CHECKS:Nonindependence','Training and test data are not independent. If you return classification results, they cannot be interpreted!');

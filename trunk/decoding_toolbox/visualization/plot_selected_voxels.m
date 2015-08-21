@@ -1,4 +1,4 @@
-% fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl)
+% fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl, cfg)
 %
 % This function plots a given voxelselection (e.g. searchlight, ROI), and
 % can in addition show a 2d projection of an image.
@@ -26,15 +26,30 @@
 %       current axis will be used.
 %       Remark: Plotting will happen in the background, and the previously 
 %           current axis will be activated in the end again
+%   cfg: The full decoding cfg. Current fields in use:
+%     cfg.plot_selected_voxels_writerObj: A writerObject, e.g. to store
+%       the current figure to a 
+%           VIDEO. 
+%       For this, pass a new and started VideoWriter. 
+%       Example code for video:
+%           % create a video writer object and add it to the cfg
+%           cfg.plot_selected_voxels = 1;
+%           cfg.plot_selected_voxels_writerObj = VideoWriter('plot_selected_voxels.avi'); % see HELP VideoWriter
+%           open(cfg.plot_selected_voxels_writerObj);
+%           % do the decoding
+%           decoding(cfg);
+%           % CLOSE the object after use
+%           close(cfg.plot_selected_voxels_writerObj);
 %
 % Martin Hebart, Kai Goergen, 2013/05/27
 
 % History: 
+%   Kai: 2015/08/15: Added Video storing option (or other objectWriter)
 %   Martin: 2014/01/26: Speed-up of 30% by drawing only voxels that are
 %       visible
 %   Kai: Removed the small bug that the projections where not shown
-%   properly. Also moved coordinate system by -.5 in each direction, so the
-%   center of each voxel is now labeled<
+%       properly. Also moved coordinate system by -.5 in each direction, so 
+%       the center of each voxel is now labeled
 
 % Possible IMPROVEMENTS:
 % Adjust size of each axis to get "real" shape of ROI, not distorted along
@@ -50,7 +65,7 @@
 %       but of course plot searchlight
 %   -- somewhere on the way there: save projections
 
-function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl)
+function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl,cfg)
 
 % check that the correct arguments are provided
 if exist('brain_data', 'var')
@@ -246,6 +261,19 @@ end
 
 %% draw image
 drawnow;
+
+%% Store to video (or any given writer, if passed)
+% in all calls, add frame
+if isfield(cfg, 'plot_selected_voxels_writerObj') && ~isempty(cfg.plot_selected_voxels_writerObj)
+    try
+        dispv(1, 'plot_selected_voxels: Adding figure to video. Remember to close video at the end with "close(cfg.plot_selected_voxels_writerObj)"')
+        writeVideo(cfg.plot_selected_voxels_writerObj, getframe);
+    catch ME
+        ME
+        cfg.plot_selected_voxels_writerObj
+        warningv('plot_selected_voxels:writerObj_failed', 'A writerObj to save the current figure was passed to plot_selected_voxels in cfg.plot_selected_voxels_writerObj, but failed. This is probably because the object was not initialized or opened correctly. See "help videowriter"')
+    end
+end
 
 %% set figurehandle back to what it was before
 if previous_fig ~= -1  % fighdl not passed

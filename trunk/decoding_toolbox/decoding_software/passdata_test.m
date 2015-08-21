@@ -4,6 +4,12 @@ function decoding_out = passdata_test(labels_test,data_test,cfg,model)
 % It serves for the case in which you only want measures about the data,
 % e.g. get the number of voxels ("dimension") of the searchlight/ROI or
 % the covariance matrix or the like.
+%
+% Also set 
+%   cfg.decoding.method = ''passdata''
+% or
+%   cfg.decoding.method = ''passdata_kernel''
+% to avoid confusion.
 
 switch lower(cfg.decoding.method)
     

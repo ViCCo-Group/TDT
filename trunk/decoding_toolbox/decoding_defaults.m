@@ -79,7 +79,12 @@ defaults.plot_selected_voxels = 0; % a value of n means that the currently
                                % DRAWING IS SLOW, thus although it is
                                % certainly FUN and EDUCATING to watch every
                                % step, this will SLOW DOWN decoding
-                               % dramatically
+                               % dramatically. If you like, you can also
+                               % create a writerObject (e.g. a VIDEO
+                               % writer) and pass it as
+                               % cfg.plot_selected_voxels_writerObj to
+                               % store each image 
+                               % (see "help plot_selected_voxels)
 
 % specification of scaling
 defaults.scale.method = 'none';

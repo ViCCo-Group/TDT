@@ -54,6 +54,9 @@
 %               1: plot every step,
 %               2: every second step, 100: every hundredth step...
 %           Default: 0 (no plotting)
+%           cfg.plot_selected_voxels_writerObj (optional): writerObj to 
+%               store each plotted selected voxel figure, e.g. to create a
+%               VIDEO (see "help plot_selected_voxels").
 %       cfg.fighandles.plot_selected_voxels (optional): Figure handle to
 %           plot selected voxels (updated in background)
 %       cfg.display_progress.string: Can contain any string that will be
@@ -676,7 +679,7 @@ if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.
     end
     try
         % plot searchlight with brain projection
-        cfg.fighandles.plot_selected_voxels = plot_selected_voxels(mask_index(indexindex), sz, currdata, mask_index, [], cfg.fighandles.plot_selected_voxels);
+        cfg.fighandles.plot_selected_voxels = plot_selected_voxels(mask_index(indexindex), sz, currdata, mask_index, [], cfg.fighandles.plot_selected_voxels, cfg);
     catch
         warningv('DECODING:PlotSelectedVoxelsFailed', 'plot_selected_voxels failed');
     end

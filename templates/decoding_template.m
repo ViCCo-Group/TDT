@@ -10,6 +10,7 @@ cfg = decoding_defaults;
 
 % Set the analysis that should be performed (default is 'searchlight')
 cfg.analysis = 'searchlight';
+cfg.searchlight.radius = 3; % use searchlight of radius 3 (by default in voxels), see more details below
 
 % Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
 cfg.results.dir = 
@@ -29,12 +30,13 @@ cfg.files.mask =
 labelname1 = 
 labelname2 = 
 
+%% Set additional parameters
 % Set additional parameters manually if you want (see decoding.m or
 % decoding_defaults.m). Below some example parameters that you might want 
-% to use:
+% to use a searchlight with radius 12 mm that is spherical:
 
 % cfg.searchlight.unit = 'mm';
-% cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12mm.
+% cfg.searchlight.radius = 12; % if you use this, delete the other searchlight radius row at the top!
 % cfg.searchlight.spherical = 1;
 % cfg.verbose = 2; % you want all information to be printed on screen
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
@@ -45,11 +47,18 @@ labelname2 =
 %   combine_designs(cfg, cfg2)
 % if you like to combine multiple designs in one cfg.
 
-% Decide whether you want to see the searchlight/ROI/... during decoding
+%% Decide whether you want to see the searchlight/ROI/... during decoding
 cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
 
-% Add additional output measures if you like
-% cfg.results.output = {'accuracy_minus_chance', 'AUC'}
+%% Add additional output measures if you like
+% See help decoding_transform_results for possible measures
+
+% cfg.results.output = {'accuracy_minus_chance', 'AUC'}; % 'accuracy_minus_chance' by default
+
+% You can also use all methods that start with "transres_", e.g. use
+%   cfg.results.output = {'SVM_pattern'};
+% will use the function transres_SVM_pattern.m to get the pattern from 
+% linear svm weights (see Haufe et al, 2015, Neuroimage)
 
 %% Nothing needs to be changed below for a standard leave-one-run out cross
 %% validation analysis.

@@ -30,12 +30,20 @@ end
 % The easiest solution: Remove all fields from orig that are not part of
 % varargin. Then run assign_fields which fills cfg with orig.
 
+if iscell(varargin{1}) && ~isempty(varargin{1})
+    varargin = varargin{1};
+end
+
 % Remove all other fields from orig (subfields are not touched)
-removefields = setdiff(fieldnames(cfg_orig),varargin{1});
+removefields = setdiff(fieldnames(cfg_orig),varargin);
 cfg_reduced = rmfield(cfg_orig,removefields);
 
 % Assign_fields
 cfg_adj = assign_fields(cfg_reduced,cfg_adj);
+
+% Assign field cfg.results.setwise (needed for results transformation, but
+% for nested methods there is only one set anyway)
+cfg_adj.results.setwise = 0;
 
 % Have results been specified manually?
 try cfg_adj.results.output; %#ok<TRYNC>

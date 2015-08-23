@@ -35,7 +35,7 @@ cfg.software = 'spm8';
 % addpath([PATH TO ACCESS SOFTWARE (e.g. SPM)]
 
 % Specify where the results should be saved
-cfg.results.dir = '/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results'; 
+cfg.results.dir = 'D:\temp\temp0001'; 
 
 % If you now look at the cfg structure, you will see a lot of entries that have
 % been set automatically. You can change each of these manually. They are
@@ -56,14 +56,14 @@ cfg.results.dir = '/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/resu
 % the following:
 
 % this directory represents the filepath to your SPM.mat and all related betas:
-beta_dir = '/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/tutorial_files';
+beta_dir = 'D:\temp\buttonpresses';
 % the following label names are the names that you gave your regressors of
 % interest in the SPM analysis (e.g. 'button left' and 'button right')
 labelname1 = 'Press left'; % e.g. 'button left';
 labelname2 = 'Press right';
 
 % Also get the brain mask (e.g. that created by SPM: mask.img):
-cfg.files.mask = {'/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/tutorial_files/mask.img'};
+cfg.files.mask = {'D:\temp\buttonpresses\mask.img'};
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat
@@ -113,6 +113,7 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,
 % === Automatic Creation ===
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
+cfg.design.set = 1:length(cfg.design.set);
 
 % === Manual Creation ===
 % After having explained the structure of the design file above, it should
@@ -140,7 +141,7 @@ cfg.scale.method = 'none';
 cfg.scale.estimation = 'none';
 
 cfg.results.overwrite = 1; % 1: automatically overwrites the results, 0: error, if results exist
-cfg.decoding.method = 'classification';
+cfg.decoding.method = 'classification_kernel';
 cfg.results.output = {'accuracy'}; % IMPORTANT: 'accuracy' does not return 
                     % the real accuracy values, but accuracy - chancelevel.
                     % E.g., if you have 2 classes, chancelevel would be .5,

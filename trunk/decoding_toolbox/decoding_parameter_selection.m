@@ -191,7 +191,10 @@ function selected_parameters = run_nest(cfg,data,i_train_external,all_combinatio
 % Create design for nested CV
 try
     if isfield(cfg.parameter_selection,'design') && isfield(cfg.parameter_selection.design,'function')
-        % do nothing
+        if ~isfield(cfg.parameter_selection.design.function,'name')
+            error(['Field cfg.parameter_selection.design.function has been passed, but missing field cfg.parameter_selection.design.function.name. ',...
+                'Place the name of the design creation function in this field.'])
+        end
     else
         cfg.parameter_selection.design.function = cfg.design.function;
     end
@@ -200,6 +203,7 @@ try
     fhandle = str2func(cfg.parameter_selection.design.function.name);
     cfg.parameter_selection.design = feval(fhandle,cfg.parameter_selection);
 catch %#ok<CTCH>
+    disp(lasterr)
     error('Could not create design for nested cross-validation. Need correct information in field ''cfg.parameter_selection.design.function!''')
 end
 

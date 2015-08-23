@@ -193,6 +193,7 @@ end
 fnames = cfg.files.name;
 fnames_char = char(fnames);
 n_str = size(fnames_char,2); % maximum string length
+n_match = n_str;
 for i_str = 1:n_str
     match = strncmp(fnames{1},fnames(2:end),i_str);
     if ~all(match)
@@ -224,12 +225,13 @@ fnames_not_shown = setdiff(1:n_fnames,fnames_shown(:));
 fnames_char(fnames_not_shown,:) = ' ';
 
 % add two extra rows, one empty, one with set
-fnames_char(end+1, :) = ' ';
-fnames_char(end, end-2:end) = 'Set';
-
-set(gca,'YTick', 1:size(fnames_char,1))
-set(gca,'YTickLabel', fnames_char)
-
+if size(fnames_char,2)>3
+    fnames_char(end+1, :) = ' ';
+    fnames_char(end, end-2:end) = 'Set';
+    set(gca,'YTick', 1:size(fnames_char,1))
+    set(gca,'YTickLabel', fnames_char)
+end
+    
 %% set xaxis training
 set(gca,'XTick', 1:length(xstr))
 set(gca,'XTickLabel', xstr)

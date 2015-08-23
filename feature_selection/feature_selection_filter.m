@@ -46,7 +46,10 @@ function [n_vox_selected,output] = run_nest(cfg,data,external,i_step,i_train,n_v
 % Create design for nested CV
 try
     if isfield(cfg.feature_selection,'design') && isfield(cfg.feature_selection.design,'function')
-        % do nothing
+        if ~isfield(cfg.feature_selection.design.function,'name')
+            error(['Field cfg.feature_selection.design.function has been passed, but missing field cfg.feature_selection.design.function.name. ',...
+                'Place the name of the design creation function in this field.'])
+        end
     else
         cfg.feature_selection.design.function = cfg.design.function;
     end

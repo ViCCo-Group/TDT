@@ -10,7 +10,7 @@ function output = wildcard2regexp(input)
 
 %% 
 % Be cautious with meta characters
-metachars = {'+','?','{','}','(',')','[',']','\','|','.','$'};
+metachars = {'+','?','{','}','(',')','[',']','\','|','.','$','^'};
 
 output = [];
 

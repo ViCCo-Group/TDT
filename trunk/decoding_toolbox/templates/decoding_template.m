@@ -27,6 +27,7 @@ cfg.files.mask =
 
 % Set the label names to the regressor names which you want to use for 
 % decoding, e.g. 'button left' and 'button right'
+% don't remember the names? -> run display_regressor_names(beta_dir)
 labelname1 = 
 labelname2 = 
 

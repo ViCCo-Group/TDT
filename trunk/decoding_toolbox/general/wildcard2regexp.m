@@ -12,16 +12,7 @@ function output = wildcard2regexp(input)
 % Be cautious with meta characters
 metachars = {'+','?','{','}','(',')','[',']','\','|','.','$','^'};
 
-output = [];
-
-%% Adjust search at beginning of file
-
-% If start of file contains no wildcard, beginning of wildcard input must match
-if ~strcmp(input(1),'*')
-    output = '^';
-end
-
-output = [output input];
+output = input;
 
 %% Replace metacharacters
 
@@ -37,6 +28,13 @@ if ~isempty(metachars_ind)
         metachars_ind = metachars_ind + 1; % update
         output = output_adjusted; % update
     end
+end
+
+%% Adjust search at beginning of file
+
+% If start of file contains no wildcard, beginning of wildcard input must match
+if ~strcmp(input(1),'*')
+    output = ['^' output];
 end
 
 %% Replace wildcards (*) by .* (which means any 0 or more characters)

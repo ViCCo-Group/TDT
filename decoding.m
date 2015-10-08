@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version: 3.30, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.50, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -174,6 +174,10 @@
 % previously identical training data
 
 % HISTORY (only major changes)
+% 2015-08 Martin
+%   Added flexible representational similarity analysis and pattern
+%   component modeling capabilities (currently as decoding)
+%   added a similarity analysis template
 % 2015-07-21 Martin
 %   Added misc as new input (e.g. for passing residuals)
 %   Allow scaling of each chunk separately
@@ -234,7 +238,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/07/21 3.30. Cite: Hebart, Goergen, Haynes, 2015 (see LICENSE.txt)'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/09/01 3.50'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

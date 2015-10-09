@@ -20,6 +20,7 @@
 % by Martin Hebart and Kai Görgen
 %
 % HISTORY
+% MARTIN: 2015/19/09: now writing cfg > 2GB with -v7.3 flag
 % MARTIN: 2015/07/07: introduced possibility to write file format .nii
 % MARTIN: 2015/07/06: introduced possibility to write ROIs using a multi-mask
 % MARTIN: 2014/06/16: now writing results > 2GB with -v7.3 flag
@@ -62,7 +63,8 @@ else
     cfg_fname = [cfg.results.filestart '_cfg_perm.mat'];
 end
 cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
-save(cfg_fpath, 'cfg');
+saveflag = checkvarsize(cfg);
+save(cfg_fpath, 'cfg',saveflag);
 
 % Get roi names and number of rois from masks and unpack mask_index_each
 if strcmpi(cfg.analysis,'roi')
@@ -505,7 +507,7 @@ v = whos('var');
 sz = v.bytes/(1024^3);
 if sz > 2
     saveflag = '-v7.3';
-    warning('CHECKVARSIZE:LARGEFILE','File is larger than 2GB. To be able to write it, we are using the -v7.3 option (see help save for details)')
+    warning('CHECKVARSIZE:LARGEFILE','Variable is larger than 2GB. To be able to write it, we are using the -v7.3 option (see help save for details)')
 else
     saveflag = ''; % when empty, default flag will be used
 end

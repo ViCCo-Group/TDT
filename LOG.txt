@@ -1,3 +1,8 @@
+* 3.50 - 2015/10/01
+- introduced similarity analysis
+- updated license file
+- other bugfixes
+
 * 3.30 - 2015/07/22
 - Added misc as new input (currently only for passing residuals)
 - Allow scaling of each chunk separately

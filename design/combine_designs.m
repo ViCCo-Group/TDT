@@ -177,10 +177,12 @@ for si = 1:length(cfg2.design.set) % si == set index
             ocfg.files.name{clen+1} = cfg2.files.name{z_ind};
             ocfg.files.chunk(clen+1) = cfg2.files.chunk(z_ind);
             ocfg.files.label(clen+1) = cfg2.files.label(z_ind);
-            if ~isempty(ocfg.files.xclass)
+            if isfield(ocfg.files,'xclass') && ~isempty(ocfg.files.xclass)
                 ocfg.files.xclass(clen+1) = cfg2.files.xclass(z_ind);
             end
-            ocfg.files.descr{clen+1} = cfg2.files.descr{z_ind};
+            if isfield(cfg2.files,'descr')
+                ocfg.files.descr{clen+1} = cfg2.files.descr{z_ind};
+            end
         end
     end
 

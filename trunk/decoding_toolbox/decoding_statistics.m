@@ -429,7 +429,7 @@ elseif any(ismember({'.nii','.img'},fext))
     rescfg  = cfg;
     rescfg.files.mask = cfg.files.mask;
     rescfg.files.name = results;
-    [passed_data,rescfg] = decoding_load_data(rescfg);
+    [passed_data, trash, rescfg] = decoding_load_data(rescfg);
     
     % run check if field cfg.stats.output exists
     check = 0;

@@ -147,7 +147,7 @@ if nargout > 2
 
     try
         display('Loading original data (can be useful for methods that need the original data, e.g. as support vectors')
-        [passed_data, cfg] = decoding_load_data(cfg);
+        [passed_data, trash, cfg] = decoding_load_data(cfg);
     catch
         warning('Loading original data from cfg.files failed. Adding something that decoding.m will accept as passed_data might also work, but that''s not implemented at the moment. The easiest way is probably to reload the original data (check & update path in cfg.files.mask & cfg.files.name)')
         error(lasterror)

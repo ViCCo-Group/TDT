@@ -246,6 +246,7 @@ dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
 %% Basic checks
 
 [cfg, n_files, n_steps] = decoding_basic_checks(cfg,nargout); %#ok<ASGLU>
+if ~exist('misc','var'), misc = []; end
 
 %% Plot and save design as graphics if requested
 
@@ -267,10 +268,10 @@ end
 
 if exist('passed_data', 'var') && ~isempty(passed_data)
     % check that passed_data fits to cfg, otherwise load data from files
-    [passed_data, cfg] = decoding_load_data(cfg, passed_data);
+    [passed_data, misc, cfg] = decoding_load_data(cfg, misc, passed_data);
 else
     % load data the standard way
-    [passed_data, cfg] = decoding_load_data(cfg);
+    [passed_data, misc, cfg] = decoding_load_data(cfg, misc);
 end
 
 % unpack all fields from passed_data to shorten names in this function
@@ -280,7 +281,6 @@ mask_index_each = passed_data.mask_index_each;
 sz = passed_data.dim;
 
 %% If requested, load miscellaneous data (e.g. residuals or raw data)
-if ~exist('misc','var'), misc = []; end
 misc = decoding_load_misc(cfg, passed_data, misc);
 
 %% Check if result data should be used to only calculate transformations

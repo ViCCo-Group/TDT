@@ -48,6 +48,14 @@ end
 % repeated here. Other checks are carried out.
 if isfield(cfg.files,'residuals') && isstruct(misc) && isfield(misc,'residuals')
     dispv(1,'Using residuals passed with variable ''misc'' rather than loading them again.')
+    
+    % Check if size matches
+    masklength = length(passed_data.mask_index);
+    if masklength ~= size(misc.residuals,2)
+        error('Length of mask_index (%i) does not fit to dimension 2 of residuals (%ix%i). Maybe caused by different masks or by NaNs. Load misc with proper mask or use cfg settings for loading.',...
+            masklength,size(misc.residuals,1),size(misc.residuals,2))
+    end
+    
     return
 end
 

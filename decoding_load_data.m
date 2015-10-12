@@ -1,4 +1,4 @@
-% function [passed_data, cfg] = decoding_load_data(cfg, passed_data)
+% function [passed_data, misc, cfg] = decoding_load_data(cfg, misc, passed_data)
 %
 % Function to load data for decoding.m
 %
@@ -10,6 +10,7 @@
 %
 % OPTIONAL INPUT:
 %   passed_data: Data as returned 
+%   misc: miscellaneous input (currently only misc.residuals)
 %
 % OUTPUT:
 % passed_data: struct containing all important data for the decoding.
@@ -32,13 +33,21 @@
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
 %             calculated)
 %
+%   misc: updated field misc when NaNs were present
+%
 % See also LOAD_MASK
 
 % Kai, 2012-03-12
 
-% HISTORY: Added passing several mask_indices for ROIs, Martin 2013/06/16
+% HISTORY:
+% MH 2015/10/12: allow reducing size of misc.residuals for NaN removal
+% Added passing several mask_indices for ROIs, Martin 2013/06/16
 
-function [passed_data, cfg] = decoding_load_data(cfg, passed_data)
+function [passed_data, misc, cfg] = decoding_load_data(cfg, misc, passed_data)
+
+if ~exist('misc','var')
+    misc = [];
+end
 
 %% make sure maskfile- and datafilenames in cfg are structs 
 
@@ -223,6 +232,9 @@ end
 nan_index = isnan(sum(data,1)); % find voxels where any image contains NaN
 if any(nan_index(:))
     data = data(:,~nan_index); % reduce data
+    if ~isempty(misc) && isstruct(misc) && isfield(misc,'residuals')
+        misc.residuals(:,nan_index) = []; % reduce residuals
+    end
     lin_index_out = mask_index(nan_index);
     mask_index = setdiff(mask_index,lin_index_out); % reduce indices
     if strcmpi(cfg.files.mask,'all voxels')
@@ -280,32 +292,32 @@ function test_decoding_load_data(cfg)
 % (not part of this function now)
 
 % load data
-[passed_data, cfg] = decoding_load_data(cfg);
+[passed_data, misc, cfg] = decoding_load_data(cfg);
 
 % try to use passed_data
-[passed_data, cfg] = decoding_load_data(cfg, passed_data);
+[passed_data, misc, cfg] = decoding_load_data(cfg, passed_data);
 
 % try to get error: 1 mask file more in cfg
 cfg2 = cfg;
 cfg2.files.mask{end+1} = cfg2.files.mask{1};
-[passed_data2, cfg2] = decoding_load_data(cfg2, passed_data);
+[passed_data2, misc2, cfg2] = decoding_load_data(cfg2, passed_data);
 
 % try to get error: 1 data file more in cfg
 cfg2 = cfg;
 cfg2.files.name{end+1} = cfg2.files.name{1};
-[passed_data2, cfg2] = decoding_load_data(cfg2, passed_data);
+[passed_data2, misc2, cfg2] = decoding_load_data(cfg2, passed_data);
 
 % try to get error: wrong mask file names in cfg
 cfg2 = cfg;
 passed_data2 = passed_data;
 passed_data2.files.mask{1} = 'anything';
-[passed_data2, cfg2] = decoding_load_data(cfg2, passed_data2);
+[passed_data2, misc2, cfg2] = decoding_load_data(cfg2, passed_data2);
 
 % try to get error: wrong data file names in cfg
 cfg2 = cfg;
 passed_data2 = passed_data;
 passed_data2.files.name{1} = 'anything';
-[passed_data2, cfg2] = decoding_load_data(cfg2, passed_data2);
+[passed_data2, misc2, cfg2] = decoding_load_data(cfg2, passed_data2);
 
 % try to get error: wrong .mat info in passed_data
 
@@ -316,6 +328,6 @@ passed_data2.files.name{1} = 'anything';
 % also try what happens if all voxels should be used
 cfg2 = cfg;
 cfg2.files.mask = 'all voxels';
-[passed_data, cfg] = decoding_load_data(cfg2);
+[passed_data, misc, cfg] = decoding_load_data(cfg2);
 
 end

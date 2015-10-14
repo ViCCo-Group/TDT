@@ -1,4 +1,4 @@
-% function display_regressor_names(spm_folder, compress)
+% function [out, regressor_names] = display_regressor_names(spm_folder, compress)
 %
 % This function gives you an overview over the possible regressor names
 % that can be used as labels for a decoding analysis. This is helpful if
@@ -21,10 +21,14 @@
 %           ...
 %           yourcondition bin 16 (1:6)
 %
+% OUT:
+%   out: displayed text as struct, use char(out) to get text
+%   regressor_names: Regressor names from design_from_spm.m
+% 
 % If you want the regressor names as output, use the function
-% get_design_from_spm.m
+% design_from_spm.m
 
-function display_regressor_names(spm_folder, compress)
+function [out, regressor_names] = display_regressor_names(spm_folder, compress)
 
 if ~exist('spm_folder', 'var')
     spm_folder = pwd;
@@ -49,10 +53,12 @@ n_runs = length(all_runs);
 
 all_names_char = char(all_names);
 
-fprintf('\nTotal number of regressors: %.0f\n',size(regressor_names, 2))
-fprintf('Number of different regressors: %.0f\n',n_names)
-fprintf('Number of runs: %.0f\n',n_runs)
-fprintf('Regressor names (and run numbers where regressor occurs):\n')
+hdr = {sprintf('\nTotal number of regressors: %.0f',size(regressor_names, 2))
+       sprintf('Number of different regressors: %.0f',n_names)
+       sprintf('Number of runs: %.0f',n_runs)
+       sprintf('Regressor names (and run numbers where regressor occurs):')};
+hdr = hdr';   
+
 for i_name = 1:n_names
     ind = strcmp(regressor_names(1,:),all_names{i_name});
     curr_runs = [regressor_names{2,ind}];
@@ -65,7 +71,8 @@ end
 
 if ~compress
     % display
-    display(char(out));
+    out = [hdr, out];
+
 else % compress bins
     
     % split everything at bin
@@ -133,6 +140,6 @@ else % compress bins
             i_out = i_out + 1; % COUNTER CHANGE IF NOT SPLITTABLE
         end
     end
-    display(char(out_new));
+    out = [hdr, out_new];
 end
-
+display(char(out));

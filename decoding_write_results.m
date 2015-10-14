@@ -63,8 +63,15 @@ else
     cfg_fname = [cfg.results.filestart '_cfg_perm.mat'];
 end
 cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
-saveflag = checkvarsize(cfg);
-save(cfg_fpath, 'cfg',saveflag);
+
+% remove figure handle before saving cfg (otherwise cfg files also contain
+% the full figure in newer matlab-versions, because these are objects...)
+org_cfg = cfg; % keep for restoring
+cfg.fighandles = [];
+% save cfg & restore cfg
+save(cfg_fpath, 'cfg', saveflag);
+cfg = org_cfg; 
+clear org_cfg;
 
 % Get roi names and number of rois from masks and unpack mask_index_each
 if strcmpi(cfg.analysis,'roi')

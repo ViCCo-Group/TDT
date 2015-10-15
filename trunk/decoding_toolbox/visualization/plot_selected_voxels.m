@@ -45,6 +45,8 @@
 % Martin Hebart, Kai Goergen, 2013/05/27
 
 % History: 
+%   Kai: 2015/10/15: Corrected plotting projects, now works with any
+%       dimensions (before only when x and y were equal)
 %   Kai: 2015/08/15: Added Video storing option (or other objectWriter)
 %   Martin: 2014/01/26: Speed-up of 30% by drawing only voxels that are
 %       visible
@@ -172,99 +174,112 @@ set(gca, 'YTick', [1, sz(2)])
 set(gca, 'ZTick', [1, sz(3)])
 
 %% Plot brain on x,y,z plane, if provided
+try
+    if exist('brain_data', 'var') && ~isempty(brain_data)
+        if ~exist('mask_index', 'var')
+            error('brain_data is provided, but mask_index not. Both arguments must be provided')
+        end
 
-if exist('brain_data', 'var') && ~isempty(brain_data)
-    if ~exist('mask_index', 'var')
-        error('brain_data is provided, but mask_index not. Both arguments must be provided')
+        % replace possible nans by 0
+        brain_data(isnan(brain_data)) = 0;
+
+        % normalize gray values for plotting
+        diff_braindata = max(brain_data(:))-min(brain_data(:));
+        if diff_braindata == 0
+            % no difference, just set upper limit to see mask voxels
+            if brain_data(1) > .6
+                brain_data(:) = .6;
+            end
+        else
+            % normalize
+            brain_data = (brain_data-min(brain_data(:)))/diff_braindata;
+        end
+
+        % put brain into a full volume (at the moment, we only have the masked
+        % brain)
+        brain = zeros(sz);
+        brain(mask_index) = brain_data*0.9+0.1; % *.9 + .1 serves to differentiate between inmask and outmask voxels
+
+        % % TODO: only project outer voxels 
+        %
+
+        if ~exist('border_image', 'var') || isempty(border_image)
+            border_images = 'projection+slices'; % choose if you want to project slice (e.g. the middle) or the projection
+        end
+        % check that value is valid
+        if ~(strcmp(border_images, 'projection') || strcmp(border_images, 'projection+slices') || strcmp(border_images, 'slices'))
+            error('Unkown projection method for border_images, please check')
+        end
+
+        if strcmp(border_images, 'projection') || strcmp(border_images, 'projection+slices')
+            z_projection = sum(brain, 3)';
+            x_projection = squeeze(sum(brain, 2))';
+            y_projection = squeeze(sum(brain, 1))';   
+
+            % normalize colours between 0 / 1
+            min_value = min([z_projection(:); x_projection(:); y_projection(:)]);
+            max_value = max([z_projection(:); x_projection(:); y_projection(:)]);
+            z_projection = (z_projection-min_value)/(max_value-min_value);
+            x_projection = (x_projection-min_value)/(max_value-min_value);
+            y_projection = (y_projection-min_value)/(max_value-min_value);
+
+            z_background = z_projection;
+            x_background = x_projection;
+            y_background = y_projection;
+        end
+
+        if strcmp(border_images, 'slices') || strcmp(border_images, 'projection+slices')
+            z_slice = brain(:,:,round(sz(3)/2))';
+            x_slice = squeeze(brain(:,round(sz(2)/2),:))';
+            y_slice = squeeze(brain(round(sz(1)/2),:,:))';
+            % no normalization needed, is already normalized above
+        end
+
+
+        if strcmp(border_images, 'projection+slices')
+            z_background(z_slice>0) = z_slice(z_slice>0);
+            x_background(x_slice>0) = x_slice(x_slice>0);
+            y_background(y_slice>0) = y_slice(y_slice>0);
+        elseif strcmp(border_images, 'slices')
+            z_background = z_slice;
+            x_background = x_slice;
+            y_background = y_slice;
+        end
+
+        % add projection of searchlight onto image
+        sl_3d = zeros(size(brain));
+        sl_3d(position_index) = 1;
+        % add projection to slices
+        z_sl_projection = sum(sl_3d, 3) > 0;
+        z_background(z_sl_projection') = 1;
+        x_sl_projection = squeeze(sum(sl_3d, 2) > 0);
+        x_background(x_sl_projection') = 1;
+        y_sl_projection = squeeze(sum(sl_3d, 1) > 0);
+        y_background(y_sl_projection') = 1;
+
+        % REMARK: When plotting the background image using surface, we need to
+        % plot x and y from 1:sz(1)+1, because surface(x,y,z)  plot the value z 
+        % to the square x..x+1, y..y+1. 
+        % This create 8! elements for x and y, but these values only define the
+        % BOUNDARY, and these are 1 more than the containing data.
+
+        % x and y are flipped
+        [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
+        surface(x,y,ones(size(x))-.5,z_background);
+        colormap('gray')
+        % shading flat
+        [x,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); x=x-.5; z=z-.5;
+        surface(sz(1)*ones(size(x)),x,z,y_background);
+        colormap('gray')
+        % shading flat
+        [y,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); y=y-.5; z=z-.5;
+        surface(y,sz(2)*ones(size(y)),z,x_background);
+        colormap('gray')
+        % shading flat
     end
-    
-    % replace possible nans by 0
-    brain_data(isnan(brain_data)) = 0;
-
-    % normalize gray values for plotting
-    brain_data = (brain_data-min(brain_data(:)))/(max(brain_data(:))-min(brain_data(:)));
-
-    % put brain into a full volume (at the moment, we only have the masked
-    % brain)
-    brain = zeros(sz);
-    brain(mask_index) = brain_data*0.9+0.1; % *.9 + .1 serves to differentiate between inmask and outmask voxels
-
-    % % TODO: only project outer voxels 
-    %
-
-    if ~exist('border_image', 'var') || isempty(border_image)
-        border_images = 'projection+slices'; % choose if you want to project slice (e.g. the middle) or the projection
-    end
-    % check that value is valid
-    if ~(strcmp(border_images, 'projection') || strcmp(border_images, 'projection+slices') || strcmp(border_images, 'slices'))
-        error('Unkown projection method for border_images, please check')
-    end
-
-    if strcmp(border_images, 'projection') || strcmp(border_images, 'projection+slices')
-        z_projection = sum(brain, 3)';
-        x_projection = squeeze(sum(brain, 2))';
-        y_projection = squeeze(sum(brain, 1))';   
-        
-        % normalize colours between 0 / 1
-        min_value = min([z_projection(:); x_projection(:); y_projection(:)]);
-        max_value = max([z_projection(:); x_projection(:); y_projection(:)]);
-        z_projection = (z_projection-min_value)/(max_value-min_value);
-        x_projection = (x_projection-min_value)/(max_value-min_value);
-        y_projection = (y_projection-min_value)/(max_value-min_value);
-
-        z_background = z_projection;
-        x_background = x_projection;
-        y_background = y_projection;
-    end
-
-    if strcmp(border_images, 'slices') || strcmp(border_images, 'projection+slices')
-        z_slice = brain(:,:,round(sz(3)/2))';
-        x_slice = squeeze(brain(:,round(sz(2)/2),:))';
-        y_slice = squeeze(brain(round(sz(1)/2),:,:))';
-        % no normalization needed, is already normalized above
-    end
-
-
-    if strcmp(border_images, 'projection+slices')
-        z_background(z_slice>0) = z_slice(z_slice>0);
-        x_background(x_slice>0) = x_slice(x_slice>0);
-        y_background(y_slice>0) = y_slice(y_slice>0);
-    elseif strcmp(border_images, 'slices')
-        z_background = z_slice;
-        x_background = x_slice;
-        y_background = y_slice;
-    end
-
-    % add projection of searchlight onto image
-    sl_3d = zeros(size(brain));
-    sl_3d(position_index) = 1;
-    % add projection to slices
-    z_sl_projection = sum(sl_3d, 3) > 0;
-    z_background(z_sl_projection') = 1;
-    x_sl_projection = squeeze(sum(sl_3d, 2) > 0);
-    x_background(x_sl_projection') = 1;
-    y_sl_projection = squeeze(sum(sl_3d, 1) > 0);
-    y_background(y_sl_projection') = 1;
-
-    % REMARK: When plotting the background image using surface, we need to
-    % plot x and y from 1:sz(1)+1, because surface(x,y,z)  plot the value z 
-    % to the square x..x+1, y..y+1. 
-    % This create 8! elements for x and y, but these values only define the
-    % BOUNDARY, and these are 1 more than the containing data.
-    
-    % x and y are flipped
-    [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
-    surface(x,y,ones(size(x))-.5,z_background);
-    colormap('gray')
-    % shading flat
-    [x,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); x=x-.5; z=z-.5;
-    surface(sz(2)*ones(size(x))+.5,x,z,y_background);
-    colormap('gray')
-    % shading flat
-    [y,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); y=y-.5; z=z-.5;
-    surface(y,sz(1)*ones(size(y))+.5,z,x_background);
-    colormap('gray')
-    % shading flat
+catch e
+    e
+    warningv('plot_selected_voxels:drawing_backgroundbrain_failed', 'Drawing backgroundbrain failed, continue nonetheless');
 end
 
 %% draw image

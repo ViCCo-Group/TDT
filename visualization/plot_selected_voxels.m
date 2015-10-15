@@ -23,7 +23,7 @@
 %   border_image: specify type of background image. Possible value:
 %       'projection', 'slices', 'projection+slices' (default), []: default
 %   fighdl: Handle to a figure that should be plotted to. By default, the
-%       current axis will be used.
+%       current axis will be used. fighdl = nan prevent clearing.
 %       Remark: Plotting will happen in the background, and the previously 
 %           current axis will be activated in the end again
 %   cfg: The full decoding cfg. Current fields in use:
@@ -40,7 +40,8 @@
 %           decoding(cfg);
 %           % CLOSE the object after use
 %           close(cfg.plot_selected_voxels_writerObj);
-%
+%   cfg.dont_clear_fig = 1 to keep the figure (e.g. to use a subplot)
+
 % Martin Hebart, Kai Goergen, 2013/05/27
 
 % History: 
@@ -74,9 +75,13 @@ if exist('brain_data', 'var')
     end
 end
 
+if ~exist('cfg', 'var')
+    cfg = [];
+end
+
 %% set focus silently
 
-if exist('fighdl', 'var')
+if exist('fighdl', 'var') && ~isempty(fighdl)
     previous_fig = gcf;
 else
     previous_fig = -1; % mark that fighdl has not been passed
@@ -145,7 +150,10 @@ end
 
 % Tried to speed-up by clearing only the child, but didn't speed-up
 % Ideally, load only the values that patch loads and replace them
-clf(fighdl)
+if ~isfield(cfg, 'dont_clear_fig') || ~cfg.dont_clear_fig 
+    clf(fighdl)
+end
+
 patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
 'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
 'EdgeColor',[0.2 0.2 0.2]);

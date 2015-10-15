@@ -68,8 +68,10 @@ cfg_fpath = fullfile(cfg.results.dir,cfg_fname);
 % the full figure in newer matlab-versions, because these are objects...)
 org_cfg = cfg; % keep for restoring
 cfg.fighandles = [];
-% save cfg & restore cfg
+% save cfg
+saveflag = checkvarsize(cfg);
 save(cfg_fpath, 'cfg', saveflag);
+% restore cfg fig handles
 cfg = org_cfg; 
 clear org_cfg;
 

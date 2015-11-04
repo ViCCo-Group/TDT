@@ -2,7 +2,7 @@
 %
 % Wrapper function to use libsvm for classification/regression.
 % To speed up cross-validation, classification using a precomputed kernel
-% is possible. For classficiation, using a kernel could be implemented, but
+% is possible. For classification, using a kernel could be implemented, but
 % has not been done yet.
 %
 % General terms:

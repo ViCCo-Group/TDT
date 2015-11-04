@@ -2,11 +2,12 @@
 %
 % This is using an ensemble classification approach to balance training
 % data. The idea is to create a number of models based on balanced,
-% randomly subsampled data. These models are then all evaluated generating
-% a decision value for each sample and each model. The decision values are
-% then averaged in a sort of weighted majority vote and used for final
-% classification. This turns out to be superior to repeated subsampling and
-% averaging classification results.
+% randomly subsampled data. This cuntion can be used to balance unbalanced
+% data, and/or to balance a confound that may exist.
+% These models are then all evaluated generating a decision value for each
+% sample and each model. The decision values are then averaged in a sort of
+% weighted majority vote and used for final classification. This turns out
+% to be superior to repeated subsampling and averaging classification results.
 %
 % INPUT (n = n_samples, p = n_features):
 %   labels_train: nx1 vector of training labels
@@ -15,8 +16,9 @@
 %           .cfg.decoding.train.classification.model_parameters.software: chosen classifier (example: 'libsvm')
 %           .cfg.decoding.train.classification.model_parameters.model_parameters: usual model parameters of chosen classier
 %           .cfg.decoding.train.classification.model_parameters.n_iter: how often to randomly subsample (example: 100)
-%           .sigma: passed pre-calculated covariance matrix (ignores field
-%               .shrinkage
+%           .cfg.files.confound (optional): a second categorical label
+%               belonging to each sample denoting the class of confound. If
+%               this field exists, confounds will be balanced accordingly.
 %
 % OUTPUT:
 %   model: struct variable with the following fields:
@@ -43,8 +45,33 @@ catch %#ok<CTCH>
         'cfg.decoding.train.classification.model_parameters.model_parameters\n'])
     rethrow(lasterror) %#ok<LERR>
 end
-    
 
+confound_present = isfield(cfg.files,'confound') && ~isempty(cfg.files.confound);
+
+% If a confound is present, convert labels to include confound
+if confound_present
+    conflabel = cfg.files.confound;
+    uconflabels = uniqueq(conflabel);
+    
+    orig_labels_train = labels_train;
+    orig_ulabels = uniqueq(orig_labels_train);
+        
+    % recode labels (using a combination of confound and original label)
+    reflabel = 10;
+    while any(labels_train>=reflabel)
+        reflabel = reflabel*10;
+    end
+    combinations = combvec(orig_ulabels',uconflabels')';
+    for i_comb = 1:size(combinations,1)
+        comb_ind = labels_train==combinations(i_comb,1)&conflabel==combinations(i_comb,2);
+        if ~any(comb_ind)
+            error('Impossible to control for confound, because at least part of confound is confounded to 100% with one experimental variable.')
+        end
+            labels_train(comb_ind) = reflabel+i_comb;
+    end
+    
+end
+    
 % Get unique labels and number of labels
 ulabels = uniqueq(labels_train);
 n_ulabels = length(ulabels);
@@ -61,7 +88,7 @@ subset_size = min(n_labels_sub);
 
 % Create random index for each label n_iter times (faster)
 randmat = cell(n_ulabels,1);
-for i_label = n_ulabels
+for i_label = 1:n_ulabels
     if n_labels_sub(i_label) == subset_size
        continue 
     end
@@ -71,10 +98,15 @@ for i_label = n_ulabels
     randmat{i_label} = sortrows(sort(randmat{i_label},2))';
 end
 
+% If confound present, use original labels again
+if confound_present
+    labels_train = orig_labels_train;
+end
+
 % Create index for later selection of subset of data
 ct = 0;
 % ind = zeros(n_ulabels*subset_size,n_iter);
-for i_label = 1:length(ulabels)
+for i_label = 1:n_ulabels
     % Skip iterations where nothing needs to be removed
     if n_labels_sub(i_label) == subset_size
         ind(ct+(1:subset_size),:) = ulabel_ind{i_label}(:,ones(1,n_iter));
@@ -103,4 +135,18 @@ for i_iter = iter_ind
 
 end
 
+% test function for ens_bal_tr with unbalanced data and a confound
+function testme
 
+labels_train = [1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1]';
+cfg.files.confound = repmat([1;2],6,1);
+d = randn(12,30);
+data_train.kernel = d*d';
+
+cfg.decoding.method = 'classification_kernel';
+cfg.decoding.use_kernel = 1;
+param.n_iter = 100;
+param.software = 'libsvm';
+param.model_parameters = '-s 0 -t 4 -c 1 -q';
+cfg.decoding.train.classification_kernel.model_parameters = param;
+m = ens_bal_tr(labels_train,data_train,cfg);

@@ -1,12 +1,16 @@
 % This script is the default template, but with a modification that allows
-% running analyses with unbalanced data. Multiple solutions are presented
-% at the end of this script.
+% balancing confounds. The two main approaches for controlling for
+% confounds are balancing confounds (by subsampling, supersampling,
+% or weighted classification) or analyzing data separately for each
+% confound. The approach in this file is subsampling using an ensemble
+% approach that has the advantage of using all data in one classification
+% step, rather than combining multiple weak classification analyses
+% together.
 % Same as the standard template, this is for people who have betas
 % available from an SPM.mat and want to automatically extract the relevant
 % images used for classification, as well as corresponding labels and
-% decoding chunk numbers (e.g. run numbers). If you don't have this
-% available, then only use the parts specific to unbalanced data and for
-% the rest use decoding_template_nobetas.m
+% decoding chunk numbers (e.g. run numbers). If you don't want this,
+% combine the relevant parts of this script with decoding_template_nobetas.
 
 % Set defaults
 cfg = decoding_defaults;
@@ -77,49 +81,22 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
 
-%% HOW CAN WE DEAL WITH UNBALANCED DATA?
-% There are multiple options
-% 1. Supersampling: Sample test data repeatedly until the two sets are
-% balanced again. Example: 30x class1, 70x class2, upsample class1 to 210
-% and class2 to 210 (or upsample class1 to 70 with a slight bias towards
-% some samples)
-% PRO: uses all data
-% CONs: may take longer, does not work properly for most classifiers
-% -> currently not implemented in TDT
-%
-% 2. AUC_minus_chance: Bias-free method for results, provides information
-% about classes irrespective of a preference for one class
-% PROs: uses all data, fast
-% CON: cannot always be used
-% Implementation: 
-% cfg.results.output = {'AUC_minus_chance'};
-% cfg.design.unbalanced_data = 'ok';
-%
-% 3. Repeated subsampling: Subsample the more frequent class repeatedly,
-% run multiple classification iterations and average results
-% PROs: works also for true prediction cases, quite common approach
-% CONs: slow, uses only subset of data on each iteration
-% Implementation:
-% n_boot = 500; % number of repetitions, fewer might also be ok
-% balance_test = 0; % if test data is not balanced, this is ok, but you need to use balanced_accuracy in that case
-% cfg.design = make_design_boot_cv(cfg,n_boot,balance_test); % this is the correct function for multiple chunks, for only one use make_design_boot
-% cfg.results.output = {'balanced_accuracy_minus_chance'};
-%
-% 4. Balance ensemble approach: Subsample the more frequent class
-% repeatedly, run multiple classification iterations and predict all labels
-% for each of classifiers. Use combined decision values to create a
-% majority vote of all classifiers for one final prediction
-% PRO: uses all data, better performance than repeated subsampling
-% CON: may become slow
-% Implementation:
-% cfg.design.unbalanced_data = 'ok';
-% cfg.decoding.software = 'ensemble_balance';
-% cfgd = decoding_defaults; % to use default values
-% cfg.decoding.train.classification_kernel.model_parameters.software = 'libsvm';
-% cfg.decoding.train.classification_kernel.model_parameters.n_iter = 100;
-% cfg.decoding.train.classification_kernel.model_parameters.model_parameters = cfgd.decoding.train.classification_kernel.model_parameters;
-% cfg.decoding.test.classification_kernel.model_parameters.model_parameters = cfgd.decoding.test.classification_kernel.model_parameters;
-% cfg.results.output = {'balanced_accuracy_minus_chance'};
+%% HOW WE DEAL WITH CONFOUNDS BY BALANCING AND ENSEMBLE CLASSIFICATION
+
+% add a nx1 vector to index the confound. Must be a categorical variable,
+% otherwise control by subsampling is not possible. For continuous
+% variables binning is an option
+cfg.files.confound = 
+
+% These settings are an example and should be self-explanatory
+cfg.design.unbalanced_data = 'ok';
+cfg.decoding.software = 'ensemble_balance';
+cfgd = decoding_defaults; % to use default values
+cfg.decoding.train.classification_kernel.model_parameters.software = 'libsvm';
+cfg.decoding.train.classification_kernel.model_parameters.n_iter = 100;
+cfg.decoding.train.classification_kernel.model_parameters.model_parameters = cfgd.decoding.train.classification_kernel.model_parameters;
+cfg.decoding.test.classification_kernel.model_parameters.model_parameters = cfgd.decoding.test.classification_kernel.model_parameters;
+cfg.results.output = {'balanced_accuracy_minus_chance'};
 
 % Run decoding
 results = decoding(cfg);

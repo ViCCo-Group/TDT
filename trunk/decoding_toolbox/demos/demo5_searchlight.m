@@ -70,8 +70,9 @@ for i_vol = 1:n_files
     data_orig(:,:,:,i_vol) = cdat;
 end
 
-% TODO: create correlated noise for TDT region
-% TODO: create noise correlation within run
+% Potential additions: 
+%  - create correlated noise for TDT region
+%  - create noise correlation within run
 % covariance can be prespecified as A = chol(V); where uncorrelated noise
 % X can be multiplied to achieve Y = A*X where var(Y) is going to be V
 
@@ -91,6 +92,8 @@ passed_data.mask_index = mask_index;
 
 cfg.design = make_design_cv(cfg);
 
+%% Show searchlight every 100th step
+cfg.plot_selected_voxels = 100;
 
 %% Run
 results = decoding(cfg,passed_data);

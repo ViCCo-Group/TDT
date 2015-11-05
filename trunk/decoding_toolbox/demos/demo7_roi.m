@@ -125,6 +125,9 @@ cfg.design = make_design_cv(cfg);
 
 plot_design(cfg)
 
+%% Show ROIS during plotting
+cfg.plot_selected_voxels = 1; % 1 means: plot every ROI/searchlight, ok for ROIs, slow for searchlight
+
 %% Run ROI analysis
 [results,cfg,passed_data] = decoding(cfg,passed_data);
 allresults(:,1) = results.(cfg.results.output{1}).output;

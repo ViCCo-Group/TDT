@@ -1,4 +1,7 @@
-% function plot_design(cfg,visible_on)
+% function figure_handle = plot_design(cfg,visible_on)
+%
+% If the figure handle should be reused, use as
+%   cfg.fighandles.plot_design = plot_design(cfg)
 %
 % This function plots your current design (analog to display_design.m).
 %
@@ -15,9 +18,6 @@
 
 % Kai, 13-01-24
 
-% TODO: In contrast to display_design, plot_design(cfg.design) does not work at
-% the moment.
-% TODO: Improve how sets are displayed
 
 function figure_handle = plot_design(cfg,visible_on)
 
@@ -209,29 +209,42 @@ else
     % keep fnames_char as they are (not cut)
 end
 
+% convert to cellstr, much easier to handle
+fnames_cstr = cellstr(fnames_char);
+clear fnames_char; % to avoid anyone uses it below
+
 % Do not show all file names if too many
-n_fnames = size(fnames_char,1);
+n_fnames = size(fnames_cstr,1);
 max_n_fnames = 16;
-if n_fnames > max_n_fnames
-    % In that case, showing them evenly spaced
-    fnames_shown = round(linspace(1,n_fnames-5,max_n_fnames));
-    fnames_shown = unique(fnames_shown);
+
+% if n_fnames > max_n_fnames
+% In that case, showing them evenly spaced
+% Find smallest integer stepsize so that maximally 16 names are shown
+stepsize = ceil(n_fnames/max_n_fnames);
+fnames_shown = 1:stepsize:n_fnames; % indices for all names that are shown
+
+% fnames_not_shown = setdiff(1:n_fnames,fnames_shown(:));
+% 
+% fnames_cstr(fnames_not_shown) = {''};
+
+%% add set as last row + stepsize info
+
+% add set as last row and make sure it's shown
+if stepsize>1
+    fnames_cstr(end+1) = {sprintf('Showing each 1/%i names; Set', stepsize)};
 else
-    fnames_shown = 1:n_fnames;
+    fnames_cstr(end+1) = {'Set'};
+end
+fnames_shown(end+1) = length(fnames_cstr);
+
+% show
+set(gca,'YTick', fnames_shown)
+set(gca,'YTickLabel', fnames_cstr(fnames_shown));
+
+try
+    set(gca,'TickLabelInterpreter','none'); % for matlab 2014++
 end
 
-fnames_not_shown = setdiff(1:n_fnames,fnames_shown(:));
-
-fnames_char(fnames_not_shown,:) = ' ';
-
-% add two extra rows, one empty, one with set
-if size(fnames_char,2)>3
-    fnames_char(end+1, :) = ' ';
-    fnames_char(end, end-2:end) = 'Set';
-    set(gca,'YTick', 1:size(fnames_char,1))
-    set(gca,'YTickLabel', fnames_char)
-end
-    
 %% set xaxis training
 set(gca,'XTick', 1:length(xstr))
 set(gca,'XTickLabel', xstr)
@@ -268,21 +281,22 @@ try linkaxes([ah_train, ah_test]), catch, warning('Failed to link train and test
 image([show_test; set_row])
 title('Test Data')
 
-set(gca, 'YTick', 1:size(cfg.files.name, 1))
-yticklab = num2str((1:size(cfg.files.name, 1))');
-yticklab(fnames_not_shown,:) = ' ';
-if ~isempty(fnames_not_shown)
-    yticklab(fnames_not_shown(end),:) = char(num2str(fnames_not_shown(end)));
-end
-set(gca, 'YTickLabel', yticklab)
-
-% add file description on the right if available
+% add file description on the right if available, else the number
 if isfield(cfg.files, 'descr')
     descr_and_set = cfg.files.descr;
-    descr_and_set{end+1} = ' ';
+    descr_and_set(end+1) = {''}; % entry for the set row
+    
     set(gca,'yaxislocation','right')
-    set(gca, 'YTick', 1:length(descr_and_set))
-    set(gca,'YTickLabel', descr_and_set)
+    set(gca, 'YTick', fnames_shown); % 1:length(descr_and_set))
+    
+    set(gca,'YTickLabel', descr_and_set(fnames_shown));
+    try
+        set(gca,'TickLabelInterpreter','none'); % for matlab 2014++
+    end
+else
+    % add number of each file
+    set(gca,'yaxislocation','right')
+    set(gca, 'YTick', fnames_shown(1:end-1)); % show simply the number of each, except the set (the last entry)
 end
 
 %% set xaxis test
@@ -299,8 +313,8 @@ if isfield(cfg.files, 'description')
         cfg.files.descr = cfg.files.descr';
     end
     
-    set(gca, 'YTick', 1:size(cfg.files.descr, 1))
-    set(gca,'YTickLabel', cfg.files.descr);
+    set(gca, 'YTick', fnames_shown(1:end-1))
+    set(gca,'YTickLabel', cfg.files.descr(fnames_shown(1:end-1)));
 else
     % switch yaxis off
 end
@@ -308,7 +322,8 @@ end
 %% add legend (this is still ugly)
 
 clear show_legends
-unique_labels = sort(unique(cfg.design.label(:)))';
+unique_labels = sort(unique(cfg.design.label(:)))'; % labels are numbers
+
 if ~alternative
     
     for rgb = 1:3
@@ -335,8 +350,13 @@ set(gca, 'YTick', [0.75, 1.25])
 set(gca, 'YAxisLocation', 'right')
 set(gca,'YTickLabel', {'Unique label values'; '(maybe not linearly scaled)'});
 % set(gca, 'ytick', [])
-set(gca, 'XTick', 1:length(unique_labels)+1)
-set(gca, 'XTickLabel', [sprintf('%i|', unique_labels) 'unused'])
+
+% only show some if too many unique labels
+ul_stepsize = ceil(length(unique_labels)/10); 
+ul_xticks = [1:ul_stepsize:length(unique_labels), length(unique_labels)+1];
+ul_xtick_labels = [num2cell(unique_labels), {'unused'}];
+set(gca, 'XTick', ul_xticks);
+set(gca, 'XTickLabel', ul_xtick_labels(ul_xticks))
 
 %% add remaining text
 subplot(4, 4, pos.text);

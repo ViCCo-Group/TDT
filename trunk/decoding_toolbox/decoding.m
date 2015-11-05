@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version: 3.50, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.51, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -238,7 +238,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/09/01 3.50'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/11/05 3.51'; % also change header of this file
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
@@ -250,7 +250,7 @@ if ~exist('misc','var'), misc = []; end
 
 %% Plot and save design as graphics if requested
 
-tdt_plot_design_init(cfg);
+cfg = tdt_plot_design_init(cfg);
 
 %% Open file to write all filenames that we load
 
@@ -277,6 +277,14 @@ end
 % unpack all fields from passed_data to shorten names in this function
 data = passed_data.data;
 mask_index = passed_data.mask_index;
+if isfield(passed_data, 'mask_index_each')
+    % do nothing
+elseif isfield(cfg.files, 'mask') && length(cfg.files.mask) <= 1
+    dispv(1, 'Filling passed_data.mask_index_each with data from passed_data.mask_index, because mask_index_each is not provided and one or less masks are used.')
+    passed_data.mask_index_each = {passed_data.mask_index};
+else
+    error('passed_data is used and multiple mask files are provided, but indices of this masks, that should be provided in passed_data.mask_index_each, are not. Please provide these or use only one mask.')
+end
 mask_index_each = passed_data.mask_index_each;
 sz = passed_data.dim;
 
@@ -560,7 +568,7 @@ cfg.progress.endtime = datestr(now);
    
 %% plot & save design again at the end (to show that job is finished)
 % Endtime shows user that job is over
-tdt_plot_design_final(cfg);
+cfg = tdt_plot_design_final(cfg);
 
 
 %% END OF MAIN FUNCTION
@@ -568,7 +576,7 @@ tdt_plot_design_final(cfg);
 
 %% SUBFUNCTIONS
 
-function tdt_plot_design_init(cfg)
+function cfg = tdt_plot_design_init(cfg)
 
 try
     if cfg.plot_design == 1 % plot + save fig, save hdl
@@ -679,7 +687,7 @@ function cfg = tdt_plot_selected_voxels(cfg, i_decoding, n_decodings, mask_index
 
 if isfield(cfg, 'plot_selected_voxels') && cfg.plot_selected_voxels > 0 && (cfg.plot_selected_voxels == 1 || mod(i_decoding, cfg.plot_selected_voxels) == 1 || i_decoding == n_decodings)
     if ~isfield(cfg, 'fighandles') || ~isfield(cfg.fighandles, 'plot_selected_voxels')
-        cfg.fighandles.plot_selected_voxels = figure('name', 'Online ROI Online ROI (cfg.plot_selected_voxels=0 for more speed)');
+        cfg.fighandles.plot_selected_voxels = ''; % will be set during call
     end
     try
         % plot searchlight with brain projection
@@ -709,13 +717,13 @@ else
 end
 
 %%
-function tdt_plot_design_final(cfg)
+function cfg = tdt_plot_design_final(cfg)
 
 try
     if cfg.plot_design
-        fighdl = plot_design(cfg,1); 
+        cfg.fighandles.plot_design = plot_design(cfg,1); 
         if cfg.results.write
-            save_fig(fullfile(cfg.results.dir, 'design'), cfg, fighdl);
+            save_fig(fullfile(cfg.results.dir, 'design'), cfg, cfg.fighandles.plot_design);
         end
     end
 catch %#ok<*CTCH>

@@ -157,8 +157,6 @@ for use_correct_weights = 0:1
         contour(X,Y,Z, -1:1, linespec);
         hold off
     end
-    legstr(end+1) = {weight_str};
+    legstr(end+1) = {[linespec ' ' weight_str]};
     legend(legstr)
 end
-
-dbclear if error

@@ -86,7 +86,7 @@ cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see 
 cfg.design = make_design_cv(cfg); 
 
 figure('name', 'Design')
-plot_design(cfg);
+cfg.fighandles.plot_design = plot_design(cfg);
 
 %% Decoding Parameters
 

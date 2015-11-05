@@ -1,3 +1,7 @@
+* 3.51 - 2015/11/05
+- demos run again (tiny and uncritical bug)
+- minor improvement in visualisation functions
+
 * 3.50 - 2015/10/01
 - introduced similarity analysis
 - updated license file

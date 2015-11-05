@@ -45,6 +45,9 @@
 % Martin Hebart, Kai Goergen, 2013/05/27
 
 % History: 
+%   Kai: 2015/11/05: using a persitant variable if function is repeatedly 
+%       called without figure handle, avoids overwritting previous figures
+%       and avoids also poping up new figures each time when called
 %   Kai: 2015/10/15: Corrected plotting projects, now works with any
 %       dimensions (before only when x and y were equal)
 %   Kai: 2015/08/15: Added Video storing option (or other objectWriter)
@@ -82,12 +85,16 @@ if ~exist('cfg', 'var')
 end
 
 %% set focus silently
-
 if exist('fighdl', 'var') && ~isempty(fighdl)
     previous_fig = gcf;
 else
     previous_fig = -1; % mark that fighdl has not been passed
-    fighdl = gcf;
+    % check the function opened a figure before, if so, try to use it
+    persistent created_fighdl % fallback function, so that function does not popup new figures if called repeatedly with no figure handles
+    if isempty(created_fighdl)
+        created_fighdl = -1; % will create a new figure
+    end
+    fighdl = created_fighdl;
 end
 
 %% select the ROI figure for plotting
@@ -96,7 +103,10 @@ try
 catch %#ok<CTCH>
     disp(lasterr)
     warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
-    fighdl = figure('name', 'Online ROI (cfg.plot_selected_voxels=0 for more speed)');
+    fighdl = figure('name', ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)']);
+    if exist('created_fighdl', 'var')
+        created_fighdl = fighdl; % remember change
+    end
 end
 %%
 % position_index: indices of all voxel positions
@@ -262,20 +272,20 @@ try
         % to the square x..x+1, y..y+1. 
         % This create 8! elements for x and y, but these values only define the
         % BOUNDARY, and these are 1 more than the containing data.
-
+        edgeCol = 'none';
         % x and y are flipped
         [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
-        surface(x,y,ones(size(x))-.5,z_background);
-        colormap('gray')
-        % shading flat
+        surface(x,y,ones(size(x))-.5,z_background, 'EdgeColor', edgeCol); 
         [x,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); x=x-.5; z=z-.5;
-        surface(sz(1)*ones(size(x)),x,z,y_background);
-        colormap('gray')
-        % shading flat
+        surface(sz(1)*ones(size(x)),x,z,y_background, 'EdgeColor', edgeCol);
         [y,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); y=y-.5; z=z-.5;
-        surface(y,sz(2)*ones(size(y)),z,x_background);
-        colormap('gray')
-        % shading flat
+        surface(y,sz(2)*ones(size(y)),z,x_background, 'EdgeColor', edgeCol);
+        % set colormap to gray for current axes only
+        try
+            colormap(gca, 'gray');
+        catch % probably for older versions of matlab
+            colormap('gray');
+        end
     end
 catch e
     e

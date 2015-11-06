@@ -23,6 +23,11 @@
 % 2. Create a function in your path called 'shrinkcov_mymethod.m'
 % 3. The method should have the pxn data as input, the covariance matrix as
 % output 1 and the shrinkage coefficient as output 2
+%
+% 2015/03/03 Martin Hebart
+
+% Update 2015/11/06: Removed bug related to pinv (didn't work before)
+
 
 function model = ldatrain(labels,data,param)
 
@@ -48,7 +53,15 @@ if ~isfield(param,'sigma') % if sigma wasn't passed
         case 'none'
             param.sigma = cov(data);
         case 'pinv'
-            param.sigma = pinv(data);
+            % special case
+            param.sigma = cov(data);
+            if n_labels == 2
+                model.w = pinv(param.sigma) * (m(:,1)-m(:,2));
+                model.b = model.w'*(0.5*(m(:,1)+m(:,2))); % project grand mean on decision axis
+            else
+                error('Multiclass LDA has not been implemented, yet!')
+            end
+            return
         case 'lw'
             [param.sigma,model.lambda] = covshrink_lw(data);
         case 'lw2'

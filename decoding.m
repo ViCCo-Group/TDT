@@ -174,6 +174,9 @@
 % previously identical training data
 
 % HISTORY (only major changes)
+% 2015-11 Martin
+%   Added ensemble classification method for balancing of unbalanced data 
+%   and for balancing confounds
 % 2015-08 Martin
 %   Added flexible representational similarity analysis and pattern
 %   component modeling capabilities (currently as decoding)

@@ -1,4 +1,6 @@
 * 3.51 - 2015/11/05
+- Added ensemble classification method for balancing of unbalanced data 
+  and for balancing confounds
 - demos run again (tiny and uncritical bug)
 - minor improvement in visualisation functions
 

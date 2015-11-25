@@ -94,7 +94,7 @@ if n_vox > 1 % normal case in which more than one voxel is present
     g = nchoosek(1:n_labels_train,2);
     decision_values = z(:,g(:,1))-z(:,g(:,2));
     [ignore,predict_ind] = max(z,[],2); %#ok<ASGLU>
-    predicted_labels = unique_labels_test(predict_ind);
+    predicted_labels = unique_labels_train(predict_ind);
 
     opt.r = r;
     opt.z = z;

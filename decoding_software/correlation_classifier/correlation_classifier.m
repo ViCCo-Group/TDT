@@ -17,6 +17,9 @@
 % 2009 Martin H.
 
 % History:
+% 2015-11-25 Kai (thanks to Carlo):
+%   Removed bug in correlation_classifier that prediction was done using 
+%   unique_labels_test instead of unique_labels_train
 % 2015-03-02 Martin:
 % - retain original sorting of labels
 % 2014-01-19 Martin:

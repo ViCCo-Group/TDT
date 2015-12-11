@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version: 3.51, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.52, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -94,7 +94,7 @@
 %   cfg.decoding.test.classification.model_parameters: Model parameter that the external
 %       software needs for testing [default = '']
 %   cfg.results.write: Should results be written to hard disk
-%       (0 = no, 1 = .mat-file, 2 = .mat-file and image) [default = 2]
+%       (0 = no, 1 = .mat-file and image, 2 = .mat-file) [default = 1]
 %   cfg.results.output: 1xn cell array specifying which output should be
 %       generated, with possible fields specified in function
 %       decoding_transform_results.m  [default = {'accuracy'}]
@@ -241,7 +241,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/11/05 3.51'; % also change header of this file
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2015/12/11 3.52'; % also change header of this file and in LOG.txt
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

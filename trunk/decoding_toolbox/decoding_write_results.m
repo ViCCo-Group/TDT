@@ -6,7 +6,15 @@
 % for ROI analyses, containing a structure with fields for each ROI.
 % The function can also be run separately to save previously processed data.
 %
-% Remark: if cfg.results.overwrite = 1 and if result files with the same
+% PARAMETERS
+%   cfg.result.write: = 0: don't write results
+%                     = 1: write mat + img file for SL + ROI
+%                     = 2: write only mat file for SL + ROI
+%
+%   cfg.results.overwrite = 0: don't overwrite files (also see comment below)
+%                         = 1: overwrite results 
+%
+% Remark: if cfg.results.overwrite = 0 and if result files with the same
 % name exist, the result files (.hdr & .img) will be copied.
 % However this is very unlikely to occur, because decoding.m checks
 % whether the result files exist already when it is starts, and aborts
@@ -20,6 +28,9 @@
 % by Martin Hebart and Kai Görgen
 %
 % HISTORY
+% KAI: 2015/12/11: switched coding cfg.result.write to more intuitive 
+%       behaviour, now cfg.result.write = 1 writes both, mat+img, and
+%       write = 2 writes mat only.
 % MARTIN: 2015/19/09: now writing cfg > 2GB with -v7.3 flag
 % MARTIN: 2015/07/07: introduced possibility to write file format .nii
 % MARTIN: 2015/07/06: introduced possibility to write ROIs using a multi-mask
@@ -119,7 +130,7 @@ end
 % exception: do not write any when permutations were executed (otherwise we
 % overwrite the original results and write e.g. 1000 images!)
 
-if cfg.results.write == 2 && strcmpi(cfg.analysis,'searchlight') && ~isperm
+if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
     
     try
         resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
@@ -197,7 +208,7 @@ end
 % exception: do not write any when permutations were executed (otherwise we
 % overwrite the original results and write e.g. 1000 images!)
 
-if cfg.results.write == 2 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysis,'wholebrain')) && ~isperm
+if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysis,'wholebrain')) && ~isperm
     
     % if we are not dealing with a multi-mask, save all ROI results separately
     if ~exist('mask_num','var')

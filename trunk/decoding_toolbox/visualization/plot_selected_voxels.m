@@ -84,6 +84,10 @@ if ~exist('cfg', 'var')
     cfg = [];
 end
 
+if ~isfield(cfg, 'plot_selected_voxels')
+    cfg.plot_selected_voxels = 1;
+end
+
 %% set focus silently
 if exist('fighdl', 'var') && ~isempty(fighdl)
     previous_fig = gcf;

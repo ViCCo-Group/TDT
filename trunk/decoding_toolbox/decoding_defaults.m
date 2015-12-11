@@ -151,7 +151,7 @@ defaults.decoding.test.regression.model_parameters = '-q';
 
 % Results specific defaults
 defaults.results.output = {'accuracy_minus_chance'};
-defaults.results.write = 2; % write results both as .mat and as image
+defaults.results.write = 1; % 1: write results both as .mat and as image, 2: mat only, 0: dont write
 defaults.results.backgroundvalue = 0; % background of images consists of zeros
 defaults.results.overwrite = 0; % don't overwrite existing results
 defaults.results.setwise = 1; % return results of each decoding set separately

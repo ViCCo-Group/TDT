@@ -236,7 +236,7 @@ if cfg.stats.results.write
     save(matfname,'results_out')
     dispv(1,'Statistical results written to %s',matfname)
     
-    if cfg.stats.results.write == 2 && strcmpi(cfg.analysis,'searchlight') % additionally write as .img or .nii file
+    if cfg.stats.results.write == 1 && strcmpi(cfg.analysis,'searchlight') % additionally write as .img or .nii file
         
         % Try to get a header from cfg, in this order
         for i = 1:4

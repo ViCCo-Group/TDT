@@ -430,7 +430,7 @@ if cfg.results.write
         % Check if it is ok and possible to overwrite existing files
 
         ext = {'.img','.hdr','.mat','.nii'};
-        if cfg.results.write == 1, ext = {'.mat'}; end
+        if cfg.results.write == 2, ext = {'.mat'}; end % check matfile only
         for ext_ind = 1:length(ext)
             if isfield(cfg.design,'function') && isfield(cfg.design.function,'permutation')
                 % do not run check when we are running a permutation test

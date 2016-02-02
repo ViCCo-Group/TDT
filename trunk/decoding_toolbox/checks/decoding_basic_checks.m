@@ -383,9 +383,10 @@ end
 
 if length(cfg.files.name) ~= length(unique(cfg.files.name))
     if isfield(cfg, 'DECODING_BASIC_CHECKS') && isfield(cfg.basic_checks, 'DoubleFilenameEntriesOk') && cfg.basic_checks.DoubleFilenameEntriesOk ~= 1
-        error('DECODING_BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!! Set cfg.basic_checks.DoubleFilenameEntriesOk = 1 to allow double file names.')
-    else
+        % explicitely acknowledge, warning only
         warningv('DECODING_BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!!')
+    else
+        error('DECODING_BASIC_CHECKS:DoubleFilenameEntries','Double filename entries in cfg.files.name. No guarantee, that training and test sets are independent!!! Set cfg.basic_checks.DoubleFilenameEntriesOk = 1 to allow double file names.')
     end
 else
     dispv(2,'  Check for double names in cfg.files.name: No double entries found.')

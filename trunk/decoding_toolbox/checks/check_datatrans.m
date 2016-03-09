@@ -49,8 +49,13 @@ for cf_ind = 1:length(check_fields)
             end
         end
     catch %#ok<CTCH>
+        the_error = lasterror;
         error_string = [error_string 'Could not check if cfg.' check_fields{cf_ind} '.method==''none''. probably it does not exist. Detailed error below:' char(10)];
-        error_string = [error_string lasterror char(10) char(10)]; %#ok<LERR>
+        if isfield(the_error, 'message')
+            error_string = [error_string the_error.message char(10) char(10)]; %#ok<LERR>
+        else
+            error_string = [error_string the_error char(10) char(10)]; %#ok<LERR>
+        end
     end
 end
 

@@ -15,10 +15,14 @@
 %   1x1 cell array of cell arrays for each output(step), containing a
 %   struct for each step with
 %   
-%     .w: weights for each primal dimension
+%     .w: nx1 vector of weights for each primal dimension
 %     .b: bias
 %
 %   such that dv = .w'*x + b for data in x
+%
+% for multiclass the output is
+%     .w: nxm matrix of weights with a column for each pair of comparisons (for 3 classes: class 1 vs. 2, 1 vs. 3, 2 vs. 3)
+%     .b: a 1xm row vector with all pairwise comparisons
 
 % If you want to draw the lines separating hyperplane & the margins, use
 %
@@ -46,6 +50,9 @@
 % Kai, 2012-03-12
 
 % History
+% 2016-03-08 MH
+%   Added multiclass capabilities, but removed compatibility with newton
+%   SVM (can be added again, but would require a special 2-class case
 % 2014-01-15
 %   Adjusted to simpler output (rather than struct>cell>struct now only
 %   cell>struct)
@@ -59,59 +66,106 @@ function output = transres_SVM_weights_plusbias(decoding_out, chancelevel, cfg, 
 check_datatrans(mfilename, cfg); 
 
 %% check that the model was a linear SVM 
-% only works for libSVM for the moment
-if ~(strcmpi('libsvm', cfg.decoding.software) || strcmpi('newton', cfg.decoding.software))
-    error('Can''t get primal weights for anything except libSVM and newtonSVM at the moment');
+% only works for libSVM at the moment
+if ~strcmpi(cfg.decoding.software,'libsvm')
+    error('Can''t get primal weights for anything except libsvm at the moment');
 end
-
-if strcmpi('libsvm', cfg.decoding.software)
-    % check that we indeed use a linear SVM
-    % get the current libSVM parameters
-    switch lower(cfg.decoding.method)
-        case 'classification'
-            libsvm_options = cfg.decoding.train.classification.model_parameters;
-        case 'classification_kernel'
-            error('Weights cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
-        case 'regression'
-            libsvm_options = cfg.decoding.train.regression.model_parameters;
-    end
-    % find '-t 0' in the current options (parameter for linear svm)
-    if isempty(strfind(libsvm_options, '-t 0'))
-        error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
-    end
+% check that we indeed use a linear SVM
+% get the current libSVM parameters
+switch lower(cfg.decoding.method)
+    case 'classification'
+        libsvm_options = cfg.decoding.train.classification.model_parameters;
+    case 'classification_kernel'
+        error('Weights cannot be returned for cfg.decoding.method = ''classification_kernel'', please use cfg.decoding.method = ''classification''!');
+    case 'regression'
+        libsvm_options = cfg.decoding.train.regression.model_parameters;
+end
+% find '-t 0' in the current options (parameter for linear svm)
+if isempty(strfind(libsvm_options, '-t 0'))
+    error('Calculating linear weights for the primal problem does not make sense, because the classifier is not linear')
 end
 
 % Unpack model
 model = [decoding_out.model];
 
-%% new version (using alphas and SVs)
+%% implementation from libsvm website
 % see http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804
 
 n_models = length(model);
 output{1} = cell(n_models,1);
 for i_model = 1:n_models
     m = model(i_model);
+    ulabel = uniqueq(m.Label);
+    n_label = length(ulabel);
     
-    if strcmpi('libsvm', cfg.decoding.software)
-        if strcmpi(cfg.decoding.method, 'classification') && length(uniqueq(m.Label)) > 2 % TODO: replace length by n_labels_per_step somewhere in cfg
-            error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
-        end
-        weights.w = m.SVs' * m.sv_coef;    
-        weights.b = -m.rho;
-    elseif strcmpi('newton', cfg.decoding.software)
-        weights.w = m.w;
-        weights.b = -m.gamma;
-    else
-        error('Method not implemented')
-    end
+    if strcmpi(cfg.decoding.method, 'classification')
         
-    output{1}{i_model} = weights;
+        if n_label == 2
+            % simple case for binary classification
+            weights.w = m.SVs' * m.sv_coef;
+            weights.b = -m.rho;
+            output{1}{i_model} = weights;
+            
+        else
+            % more complex case for multiclass classification, see abve for instructions
+            % (coding this efficiently was not easy, feel free to improve):
+            % http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804
+            
+            % we need to know which rows of SVs and of sv_coef belong to which
+            % label, this is determined by the number of support vectors per label
+            csum = cumsum(m.nSV);
+            % the following provides us with a range for each
+            rangeind = [[1; csum(1:end-1)+1] csum];
+            
+            % we get the relevant subscripts and convert them to indices, it
+            % will give us the indices that signal the same pair, e.g. the indices
+            % for (1,2) and (2,1) or for (31,5) and (5,31) -> the missing
+            % diagonal would make this difficult for indexing
+            [a,b] = meshgrid(1:n_label,1:n_label);
+            c = tril(true(n_label),-1); % this is our logical index selecting the lower triangular matrix
+            d = [a(c) b(c)];
+            % This line is like ind2sub, but leaves out the diagonals to get indices
+            ind = d(:,[2 1]) + (d-1)*n_label - [d(:,1) d(:,2)-1];
+            
+            % we assign all entries of sv_coef an index that we use to find relevant entries later
+            mask = zeros(size(m.sv_coef,1),1);
+            for i_label = 1:n_label
+                mask(rangeind(i_label,1):rangeind(i_label,2)) = (i_label-1)*(n_label-1)+1;
+            end
+            mask = bsxfun(@plus,mask,0:n_label-2);
+            
+            % init
+            w = zeros(size(m.SVs,2),nchoosek(n_label,2));
+            ct = 0;
+            
+            m.SVs = full(m.SVs); % this speeds everything up
+            for i_label = 1:n_label
+                for j_label = i_label+1:n_label
+                    ct = ct+1; % increase counter
+                    % index needs to be sorted, should always be the case if entered this way (I checked it)
+                    rind = [rangeind(i_label,1):rangeind(i_label,2) rangeind(j_label,1):rangeind(j_label,2)];
+                    % need to index separately to maintain order
+                    coef = [m.sv_coef(mask==ind(ct,1)); m.sv_coef(mask==ind(ct,2))];
+                    % carry out calculation as done on libsvm website
+                    w(:,ct) = m.SVs(rind,:)'*coef;
+                end
+            end
+            
+            output{1}{i_model}.w = w;
+            output{1}{i_model}.b = -m.rho';
+            
+        end
+        
+    else
+        error('Method %s not implemented for cfg.decoding.method = %s.',mfilename,cfg.decoding.method)
+    end
 end
 
 
 % %% old version
 % The old version works for smaller problems, but not for e.g. wholebrain
-% decoding. So I replaced it by a one that should work.
+% decoding. So I replaced it by a one that should always work. It might
+% become interested trying it for linear kernels.
 % % get the size of the current primal source space
 % [nSVs, primal_dim] = size(model(1).SVs);
 % 

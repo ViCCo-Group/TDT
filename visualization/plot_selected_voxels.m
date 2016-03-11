@@ -105,8 +105,9 @@ end
 try
     set(0,'CurrentFigure',fighdl)
 catch %#ok<CTCH>
-    disp(lasterr)
-    warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
+%     disp(lasterr)
+    display('Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
+%     warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
     fighdl = figure('name', ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)']);
     if exist('created_fighdl', 'var')
         created_fighdl = fighdl; % remember change

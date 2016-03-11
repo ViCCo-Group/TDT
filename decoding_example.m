@@ -1,4 +1,4 @@
-% function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
+% function [results, cfg] = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
 %
 % This is a general function for two class classification, using a linear 
 % SVM as implemented in the libsvm software, with accuracy images (for
@@ -25,6 +25,10 @@
 % ROI-files: If you want to specify ROI files, set 
 %   cfg.files.mask = {'ROI1.img', 'ROI2.nii'} % etc
 %
+% OUTPUT:
+%   results: the results
+%   cfg:     the cfg created in the example (can be use for decoding(cfg) )
+%
 % See also DECODING
 
 % Martin H.
@@ -35,7 +39,7 @@
 
 
 
-function results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
+function [results, cfg] = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
 
 
 if ~exist('cfg', 'var')
@@ -145,4 +149,4 @@ cfg.design = make_design_cv(cfg);
 % cfg.results.output = {'AUC_minus_chance'}; % activate for alternative output
 
 % run results = decoding(cfg)
-results = decoding(cfg);
+[results, cfg] = decoding(cfg);

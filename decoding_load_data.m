@@ -32,6 +32,8 @@
 %             dimensionality of the data.
 %       .voxelsize: voxelsize in mm (nan, if voxelsize could not be
 %             calculated)
+%       .mat: 4x4 vector, rotation and translation values for image for
+%           data (optional, it not exist or empty no image will be written)
 %
 %   misc: updated field misc when NaNs were present
 %
@@ -40,6 +42,8 @@
 % Kai, 2012-03-12
 
 % HISTORY:
+% KAI: 2016/03/11: Added adding translation mat to cfg.datainfo.mat, also
+%   checking that mats from different data files and masks agree
 % MH 2015/10/12: allow reducing size of misc.residuals for NaN removal
 % Added passing several mask_indices for ROIs, Martin 2013/06/16
 
@@ -160,7 +164,6 @@ if strcmpi(cfg.files.mask{1}, 'all voxels');
 else
     % Load the brain or ROI mask(s)
     [mask_vol, mask_hdr, sz, mask_vol_each] = load_mask(cfg);
-    
 end
 
 mask_index = find(mask_vol); % get indices of all voxels inside the mask (important: need to be sorted for ismembc!!)
@@ -168,6 +171,12 @@ mask_index = find(mask_vol); % get indices of all voxels inside the mask (import
 mask_index_each = cell(1,size(mask_vol_each,4));
 for i_mask = 1:size(mask_vol_each,4)
     mask_index_each{i_mask} = find(mask_vol_each(:,:,:,i_mask));
+end
+
+if isfield(mask_hdr, 'mat')
+    mask_tmat = mask_hdr.mat;
+else
+    warningv('decoding_load_data:no_tmat_from_mask', 'Could not get a transformation mat from mask, assuming for the moment that that''s ok');
 end
 
 %% Load data
@@ -190,7 +199,7 @@ for file_ind = 1:n_files
     % check dimension
     if exist('sz','var')
         if ~isequal(data_hdr.dim(1:3), sz)
-            error('Dimension of image in file %s \n is different from dimension of the mask file(s)/the first data image file, please check!', fname)
+            error('Dimension of image in file %s \n is different from dimension of the mask file(s)/the first data image file, please check!', mask_hdr.fname, fname)
         end
     else
         sz = data_hdr.dim(1:3); % this is the first time we check the dimensions, so let's save it for the next images
@@ -199,7 +208,7 @@ for file_ind = 1:n_files
     % check that translation & rotation matrices of this image roughly equals the
     % previous ones (otherwise the images would be rotated differently,
     % which we can't handle)
-    if exist('mat','var')
+    if exist('mat','var') && ~isempty(mat) % mat is empty if neither mask nor data had an orientation matrix
 %         if ~isequal(data_hdr.mat, mat) % old
         mat_diff = abs(data_hdr.mat(:)-mat(:));
         tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
@@ -213,6 +222,36 @@ for file_ind = 1:n_files
     else
         if isfield(data_hdr, 'mat')
             mat = data_hdr.mat; % this is the first time we check the dimensions, so let's save it for the next images
+            % and compare it to the mat file of the mask to make sure that
+            % agrees, too
+            if exist('mask_tmat', 'var')
+                mat_diff = abs(data_hdr.mat(:)-mat(:));
+                tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
+                if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                    if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
+                        warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of image in file \n %s \n is different from matrix of the mask file(s)/the first data image file.\n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!',fname)
+                    else
+                        error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s).\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.imagerotation_unequal = ''ok''!', fname)
+                    end
+                end
+            else % check that at least dimensions agree and warn
+                if isequal(sz, data_hdr.dim(1:3))
+                    if isfield(data_hdr, 'mat')
+                        if isfield(cfg,'files') && isfield(cfg.files,'take_orientation_from_data') && strcmpi(cfg.files.take_orientation_from_data,'ok')
+                            warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_FROM_DATA','Taking orientation from data because no orientation was provided with the mask. \n The final results may not be interpretable!!',fname)
+                            mat = data_hdr.mat;
+                        else
+                            error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s).\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.take_orientation_from_data = ''ok''!', fname)
+                        end
+                    else
+                        warningv('DECODING_LOAD_DATA:NO_TRANSFORMATIONMATRIX','Neither the first data image nor the mask had an rotation & translation matrix, but their size agrees, so assuming that it''s ok',fname)
+                        mat = [];
+                    end 
+                else
+                    % dimensions do not agree, quit
+                    error('Dimensions do not agree between mask and data, please check')
+                end
+            end
         end
     end
 
@@ -261,6 +300,7 @@ passed_data.mask_index = mask_index;
 passed_data.mask_index_each = mask_index_each;
 passed_data.hdr = mask_hdr;
 passed_data.dim = sz;
+passed_data.mat = mat;
 
 % add voxelsize, if provided
 
@@ -282,6 +322,7 @@ end
 % save stuff for cfg (MAKE SURE THIS FITS TO END OF PASSED_DATA CHECK above)
 cfg.datainfo.dim = sz;
 cfg.datainfo.voxelsize = passed_data.voxelsize;
+cfg.datainfo.mat = mat;
 end
 
 

@@ -10,6 +10,7 @@
 %
 % To run it:
 %   0. DOWNLOAD the dataset
+%       See http://dx.doi.org/10.1126/science.1063736
 %   1. ADAPT the paths below to 
 %       - TDT (if not in your path anyway)
 %       - SPM (if not in your path anyway)
@@ -23,27 +24,23 @@
 % Author: Kai
 
 function results = haxby_template_all(sbj)
-%% Add paths
-% add decoding toolbox
-addpath('/home/kai/tdt//decoding_toolbox_v3.04')
-% add SPM to path (for file access)
-addpath('/analysis/kai/spm/spm8')
+
 % directory that contains original Haxby dataset files from DOI: http://dx.doi.org/10.1126/science.1063736
-base_dir = '/analysis/kai/haxby01'; 
+base_dir = fullfile('z:', 'kai', 'haxby01'); 
 
 %% Set defaults
 cfg = decoding_defaults;
 % Set the analysis that should be performed (default is 'searchlight')
 cfg.analysis = 'searchlight';
-
+% cfg.testmode = 1; % use if you just want a quick test, calculates 1 SL
 % directory for current subject
 sbj_dir = fullfile(base_dir, ['subj' num2str(sbj)]);
 
 % Set the filepath where your SPM.mat and all related betas are, e.g. 'c:\exp\glm\model_button'
-beta_dir = fullfile(sbj_dir, 'level1/all_runwise');
+beta_dir = fullfile(sbj_dir, 'level1', 'all_runwise');
 
 % Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
-cfg.results.dir = fullfile(sbj_dir, 'decoding/newtest/runwise_all_classes/all_classes');
+cfg.results.dir = fullfile(sbj_dir, 'decoding', 'newtest', 'runwise_all_classes', 'all_classes');
 
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
@@ -79,7 +76,7 @@ labelnames = {
 % if you like to combine multiple designs in one cfg.
 
 % Decide whether you want to see the searchlight/ROI/... during decoding
-cfg.plot_selected_voxels = 0; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
+cfg.plot_selected_voxels = 100; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
 
 % Add additional output measures if you like
 % cfg.results.output = {'accuracy_minus_chance', 'AUC'}

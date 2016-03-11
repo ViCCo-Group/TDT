@@ -11,6 +11,9 @@
 % See also DECODING_LOAD_DATA
 
 % 15/07/03: introduced possibility to supply multiple masks in one mask volume
+% HISTORY:
+% % KAI: 2016/03/11: Added adding translation mat to cfg.datainfo.mat, also
+%   checking that mats from different masks agree
 
 function [mask_vol,mask_hdr,sz,mask_vol_each] = load_mask(cfg)
 
@@ -28,6 +31,7 @@ mask_fname = mask_names{1};
 mask_hdr = read_header(cfg.software,mask_fname);
 sz = mask_hdr.dim(1:3);
 mask_vol_each = zeros([sz n_masks]);
+mat = mask_hdr.mat;
 
 for i_mask = 1:n_masks
     fname = mask_names{i_mask};
@@ -35,6 +39,18 @@ for i_mask = 1:n_masks
     % Check dimension
     if ~isequal(hdr.dim(1:3), sz)
         error('Dimension of mask file %s \n is different from dimension of mask file %s, please check!', fname,mask_fname)
+    end
+    
+    % also check orientation & rotation
+    mat_diff = abs(hdr.mat(:)-mat(:));
+    tolerance = 32*eps(max(hdr.mat(:),mat(:)));
+    if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+        if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
+            warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of the mask in file \n %s \n is different from matrix of the first mask file \n%s \n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!', fname, mask_fname)
+            keyboard
+        else
+            error('Transformation matrix of mask file %s \n is different from dimension of mask file %s, please check!', fname, mask_fname)
+        end
     end
     mask_vol_each(:,:,:,i_mask) = read_image(cfg.software,hdr); % get mask
     dispv(1,'%s',fname)

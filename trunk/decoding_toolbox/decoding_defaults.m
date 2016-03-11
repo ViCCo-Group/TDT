@@ -31,7 +31,11 @@ if ~exist('cfg','var'), cfg = struct; end
 % will be determined automatically from the position of this file
 fname = mfilename('fullpath');
 fpath = fileparts(fname);
-addpath(genpath(fpath));
+try
+    addpath(genpath_nosvn(fpath));
+catch
+    addpath(genpath(fpath));
+end
 defaults.toolbox_path = fpath;
 defaults.report = []; % init field
 

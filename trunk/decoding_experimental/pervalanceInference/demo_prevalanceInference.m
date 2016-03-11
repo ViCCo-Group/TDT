@@ -66,15 +66,13 @@ end
 prevalence(inputimages);
 
 % The function returns three images: 
-%   prevalence_gamma0.nii: 
-%
+%   prevalence_gamma0.nii: The prevalance value, see paper
 %   prevalence_typical.nii: The typical above-chance accuracies at
 %       positions where the majority of subject shows an effect (the median 
 %       of all accuracies)
 %   prevalence_mask.nii: The mask where permutations have been computed.
 
-% TODO: Check toy data or remove option
-H:\projects\decoding_tool\trunk\decoding_experimental\pervalanceInference
+% TODO: Check toy data or remove option: Probably remove option
 
 
 

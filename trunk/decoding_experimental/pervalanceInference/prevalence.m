@@ -3,10 +3,11 @@
 %   remains to be improved.
 %
 % Current TODOs or restrictions:
+%   Add carstens correct GPL
 %   Issues with TDT output in .mat-files
 %       - Works only for SL maps if mat-files are used
 %       - Cannot put the result at the correct location because the affine
-%         parameters are currently not stored stored in the mat-files
+%         parameters are currently not stored stored in the mat-files [solved, new version of TDT saves mat, will ask for mat if not clear]
 %       - Can only deal with Searchlight results so far (not a bit issue to 
 %         implement ROI analyses as well, we just need to use the usual
 %         output format instead of only writing an image)
@@ -17,7 +18,7 @@ function gamma0max = prevalence(inputfilenames, P2, outputfilename, alpha, decod
 
 % permutation-based prevalence inference
 %
-% prevalence(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, decoding_measure)
+% prevalence(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, trans_mat, decoding_measure)
 %
 % inputfilenames:   Cell array of input with size subjects x permutations
 %                   The original unpermuted input should be in subjects x 1
@@ -122,7 +123,30 @@ if strcmp(inputformat, 'SPM') || strcmp(inputformat, 'mat')
                 elseif ~strcmp(currmat.results.analysis, 'searchlight') % also check that data is from a searchlight analysis
                     error('Prevalence analysis is currently only implemented for searchlight analyses, but you use a %s analysis. Please contact us so we can implement it for other analysis as well.', currmat.results.analysis);
                 end
+                % get transformation matrix from image
+                
+                try
+                    vol.mat = currmat.results.datainfo.mat;
+                catch
+                    warning('Could not get transformation matrix from loaded mat file. This might be the case if the mat files have been created with an old version of TDT. In this case, you need to provide the orientation at the end of the function')
+                    vol.mat = [];
+                end
+                    
+                
             end
+            
+            % check that orientation matrices are the same
+            if ~exist('mat', 'var')
+                mat = vol.mat; % save orientation matrix from first image to compare to others
+            end
+            if ~isempty(vol.mat) || ~isempty(mat)
+                mat_diff = abs(vol.mat(:)-mat(:));
+                tolerance = 32*eps(max(vol.mat(:),mat(:)));
+                if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                    error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the first file.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position.', inputfilenames{k, i})
+                end
+            end
+            
             fprintf('.')
         end
         fprintf('\n')
@@ -275,15 +299,21 @@ at(gamma0 >= 0.5) = median(a(gamma0 >= 0.5, :, 1), 2);
 
 data = nan(size(mask));
 data(mask) = gamma0;
-if ~exist('vol', 'var') || ~isfield(vol, 'mat')
-    warning('Computations have been done, but it seems that the transformation matrix has not been stored in the file. We know assume a transformation matrix, but that is sure to be wrong. So dont wonder if the image looks strange.')
-    vol.mat = eye(4); % default
-    if strcmp(inputformat, 'mat')
-       vol.mat(eye(4)==1) = [currmat.results.datainfo.voxelsize, 1]; % we are nice and at least have the right voxels size
+if ~exist('vol', 'var') || ~isfield(vol, 'mat') || isempty(vol.mat)
+    % check if the tranformation matrix has been provided as trans_mat
+    if exist('trans_mat', 'var')
+        vol.mat = trans_mat;
+    else
+
+        warning('Computations have been done, but it seems that the transformation matrix has not been stored in the file. We know assume a transformation matrix, but that is sure to be wrong. So dont wonder if the image looks strange.')
+        vol.mat = eye(4); % default
+        if strcmp(inputformat, 'mat')
+           vol.mat(eye(4)==1) = [currmat.results.datainfo.voxelsize, 1]; % we are nice and at least have the right voxels size
+        end
+        disp(vol.mat)
+        display('Type "dbcont" to accept the above matrix, or use the debuger to set vol.mat as proper transformation matrix');
+        keyboard
     end
-    disp(vol.mat)
-    display('Type "dbcont" to accept the above matrix, or use the debuger to set vol.mat as proper transformation matrix');
-    keyboard
 end
 
 saveMRImage(data, [outputfilename '_gamma0.nii'], vol.mat, 'prevalence map')

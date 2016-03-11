@@ -28,6 +28,8 @@
 % by Martin Hebart and Kai Görgen
 %
 % HISTORY
+% KAI: 2016/03/11: Added check that new datainfo.mat agress with
+%   results_hdr.mat when writing image.
 % KAI: 2015/12/11: switched coding cfg.result.write to more intuitive 
 %       behaviour, now cfg.result.write = 1 writes both, mat+img, and
 %       write = 2 writes mat only.
@@ -129,11 +131,21 @@ end
 %% WRITE SEARCHLIGHT RESULTS AS IMAGE
 % exception: do not write any when permutations were executed (otherwise we
 % overwrite the original results and write e.g. 1000 images!)
-
 if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
     
     try
         resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
+        % check that rotation matrices agree
+        if isfield(cfg.datainfo, 'mat')
+            if isfield(resultsvol_hdr, 'mat')
+                mat_diff = abs(cfg.datainfo.mat(:)-resultsvol_hdr.mat(:));
+                tolerance = 32*eps(max(cfg.datainfo.mat(:)-resultsvol_hdr.mat(:)));
+                if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                    warningv('decoding_write_results:rotation_matrices_different', 'Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix in cfg.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position.', resultsvol_hdr.fname)
+                    warningv('decoding_write_results:rotation_matrices_differentTODO', 'TODO: This should be fixed')
+                end
+            end
+        end
         fallback = 0; % if results cannot be written as .img, save as mat
     catch %#ok<CTCH>
         fallback = 1;
@@ -217,6 +229,17 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
         
         try
             resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
+            % check that rotation matrices agree
+            if isfield(cfg.datainfo, 'mat')
+                if isfield(resultsvol_hdr, 'mat')
+                    mat_diff = abs(cfg.datainfo.mat(:)-resultsvol_hdr.mat(:));
+                    tolerance = 32*eps(max(cfg.datainfo.mat(:)-resultsvol_hdr.mat(:)));
+                    if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                        warningv('decoding_write_results:rotation_matrices_different', 'Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix in cfg.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position.', resultsvol_hdr.fname)
+                        warningv('decoding_write_results:rotation_matrices_differentTODO', 'TODO: This should be fixed')
+                    end
+                end
+            end
             fallback = 0; % if results cannot be written as .img, save as mat
         catch %#ok<CTCH>
             fallback = 1;
@@ -305,6 +328,17 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
         
         try
             resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
+            % check that rotation matrices agree
+            if isfield(cfg.datainfo, 'mat')
+                if isfield(resultsvol_hdr, 'mat')
+                    mat_diff = abs(cfg.datainfo.mat(:)-resultsvol_hdr.mat(:));
+                    tolerance = 32*eps(max(cfg.datainfo.mat(:)-resultsvol_hdr.mat(:)));
+                    if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                        warningv('decoding_write_results:rotation_matrices_different', 'Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix in cfg.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position.', resultsvol_hdr.fname)
+                        warningv('decoding_write_results:rotation_matrices_differentTODO', 'TODO: This should be fixed')
+                    end
+                end
+            end
             fallback = 0; % if results cannot be written as .img, save as mat
         catch %#ok<CTCH>
             fallback = 1;

@@ -14,9 +14,12 @@
 %
 % OUTPUT
 %   1x1 cell array of cell arrays for each output(step), with the pattern
-%   as a 1xn_features numeric output.
+%   as a n_featuresx1 numeric output. For multiclass, 
 %   
 % Martin, 2014-01-15
+
+% History
+% 2016-08-03: Added multiclass capabilities
 
 function output = transres_SVM_pattern(decoding_out, chancelevel, cfg, data)
 
@@ -53,39 +56,90 @@ n_models = length(model);
 output{1} = cell(n_models,1);
 for i_model = 1:n_models
     m = model(i_model);
-    if strcmpi(cfg.decoding.method, 'classification') && length(uniqueq(m.Label)) > 2
-        error('Only 2 classes supported at the moment. See http://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f804 how to extend to more classes (and implement it and send it to us)')
-    end
+    ulabel = uniqueq(m.Label);
+    n_label = length(ulabel);
     
-    weights = m.SVs' * m.sv_coef;    
-
-%% Get pattern    
-    
-    data_train = data(cfg.design.train(:, i_model) > 0, :);
-    [n_samples n_dim] = size(data_train);
-    
-    if n_dim^2<10^7 % if pattern doesn't have a very large number of voxels
-        pattern = cov(data_train)*weights / cov(weights'*data_train'); % like cov(X)*W * inv(W'*X')
-    else % else do row by row (not much slower, even if we chunk it no dramatic speed-up)
-        warningv('TRANSRES_SVM_PATTERN:pattern_calculation_slow','Pattern is very large, so its estimation will be very slow (up to minutes)!')
-        scale_param = cov(weights'*data_train');
-        pattern_unscaled = zeros(n_dim,1);
-        for i = 1:n_dim % remove mean columnwise
-           data_train(:,i) = data_train(:,i) - mean(data_train(:,i));
-        end
-        fprintf(repmat(' ',1,20))
-        backstr = repmat('\b',1,20);
-        for i = 1:n_dim % now calculate columnwise
-            if i == 1 || ~mod(i,round(n_dim/50)) || i == n_dim
-                fprintf([backstr '%03.0f percent finished'],100*i/n_dim)
+    if strcmpi(cfg.decoding.method, 'classification')
+        
+        % get weights first
+        
+        if n_label == 2
+            
+            weights = m.SVs' * m.sv_coef;
+            
+        else
+            % for extensively commented code, see transres_SVM_weights
+            csum = cumsum(m.nSV);
+            rangeind = [[1; csum(1:end-1)+1] csum];
+            [a,b] = meshgrid(1:n_label,1:n_label);
+            c = tril(true(n_label),-1);
+            d = [a(c) b(c)];
+            ind = d(:,[2 1]) + (d-1)*n_label - [d(:,1) d(:,2)-1];
+            mask = zeros(size(m.sv_coef,1),1);
+            for i_label = 1:n_label
+                mask(rangeind(i_label,1):rangeind(i_label,2)) = (i_label-1)*(n_label-1)+1;
             end
-            data_cov = (data_train(:,i)'*data_train)/(n_samples-1);
-            pattern_unscaled(i,1) = data_cov * weights;
+            mask = bsxfun(@plus,mask,0:n_label-2);
+            weights = zeros(size(m.SVs,2),nchoosek(n_label,2));
+            ct = 0;
+            m.SVs = full(m.SVs);
+            for i_label = 1:n_label
+                for j_label = i_label+1:n_label
+                    ct = ct+1;
+                    rind = [rangeind(i_label,1):rangeind(i_label,2) rangeind(j_label,1):rangeind(j_label,2)];
+                    coef = [m.sv_coef(mask==ind(ct,1)); m.sv_coef(mask==ind(ct,2))];
+                    weights(:,ct) = m.SVs(rind,:)'*coef;
+                end
+            end
         end
-        fprintf('\ndone.\n')
-        pattern = pattern_unscaled / scale_param; % like cov(X)*W * inv(W'*X')
+        
+        %% Get pattern
+        
+        % Get all relevant data and corresponding labels (check if correct)
+        select_ind = cfg.design.train(:, i_model) > 0;
+        all_data_train = data(select_ind, :);
+        all_labels = cfg.design.label(select_ind, i_model);
+        [n_samples n_dim] = size(all_data_train);
+        
+        pattern = zeros(size(weights));
+        ct = 0;
+        for i_label = 1:n_label
+            for j_label = i_label+1:n_label
+                ct = ct+1;
+                % we need correct order for label_ind
+                label_ind = [find(all_labels == m.Label(i_label)) find(all_labels == m.Label(j_label))];
+                data_train = all_data_train(label_ind,:);
+                
+                if n_dim^2<10^7 % if pattern doesn't have a very large number of voxels
+                    pattern(:,ct) = cov(data_train)*weights(:,ct) / cov(weights(:,ct)'*data_train'); % like cov(X)*W * inv(W'*X')
+                else % else do row by row (not much slower, even if we chunk it no dramatic speed-up)
+                    warningv('TRANSRES_SVM_PATTERN:pattern_calculation_slow','Pattern is very large, so its estimation will be very slow (up to minutes)!')
+                    scale_param = cov(weights(:,ct)'*data_train');
+                    pattern_unscaled = zeros(n_dim,1);
+                    for i = 1:n_dim % remove mean columnwise
+                        data_train(:,i) = data_train(:,i) - mean(data_train(:,i));
+                    end
+                    fprintf(repmat(' ',1,20))
+                    backstr = repmat('\b',1,20);
+                    for i = 1:n_dim % now calculate columnwise
+                        if i == 1 || ~mod(i,round(n_dim/50)) || i == n_dim
+                            fprintf([backstr '%03.0f percent finished'],100*i/n_dim)
+                        end
+                        data_cov = (data_train(:,i)'*data_train)/(n_samples-1);
+                        pattern_unscaled(i,1) = data_cov * weights(:,ct);
+                    end
+                    fprintf('\ndone.\n')
+                    pattern(:,ct) = pattern_unscaled / scale_param; % like cov(X)*W * inv(W'*X')
+                end
+            end
+        end
+        
+        
+        output{1}{i_model} = pattern;
+        
+    else
+        error('Method %s not implemented for cfg.decoding.method = %s.',mfilename,cfg.decoding.method)
     end
-    output{1}{i_model} = pattern; %#ok<AGROW>
 end
 
 

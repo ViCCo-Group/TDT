@@ -60,8 +60,7 @@ n_models = length(model);
 output{1} = cell(n_models,1);
 for i_model = 1:n_models
     m = model(i_model);
-    ulabel = uniqueq(m.Label);
-    n_label = length(ulabel);
+    n_label = length(m.Label);
     
     if strcmpi(cfg.decoding.method, 'classification')
         

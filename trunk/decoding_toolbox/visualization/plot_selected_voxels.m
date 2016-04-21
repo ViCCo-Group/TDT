@@ -14,6 +14,8 @@
 %
 % PARAMETER
 %   position_index: vector 1xn with indices of voxels in sz space
+%       because we are merciful, we also take a mask volume, but that will
+%       slow down drawing a bit
 %   sz: 1x3 vector: dimensions of original images
 % OPTIONAL (to add background image)
 %   brain_data: 1xBD vector with values of an input image 
@@ -40,11 +42,18 @@
 %           decoding(cfg);
 %           % CLOSE the object after use
 %           close(cfg.plot_selected_voxels_writerObj);
-%   cfg.dont_clear_fig = 1 to keep the figure (e.g. to use a subplot)
+%   Subplots
+%       cfg.handle_focus: Set 0 if the function should not handle the focus 
+%           (e.g. to use a subplot)
+%       cfg.dont_clear_fig: Set 1 to not clear the figure (e.g. to use a 
+%           subplot)
 
-% Martin Hebart, Kai Goergen, 2013/05/27
+% Martin Hebart, Kai Goergen, 2016/04/21
 
 % History: 
+%   Kai: 2016/04/21 Added cfg.handle_focus, can be set to 0 to avoid that 
+%       function cares about focus at all (e.g. to save subplots), needs to 
+%       be used with cfg.dont_clear_fig.
 %   Kai: 2015/11/05: using a persitant variable if function is repeatedly 
 %       called without figure handle, avoids overwritting previous figures
 %       and avoids also poping up new figures each time when called
@@ -71,7 +80,7 @@
 %       but of course plot searchlight
 %   -- somewhere on the way there: save projections
 
-function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl,cfg)
+function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl, cfg)
 
 % check that the correct arguments are provided
 if exist('brain_data', 'var')
@@ -88,31 +97,38 @@ if ~isfield(cfg, 'plot_selected_voxels')
     cfg.plot_selected_voxels = 1;
 end
 
-%% set focus silently
-if exist('fighdl', 'var') && ~isempty(fighdl)
-    previous_fig = gcf;
-else
-    previous_fig = -1; % mark that fighdl has not been passed
-    % check the function opened a figure before, if so, try to use it
-    persistent created_fighdl % fallback function, so that function does not popup new figures if called repeatedly with no figure handles
-    if isempty(created_fighdl)
-        created_fighdl = -1; % will create a new figure
-    end
-    fighdl = created_fighdl;
+if ~isfield(cfg, 'handle_focus')
+    cfg.handle_focus = 1; % care about the focus
 end
 
-%% select the ROI figure for plotting
-try
-    set(0,'CurrentFigure',fighdl)
-catch %#ok<CTCH>
-%     disp(lasterr)
-    display('Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
-%     warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
-    fighdl = figure('name', ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)']);
-    if exist('created_fighdl', 'var')
-        created_fighdl = fighdl; % remember change
+%% set focus silently
+if  cfg.handle_focus
+    if exist('fighdl', 'var') && ~isempty(fighdl)
+        previous_fig = gcf;
+    else
+        previous_fig = -1; % mark that fighdl has not been passed
+        % check the function opened a figure before, if so, try to use it
+        persistent created_fighdl % fallback function, so that function does not popup new figures if called repeatedly with no figure handles
+        if isempty(created_fighdl)
+            created_fighdl = -1; % will create a new figure
+        end
+        fighdl = created_fighdl;
+    end
+
+    %% select the ROI figure for plotting
+    try
+        set(0,'CurrentFigure',fighdl)
+    catch %#ok<CTCH>
+    %     disp(lasterr)
+        display('Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
+    %     warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
+        fighdl = figure('name', ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)']);
+        if exist('created_fighdl', 'var')
+            created_fighdl = fighdl; % remember change
+        end
     end
 end
+
 %%
 % position_index: indices of all voxel positions
 % sz: size of volume (optional)
@@ -131,6 +147,13 @@ faces_matrix = [1 2 6 5
 4 1 5 8
 1 2 3 4
 5 6 7 8];
+
+% check if position_index really is indeed a binary filter, and if so,
+% convert it
+if numel(position_index) == prod(sz) && numel(unique(position_index)) < prod(sz)
+    warningv('plot_selected_voxels:position_index_is_volumefilter', 'position_index provided to plot_selcted_voxels seems to be a filter, converting it to position indices using find(position_index). Providing the position_index directly can increase speed.')
+    position_index = find(position_index(:));
+end
 
 
 [P(:,1) P(:,2) P(:,3)] = ind2sub(sz,position_index);
@@ -314,6 +337,6 @@ if isfield(cfg, 'plot_selected_voxels_writerObj') && ~isempty(cfg.plot_selected_
 end
 
 %% set figurehandle back to what it was before
-if previous_fig ~= -1  % fighdl not passed
+if cfg.handle_focus && previous_fig ~= -1  % fighdl not passed
     set(0,'CurrentFigure',previous_fig) % set figurehandle back to previous axis
 end

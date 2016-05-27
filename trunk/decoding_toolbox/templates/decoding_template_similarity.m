@@ -81,8 +81,12 @@ regressor_names = design_from_spm(beta_dir);
 % Extract all information for the cfg.files structure (labels will be [1 -1] )
 cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_dir);
 
-% This creates the leave-one-run-out cross validation design:
+% This creates a design in which all data is used to calculate the correlation
 cfg.design = make_design_similarity(cfg); 
+% Use the next line to use RSA with cross-validation
+% cfg.design = make_design_similarity_cv(cfg); 
+
+
 
 % Run decoding
 results = decoding(cfg);

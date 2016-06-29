@@ -1,17 +1,17 @@
-tests.basic = 0;
+tests.basic = 1;
 tests.subset = 0;
 tests.nokernel = 0;
-tests.multiple = 0; % multiple results
+tests.multiple = 1; % multiple results
 tests.writematonly = 0;
 tests.nowrite = 0;
 tests.wholebrain = 0; % include weights
 tests.roi = 0; % testing one and multiple ROIs
 tests.roi_setwise = 0; % testing same analysis with setwise settings
 tests.sl_setwise = 0; % testing classical searchlight with setwise settings
-tests.fs_filter = 1;
-tests.fs_embedded = 1;
-tests.fs_multilevel = 1;
-tests.parameter_selection = 1; % testing basic parameter selection assumptions
+tests.fs_filter = 0;
+tests.fs_embedded = 0;
+tests.fs_multilevel = 0;
+tests.parameter_selection = 0; % testing basic parameter selection assumptions
 
 %% Possibly, manually deactivate all non-base Matlab toolboxes before running this! And run with an old Matlab version!
 
@@ -238,7 +238,7 @@ if tests.writematonly
     cfg.plot_design = 0;
     cfg.searchlight.subset = (30001:30050)';
     cfg.decoding.method = 'classification_kernel';
-    cfg.results.write = 1;
+    cfg.results.write = 2;
     
     % Now run searchlight analysis
     results = decoding(cfg);

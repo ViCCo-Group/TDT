@@ -23,9 +23,9 @@
 % the same name are created between this initial check in decoding.m and
 % when they should be saved here.
 %
-% See also DECODNG
+% See also DECODING
 
-% by Martin Hebart and Kai Görgen
+% by Martin Hebart and Kai Goergen
 %
 % HISTORY
 % KAI: 2016/03/11: Added check that new datainfo.mat agress with
@@ -135,6 +135,7 @@ if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
     
     try
         resultsvol_hdr = read_header(cfg.software,cfg.files.name{1}); % choose canonical hdr from first classification image
+        resultsvol_hdr = resultsvol_hdr(1); % in case we are dealing with a 4D volume
         % check that rotation matrices agree
         if isfield(cfg.datainfo, 'mat')
             if isfield(resultsvol_hdr, 'mat')
@@ -166,6 +167,7 @@ if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
         
         % Save overall results and save to returning variable
         [trash1,trash2,ext] = fileparts(cfg.files.name{1});
+        ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
         fname = sprintf('%s%s',cfg.results.resultsname{i_output},ext);
         resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
         resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
@@ -254,6 +256,7 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             
             % Save overall results and save to returning variable
             [trash1,trash2,ext] = fileparts(cfg.files.name{1});
+            ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
             fname = sprintf('%s_%s%s',cfg.results.resultsname{i_output},roi_names{i_roi},ext);
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map on ROI %s',outputname,roi_names{i_roi});
@@ -353,6 +356,7 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             
             % Save overall results and save to returning variable
             [trash1,trash2,ext] = fileparts(cfg.files.name{1});
+            ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
             fname = sprintf('%s_multiroi%s',cfg.results.resultsname{i_output},ext);
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map on all ROIs (multi-ROI)',outputname);

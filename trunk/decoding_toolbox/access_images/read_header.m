@@ -19,6 +19,10 @@ function varargout = read_header(software,filename,varargin)
 %           TODO: Add which header-fields are important, how they are built
 %                   and what they mean
 
+
+filename = strsplit(filename,',');
+filename = filename{1}; % remove everything after a potential comma (we read all headers)
+
 if ~exist(filename, 'file')
     error('File %s does not exist', filename)
 end

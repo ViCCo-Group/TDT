@@ -20,7 +20,7 @@
 % regressor_names(2, :) - experimental run/session of each regressors
 % regressor_names(3, :) - full name of the SPM regressor
 %
-% by Martin Hebart & Kai Görgen, 2012/03/01, Update 13/04/16 Kai
+% by Martin Hebart & Kai G?rgen, 2012/03/01, Update 13/04/16 Kai
 %
 % See also DECODING_DESCRIBE_DATA
 
@@ -39,6 +39,14 @@
 function regressor_names = design_from_spm(spm_folder,save_on)
 
 if ~exist('save_on','var'), save_on = 1; end
+
+% we allow passing one or multiple file names as cell arrays, too, so let's try to make it one folder
+if iscell(spm_folder)
+    spm_folder = spm_folder{1};
+end
+if exist(spm_folder,'file') == 2
+    spm_folder = fileparts(spm_folder);
+end
 
 spm_file = fullfile(spm_folder,'SPM.mat');
 regressor_file = fullfile(spm_folder,'regressor_names.mat');

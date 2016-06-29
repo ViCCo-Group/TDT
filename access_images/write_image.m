@@ -27,7 +27,7 @@ function varargout = write_image(software,varargin)
 %   % Get a header. The best way is to load it from a file that is similar
 %   % to what you want to write: It should have the same voxel size, the 
     % same images size, the same location in standard space, the same 
-%   % datatype, etc. See "HELP SPM_VOL" for details about header options.
+%   % datatype, etc. For SPM, see "help spm_vol" for details about header options.
 %   hdr = read_header(cfg.software, 'similar_file.img')
 %
 %   % update infos and write

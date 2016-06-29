@@ -1,3 +1,6 @@
+* 3.60 - 2016/06/29
+- Added support for reading 4D data (e.g. 4D nifti files)
+
 * 3.52 - 2015/12/11
 - Minor: changed coding in cfg.results.write. Now write = 1 writes both img 
   and mat file, and = 2 writes mat-file only [default: write = 1].

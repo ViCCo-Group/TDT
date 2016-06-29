@@ -4,7 +4,7 @@
 % times a full classification is performed (e.g. number of searchlights or 
 % number of ROIs).
 %
-% Martin Hebart & Kai Görgen, 2013
+% Martin Hebart & Kai G?rgen, 2013
 
 function [n_decodings,decoding_subindex] = get_n_decodings(cfg,mask_index,mask_index_each,sz)
 
@@ -28,15 +28,15 @@ if strcmpi(cfg.analysis,'searchlight')
         % First, check the two critical cases (1, 3) and (3,1), here only
         % warnings
         if subset_sz(1) == 1 && subset_sz(2) == 3
-            warningv('cfg.searchlight.subset_wrong_or_ambiguous_orientation', 'Dimension of cfg.searchlight.subset is 1x3. This is interpreted as 1 coordinate value, not as 3 voxel indices. Transpose if this is wrong.')
+            warningv('GET_N_DECODINGS:searchlight_subset_wrong_or_ambiguous_orientation', 'Dimension of cfg.searchlight.subset is 1x3. This is interpreted as 1 coordinate value, not as 3 voxel indices. Transpose cfg.searchlight.subset if this is wrong.')
         elseif subset_sz(1) == 3 && subset_sz(2) == 1
-            warningv('cfg.searchlight.subset_wrong_or_ambiguous_orientation', 'Dimension of cfg.searchlight.subset is 3x1. This is interpreted as 3 voxel indices, not as 1 coordinate value. Transpose if this is wrong.')
+            warningv('GET_N_DECODINGS:searchlight_subset_wrong_or_ambiguous_orientation', 'Dimension of cfg.searchlight.subset is 3x1. This is interpreted as 3 voxel indices, not as 1 coordinate value. Transpose cfg.searchlight.subset if this is wrong.')
         % next check if it could be the attempt to pass 1 coordinate with 2
         % dimensions (i.e. without z pretty unlikely), if so, warn and and 
         % flip
         elseif subset_sz(1) == 1 && subset_sz(2) == 2
             % if we only get two values in 1x2, also take as 2 indices, but warn
-            warningv('cfg.searchlight.subset_wrong_or_ambiguous_orientation', 'cfg.searchlight.subset includes only 2 values but. Assuming these are 2 indices in wrong orientation, not 1 coordinate. If you want to use this as coordinate, add a 3rd coordinate here, transposing it.')
+            warningv('GET_N_DECODINGS:searchlight_subset_wrong_or_ambiguous_orientation', 'cfg.searchlight.subset includes only 2 values but. Assuming these are 2 indices in wrong orientation, not 1 coordinate. If you want to use this as coordinate, add a 3rd coordinate here, transposing it.')
             cfg.searchlight.subset = cfg.searchlight.subset';
         % then check for the standard case: a row vector instead of a colum
         % vector (as you get from 1:n). If so, flip
@@ -44,7 +44,7 @@ if strcmpi(cfg.analysis,'searchlight')
             % Common errors: subset provided as row vector instead of colum
             % vector, if so, flip it.
             % flip if more than 4 entries of row vector
-            warningv('cfg.searchlight.subset_wrong_or_ambiguous_orientation', 'cfg.searchlight.subset seems to include single voxels but in wrong orientation, transposing it')
+            warningv('GET_N_DECODINGS:searchlight_subset_wrong_or_ambiguous_orientation', 'cfg.searchlight.subset seems to include single voxel locations but in wrong orientation, transposing it')
             cfg.searchlight.subset = cfg.searchlight.subset';
         end
         
@@ -60,14 +60,6 @@ if strcmpi(cfg.analysis,'searchlight')
             error('cfg.searchlight.subset should have dimensions nx1 (for voxel indices) or nx3 (for coordinates), but is neither (dimensions are [%i, %i])', subset_sz);
         end
         
-%       Old error message, remove in future releases        
-%         if subset_sz(2) ~= 3 && subset_sz(2) ~= 1
-%             % just flip everything
-%             error(['Size of input to cfg.searchlight.subset is %ix%i. If you provided indices, provide them as 1xn vector',...
-%                 'instead of nx1 vectore (e.g. transpose input by adding cfg.searchlight.subset = cfg.searchlight.subset'').', ...
-%                 'If you wanted to provide coordinates, use nx3 as input (see ''help decoding'' for more information)'],subset_sz(1),subset_sz(2));
-%         end
-
         % if provided as vector
         if subset_sz(2)==1
             decoding_subindex = cfg.searchlight.subset;

@@ -99,26 +99,56 @@ labels_provided = ~(isempty(labelnames) && isempty(labels));
 
 % check if beta_dir is a directory or a cellstr (in this case, assume it's the name of the input files directly)
 if iscellstr(beta_dir)
-    dispv(1, 'beta_dir is a cellstr, using the inputs directly as beta_names (e.g. for behavioural decoding)')
+    dispv(1, 'Data mapping: beta_dir is a cellstr, using these inputs directly as beta_names.')
     beta_names = beta_dir;
-else
-    if beta_dir(end) == filesep % prevents some stupid spm_select bug
-        beta_dir = beta_dir(1:end-1);
-        if beta_dir(end) == ':' % also because of spm_select bug
-            error('At current, results cannot be saved in basic directories such as C:\')
+% check if beta_dir is a file (in this case, assume it is a 4D volume containing all files)    
+elseif exist(beta_dir,'file') == 2
+    dispv(1, 'Data mapping: beta_dir is a file, assuming that it contains 4D volumes.');
+    beta_names = {beta_dir};
+% else is usual case    
+elseif exist(beta_dir,'dir') == 7
+    if strfind(lower(cfg2.software),'spm')
+        if beta_dir(end) == filesep % prevents some stupid spm_select bug
+            beta_dir = beta_dir(1:end-1);
+            if beta_dir(end) == ':' % also because of spm_select bug
+                error('At current, results cannot be saved in basic directories such as C:\')
+            end
         end
-    end
-    dispv(1, 'getting betas from %s', beta_dir)
-    % get image and nii files
-    beta_names = get_filenames(cfg2.software,beta_dir,'beta*.img');
-    beta_names = [beta_names; get_filenames(cfg2.software,beta_dir,'beta*.nii')];
-    
-    if isempty(beta_names)
+        dispv(1, 'getting betas from %s', beta_dir)
+        % get image and nii files
+        beta_names = get_filenames(cfg2.software,beta_dir,'beta*.img');
+        beta_names = [beta_names; get_filenames(cfg2.software,beta_dir,'beta*.nii')];
+        
         if isempty(beta_names)
-            error('No img/nii-files starting with ''beta'' found in %s',beta_dir)
+            if isempty(beta_names)
+                error('No img/nii-files starting with ''beta'' found in %s',beta_dir)
+            end
         end
+    else
+        error(['Passing a directory as beta_dir is currently only possible with SPM ',...
+            'as decoding software (see cfg.software). If you are not using SPM, ',...
+            'Try passing file names as beta_dir directly or use passed_data ',...
+            'as input to pass data directly to TDT (see ''help decoding'').'])
+    end
+else
+    error('Data mapping not possible: file or directory passed in variable ''beta_dir'' does not exist.')
+end
+
+%% If there is only one entry in beta_names, check if beta_names is a 4D image (use header info in dim), and adjust beta_names accordingly to become compatible with a 4D representation
+if numel(beta_names) == 1
+    hdr = read_header(cfg2.software,beta_names{1});
+    % the first case is SPM standard (multiple headers), the second is AFNI (one header with larger dim)
+    % TODO: for other standards, we might need to create separate mapping files
+    n_subvol = numel(hdr);
+    if n_subvol == 1
+        n_subvol = size(hdr.dim,4);
+    end
+    beta_names = repmat(beta_names,n_subvol,1);
+    for i_subvol = 1:n_subvol
+        beta_names{i_subvol} = sprintf('%s,%i',beta_names{i_subvol},i_subvol);
     end
 end
+
 
 %% Typical case
 if labels_provided

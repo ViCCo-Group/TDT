@@ -190,78 +190,100 @@ data = zeros(n_files, length(mask_index)); % init data
 
 % load data files
 for file_ind = 1:n_files
-
+    
     fname = cfg.files.name{file_ind};
-
+    
     dispv(2,'  Loading file %i: %s', file_ind, fname)
     data_hdr = read_header(cfg.software,fname); % get header of image
-
-    % check dimension
-    if exist('sz','var')
-        if ~isequal(data_hdr.dim(1:3), sz)
-            error('Dimension of image in file %s \n is different from dimension of the mask file(s)/the first data image file, please check!', mask_hdr.fname, fname)
+    
+    % if data_hdr is more than one struct, it is a 4D volume (SPM) OR if there are more than 3D, it is a 4D volume (AFNI)
+    if length(data_hdr) > 1 || (length(data_hdr.dim) > 3 && data_hdr.dim(4) > 1)
+        
+        % check if filename contains comma (else we don't know which subvolume to pick)
+        commaind = strfind(fname,',');
+        if isempty(commaind)
+            error(['The file %s is a 4D volume, but the file name in cfg.files.name has not been provided together ',...
+                'with the subvolume to pick. When specifying cfg.files.name, add '',i'' behind each filename where ',...
+                'i denotes the index of the volume to pick (e.g. ''4D.nii,23'' would select volume 23).'],fname)
         end
+        
+        subvolind = str2double(fname(commaind+1:end));
+        
+        data(file_ind,:) = read_voxels(cfg.software,data_hdr,[x y z],subvolind);
+        
+        mat = data_hdr.mat;
+        
+    % if data_hdr is a 3D volume
     else
-        sz = data_hdr.dim(1:3); % this is the first time we check the dimensions, so let's save it for the next images
-    end
-
-    % check that translation & rotation matrices of this image roughly equals the
-    % previous ones (otherwise the images would be rotated differently,
-    % which we can't handle)
-    if exist('mat','var') && ~isempty(mat) % mat is empty if neither mask nor data had an orientation matrix
-%         if ~isequal(data_hdr.mat, mat) % old
-        mat_diff = abs(data_hdr.mat(:)-mat(:));
-        tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
-        if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
-            if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
-                warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of image in file \n %s \n is different from matrix of the mask file(s)/the first data image file.\n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!',fname)
-            else
-                error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s)/the first data image file.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.imagerotation_unequal = ''ok''!', fname)
+        
+        % check dimension
+        if exist('sz','var')
+            if ~isequal(data_hdr.dim(1:3), sz)
+                error('Dimension of image in file %s \n is different from dimension of the mask file(s)/the first data image file, please check!', mask_hdr.fname, fname)
             end
+        else
+            sz = data_hdr.dim(1:3); % this is the first time we check the dimensions, so let's save it for the next images
         end
-    else
-        if isfield(data_hdr, 'mat')
-            mat = data_hdr.mat; % this is the first time we check the dimensions, so let's save it for the next images
-            % and compare it to the mat file of the mask to make sure that
-            % agrees, too
-            if exist('mask_tmat', 'var')
-                mat_diff = abs(data_hdr.mat(:)-mat(:));
-                tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
-                if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
-                    if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
-                        warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of image in file \n %s \n is different from matrix of the mask file(s)/the first data image file.\n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!',fname)
-                    else
-                        error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s).\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.imagerotation_unequal = ''ok''!', fname)
-                    end
+        
+        % check that translation & rotation matrices of this image roughly equals the
+        % previous ones (otherwise the images would be rotated differently,
+        % which we can't handle)
+        if exist('mat','var') && ~isempty(mat) % mat is empty if neither mask nor data had an orientation matrix
+            %         if ~isequal(data_hdr.mat, mat) % old
+            mat_diff = abs(data_hdr.mat(:)-mat(:));
+            tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
+            if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
+                    warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of image in file \n %s \n is different from matrix of the mask file(s)/the first data image file.\n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!',fname)
+                else
+                    error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s)/the first data image file.\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.imagerotation_unequal = ''ok''!', fname)
                 end
-            else % check that at least dimensions agree and warn
-                if isequal(sz, data_hdr.dim(1:3))
-                    if isfield(data_hdr, 'mat')
-                        if isfield(cfg,'files') && isfield(cfg.files,'take_orientation_from_data') && strcmpi(cfg.files.take_orientation_from_data,'ok')
-                            warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_FROM_DATA','Taking orientation from data because no orientation was provided with the mask. \n The final results may not be interpretable!!',fname)
-                            mat = data_hdr.mat;
+            end
+        else
+            if isfield(data_hdr, 'mat')
+                mat = data_hdr.mat; % this is the first time we check the dimensions, so let's save it for the next images
+                % and compare it to the mat file of the mask to make sure that
+                % agrees, too
+                if exist('mask_tmat', 'var')
+                    mat_diff = abs(data_hdr.mat(:)-mat(:));
+                    tolerance = 32*eps(max(data_hdr.mat(:),mat(:)));
+                    if any(mat_diff > tolerance) % like isequal, but allows for rounding errors
+                        if isfield(cfg,'files') && isfield(cfg.files,'imagerotation_unequal') && strcmpi(cfg.files.imagerotation_unequal,'ok')
+                            warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_DIFFERENT','Rotation & translation matrix of image in file \n %s \n is different from matrix of the mask file(s)/the first data image file.\n You selected cfg.files.imagerotation_unequal = ''ok'', i.e. they can differ beyond rounding errors!\n The final results may not be interpretable!!',fname)
                         else
-                            error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s).\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.take_orientation_from_data = ''ok''!', fname)
+                            error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s).\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.imagerotation_unequal = ''ok''!', fname)
+                        end
+                    end
+                else % check that at least dimensions agree and warn
+                    if isequal(sz, data_hdr.dim(1:3))
+                        if isfield(data_hdr, 'mat')
+                            if isfield(cfg,'files') && isfield(cfg.files,'take_orientation_from_data') && strcmpi(cfg.files.take_orientation_from_data,'ok')
+                                warningv('DECODING_LOAD_DATA:TRANSFORMMATRIX_FROM_DATA','Taking orientation from data because no orientation was provided with the mask. \n The final results may not be interpretable!!',fname)
+                                mat = data_hdr.mat;
+                            else
+                                error('Rotation & translation matrix of image in file \n %s \n is different from rotation & translation matrix of the mask file(s).\n The .mat entry defines rotation & translation of the image.\n That both differ means that at least one of both has been rotated.\n Please use reslicing (e.g. from SPM) to have all images in the same position or IF YOU KNOW WHAT YOU ARE DOING set cfg.files.take_orientation_from_data = ''ok''!', fname)
+                            end
+                        else
+                            warningv('DECODING_LOAD_DATA:NO_TRANSFORMATIONMATRIX','Neither the first data image nor the mask had an rotation & translation matrix, but their size agrees, so assuming that it''s ok',fname)
+                            mat = [];
                         end
                     else
-                        warningv('DECODING_LOAD_DATA:NO_TRANSFORMATIONMATRIX','Neither the first data image nor the mask had an rotation & translation matrix, but their size agrees, so assuming that it''s ok',fname)
-                        mat = [];
-                    end 
-                else
-                    % dimensions do not agree, quit
-                    error('Dimensions do not agree between mask and data, please check')
+                        % dimensions do not agree, quit
+                        error('Dimensions do not agree between mask and data, please check')
+                    end
                 end
             end
         end
+        
+        % POTENTIAL IMPROVEMENT: check whether read_voxels or read_images is
+        % faster here. The first is faster, if less than xx (check) % of all
+        % voxels are read. If read_images is used, mask_index can be used to
+        % get only inmask-voxels after reading.
+        % Ths is a minor improvement (reading does not occur that often anyway)
+        
+        data(file_ind, :) = read_voxels(cfg.software,data_hdr,[x y z]); % get in-mask voxels of image
+        
     end
-
-    % POTENTIAL IMPROVEMENT: check whether read_voxels or read_images is
-    % faster here. The first is faster, if less than xx (check) % of all
-    % voxels are read. If read_images is used, mask_index can be used to
-    % get only inmask-voxels after reading.
-    % Ths is a minor improvement (reading does not occur that often anyway)
-    
-    data(file_ind, :) = read_voxels(cfg.software,data_hdr,[x y z]); % get in-mask voxels of image
 end
 
 

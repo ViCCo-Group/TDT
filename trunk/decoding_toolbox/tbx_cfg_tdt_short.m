@@ -31,7 +31,7 @@ labelname2.num     = [1 Inf];
 % ---------------------------------------------------------------------
 betadir         = cfg_files;
 betadir.tag     = 'betadir';
-betadir.name    = 'Beta Directory';
+betadir.name    = 'Beta Location (usually directory)';
 betadir.help    = {'This is the path where the TDT gets the SPM.mat, the beta files and - for whole-brain or searchlight analyses - the mask file.'};
 betadir.filter  = 'dir';
 betadir.ufilter = '.*';
@@ -134,7 +134,7 @@ end
         
 labelname1 = job.labelname1;
 labelname2 = job.labelname2;
-beta_dir = job.betadir{1};
+beta_loc = job.betadir{1};
 output_dir = job.outputdir{1};
 radius = job.radius;
 maskfiles = job.maskfiles;
@@ -155,4 +155,4 @@ if ~isempty(maskfiles)
     end
 end
 
-results = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg);
+results = decoding_example(decoding_type,labelname1,labelname2,beta_loc,output_dir,radius,cfg);

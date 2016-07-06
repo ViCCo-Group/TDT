@@ -52,7 +52,7 @@ cfg.results.overwrite = 1;
 % the following block.
 
 % Specify the directory to your SPM.mat and all related beta images:
-beta_dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/Martin buttonpresses onehand/buttonpress_onehand'];
+beta_loc = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/Martin buttonpresses onehand/buttonpress_onehand'];
 % Specify the label names that you gave your regressors of interest in the 
 % SPM analysis (e.g. 'button left' and 'button right').
 % Case sensitive!
@@ -67,20 +67,20 @@ cfg.files.mask = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/Mart
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat (and adds 'bin 1' to 'bin m', if a FIR design 
 % was used)
-regressor_names = design_from_spm(beta_dir);
+regressor_names = design_from_spm(beta_loc);
 
 % Now with the names of the labels, we can extract the filenames and the 
 % run numbers of each label. The labels will be -1 and 1.
 % Important: You have to make sure to get the label names correct and that
 % they have been uniquely assigned, so please check them in regressor_names
-cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[-1 1],regressor_names,beta_loc);
 %
 % Other examples:
 % For a cross classification, it would look something like this:
-% cfg = decoding_describe_data(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
+% cfg = decoding_describe_data(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_loc,[1 1 2 2]);
 %
 % Or for SVR with a linear relationship like this:
-% cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
+% cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_loc);
 
 % === Manual Creation ===
 % Alternatively, you can also manually prepare the files field.

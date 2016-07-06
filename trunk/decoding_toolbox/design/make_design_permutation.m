@@ -71,7 +71,7 @@
 %       design.
 %
 % Example (running all permutations separately)
-%   cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir); % see decoding tutorial for details
+%   cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_loc); % see decoding tutorial for details
 %   cfg = rmfield(cfg,'design'); % this is needed if you previously used cfg.
 %   cfg.design.function.name = 'make_design_cv';
 %   n_perms = 1000;  % pick a reasonable number, the function might compute less if less are available
@@ -383,7 +383,7 @@ if combine
     design.train = horzcat(design_orig.train); 
     design.test = horzcat(design_orig.test);
     if isfield(cfg,'results') && isfield(cfg.results,'setwise') && cfg.results.setwise ~= 1
-        warningv('cfg.results.setwise = 0. PLEASE MAKE SURE TO SET IT TO 1 BEFORE RUNNING THE PERMUTATION DESIGN.')
+        warningv('MAKE_DESIGN_PERMUTATION:SETWISE','cfg.results.setwise = 0. PLEASE MAKE SURE TO SET IT TO 1 BEFORE RUNNING THE PERMUTATION DESIGN.')
     else
         disp('Combining designs. Please make sure cfg.results.setwise = 1 and remains that way before running the permutation design.')
     end

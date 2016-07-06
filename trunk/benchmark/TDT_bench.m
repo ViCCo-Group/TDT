@@ -1,17 +1,17 @@
 tests.basic = 1;
-tests.subset = 0;
-tests.nokernel = 0;
+tests.subset = 1;
+tests.nokernel = 1;
 tests.multiple = 1; % multiple results
-tests.writematonly = 0;
-tests.nowrite = 0;
-tests.wholebrain = 0; % include weights
-tests.roi = 0; % testing one and multiple ROIs
-tests.roi_setwise = 0; % testing same analysis with setwise settings
-tests.sl_setwise = 0; % testing classical searchlight with setwise settings
-tests.fs_filter = 0;
-tests.fs_embedded = 0;
-tests.fs_multilevel = 0;
-tests.parameter_selection = 0; % testing basic parameter selection assumptions
+tests.writematonly = 1;
+tests.nowrite = 1;
+tests.wholebrain = 1; % include weights
+tests.roi = 1; % testing one and multiple ROIs
+tests.roi_setwise = 1; % testing same analysis with setwise settings
+tests.sl_setwise = 1; % testing classical searchlight with setwise settings
+tests.fs_filter = 1;
+tests.fs_embedded = 1;
+tests.fs_multilevel = 1;
+tests.parameter_selection = 1; % testing basic parameter selection assumptions
 
 %% Possibly, manually deactivate all non-base Matlab toolboxes before running this! And run with an old Matlab version!
 

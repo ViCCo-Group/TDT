@@ -21,12 +21,12 @@
 %
 % First set up your cfg with whatever settings you want. Then setup:
 %
-% regressor_names = design_from_spm(beta_dir);
+% regressor_names = design_from_spm(beta_loc);
 % 
 % Now build up your two (or more) cfgs that you want to combine.
 %
-% cfg1 = decoding_describe_data(cfg,{ll ln},[-1 1],regressor_names,beta_dir);
-% cfg2 = decoding_describe_data(cfg,{lr ln},[-1 1],regressor_names,beta_dir);
+% cfg1 = decoding_describe_data(cfg,{ll ln},[-1 1],regressor_names,beta_loc);
+% cfg2 = decoding_describe_data(cfg,{lr ln},[-1 1],regressor_names,beta_loc);
 % 
 % cfg1.design = make_design_cv(cfg1);
 % cfg2.design = make_design_cv(cfg2);

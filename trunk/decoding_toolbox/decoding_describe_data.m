@@ -1,4 +1,4 @@
-% function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
+% function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_loc,xclass)
 %
 % This functions creates the link between the file names of regressors
 % (e.g. beta_0001.img) and its corresponding label name (e.g. button press),
@@ -38,7 +38,7 @@
 %               were used.
 %           regressor_names(2,:) - Run/Session number of regressor.
 %           regressor_names(3,:) [OPTIONAL] - Full name of SPM regressor
-%   beta_dir: Directory where images are stored that are used for decoding
+%   beta_loc: Directory where images are stored that are used for decoding
 %       (e.g. beta_0001.img)
 %   xclass (optional): Useful for simple cross classification. Assigns
 %       separate numbers to each label. The cross classification will go from
@@ -67,10 +67,13 @@
 %           regressor names from SPM (more or less)
 %
 %
-% by Martin Hebart 11/06/12, Update Martin 15/04/16, Update Kai 13/04/16, Update Martin 13/06/12
+% by Martin Hebart 11/06/12
 %
 % SEE ALSO DESIGN_FROM_SPM
 
+% Update Martin 16/07/05
+%   Made compatible with AFNI
+%   Renamed beta_dir to beta_loc
 % Update Martin 15/04/16
 %   Introduced possibility to pass neither label names nor labels and
 %   automatically create the corresponding entries for cfg.files.
@@ -84,7 +87,7 @@
 % MH: added cross classification and help file: 11/09/05
 
 
-function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_dir,xclass)
+function cfg = decoding_describe_data(cfg,labelnames,labels,regressor_names,beta_loc,xclass)
 
 cfg2 = decoding_defaults(cfg); % adds path and gets some required settings (keep separate just in case we don't want to set all fields yet)
 
@@ -97,57 +100,68 @@ cfg.files.descr = {}; % contains the regressor names from SPM (more or less)
 
 labels_provided = ~(isempty(labelnames) && isempty(labels));
 
-% check if beta_dir is a directory or a cellstr (in this case, assume it's the name of the input files directly)
-if iscellstr(beta_dir)
-    dispv(1, 'Data mapping: beta_dir is a cellstr, using these inputs directly as beta_names.')
-    beta_names = beta_dir;
-% check if beta_dir is a file (in this case, assume it is a 4D volume containing all files)    
-elseif exist(beta_dir,'file') == 2
-    dispv(1, 'Data mapping: beta_dir is a file, assuming that it contains 4D volumes.');
-    beta_names = {beta_dir};
+% check if beta_loc is a directory or a cellstr (in this case, assume it's the name of the input files directly)
+if iscellstr(beta_loc)
+    dispv(1, 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')
+    beta_names = beta_loc;
+% check if beta_loc is a file (in this case, assume it is a 4D volume containing all files)    
+elseif exist(beta_loc,'file') == 2
+    dispv(1, 'Data mapping: beta_loc is a file, assuming that it contains 4D volumes.');
+    beta_names = {beta_loc};
 % else is usual case    
-elseif exist(beta_dir,'dir') == 7
+elseif exist(beta_loc,'dir') == 7
     if strfind(lower(cfg2.software),'spm')
-        if beta_dir(end) == filesep % prevents some stupid spm_select bug
-            beta_dir = beta_dir(1:end-1);
-            if beta_dir(end) == ':' % also because of spm_select bug
+        if beta_loc(end) == filesep % prevents some stupid spm_select bug
+            beta_loc = beta_loc(1:end-1);
+            if beta_loc(end) == ':' % also because of spm_select bug
                 error('At current, results cannot be saved in basic directories such as C:\')
             end
         end
-        dispv(1, 'getting betas from %s', beta_dir)
-        % get image and nii files
-        beta_names = get_filenames(cfg2.software,beta_dir,'beta*.img');
-        beta_names = [beta_names; get_filenames(cfg2.software,beta_dir,'beta*.nii')];
+        dispv(1, 'getting betas from %s', beta_loc)
+        % get image and nii files (BRIK files are not saved as beta files)
+        beta_names = get_filenames(cfg2.software,beta_loc,'beta*.img');
+        beta_names = [beta_names; get_filenames(cfg2.software,beta_loc,'beta*.nii')];
         
         if isempty(beta_names)
             if isempty(beta_names)
-                error('No img/nii-files starting with ''beta'' found in %s',beta_dir)
+                error('No img/nii-files starting with ''beta'' found in %s',beta_loc)
             end
         end
     else
-        error(['Passing a directory as beta_dir is currently only possible with SPM ',...
+        error(['Passing a directory as beta_loc is currently only possible with SPM ',...
             'as decoding software (see cfg.software). If you are not using SPM, ',...
-            'Try passing file names as beta_dir directly or use passed_data ',...
+            'Try passing file names as beta_loc directly or use passed_data ',...
             'as input to pass data directly to TDT (see ''help decoding'').'])
     end
 else
-    error('Data mapping not possible: file or directory passed in variable ''beta_dir'' does not exist.')
+    error('Data mapping not possible: file or directory passed in variable ''beta_loc'' does not exist.')
 end
 
-%% If there is only one entry in beta_names, check if beta_names is a 4D image (use header info in dim), and adjust beta_names accordingly to become compatible with a 4D representation
-if numel(beta_names) == 1
-    hdr = read_header(cfg2.software,beta_names{1});
-    % the first case is SPM standard (multiple headers), the second is AFNI (one header with larger dim)
-    % TODO: for other standards, we might need to create separate mapping files
-    n_subvol = numel(hdr);
-    if n_subvol == 1
-        n_subvol = size(hdr.dim,4);
+if ~iscell(beta_names)
+    beta_names = num2cell(beta_names,2);
+end
+
+%% For each entry in beta_names, check if it is a 4D image and if so expand beta names accordingly
+beta_names_orig = beta_names;
+
+beta_names = {}; % re-init
+
+for i_beta = 1:length(beta_names_orig)
+    hdr = read_header(cfg2.software,beta_names_orig{i_beta});
+    n_subvol = numel(hdr); % this is testing the SPM standard (multiple headers)
+    if n_subvol == 1 && length(hdr.dim) > 3 % this is testing the AFNI standard (one header)
+        n_subvol = hdr.dim(4);
     end
-    beta_names = repmat(beta_names,n_subvol,1);
-    for i_subvol = 1:n_subvol
-        beta_names{i_subvol} = sprintf('%s,%i',beta_names{i_subvol},i_subvol);
+    % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
+    if n_subvol == 1
+        beta_names(end+1,1) = beta_names_orig(i_beta);
+    else
+        % the following line repeats beta_names_orig{i_beta} and adds 1:n_subvol to each repetition (e.g. ',1' for the first ',2' for the second etc.)
+        curr_beta_names = arrayfun(@(i_subvol) [beta_names_orig{i_beta} ',' num2str(i_subvol)] ,1:n_subvol,'uniformoutput',false);
+        beta_names(end+1:end+length(curr_beta_names),1) = curr_beta_names;
     end
 end
+    
 
 
 %% Typical case

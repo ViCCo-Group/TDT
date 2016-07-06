@@ -37,7 +37,7 @@ cfg.analysis = 'searchlight';
 sbj_dir = fullfile(base_dir, ['subj' num2str(sbj)]);
 
 % Set the filepath where your SPM.mat and all related betas are, e.g. 'c:\exp\glm\model_button'
-beta_dir = fullfile(sbj_dir, 'level1', 'all_runwise');
+beta_loc = fullfile(sbj_dir, 'level1', 'all_runwise');
 
 % Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
 cfg.results.dir = fullfile(sbj_dir, 'decoding', 'newtest', 'runwise_all_classes', 'all_classes');
@@ -45,7 +45,7 @@ cfg.results.dir = fullfile(sbj_dir, 'decoding', 'newtest', 'runwise_all_classes'
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
-cfg.files.mask = fullfile(beta_dir, 'mask.nii')
+cfg.files.mask = fullfile(beta_loc, 'mask.nii')
 
 % Set the label names to the regressor names which you want to use for 
 % decoding, e.g. 'button left' and 'button right'
@@ -86,10 +86,10 @@ cfg.plot_selected_voxels = 100; % 0: no plotting, 1: every step, 2: every second
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat
-regressor_names = design_from_spm(beta_dir);
+regressor_names = design_from_spm(beta_loc);
 
 % Extract all information for the cfg.files structure (labels will be [1 -1] )
-cfg = decoding_describe_data(cfg,labelnames,1:length(labelnames),regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,labelnames,1:length(labelnames),regressor_names,beta_loc);
 
 %% This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 

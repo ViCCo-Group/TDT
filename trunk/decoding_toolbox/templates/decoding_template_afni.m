@@ -1,6 +1,6 @@
 % This script is a template that can be used for a decoding analysis on 
-% brain image data. It is for people who have betas available from an 
-% SPM.mat and want to automatically extract the relevant images used for
+% brain image data. It is for people who ran one deconvolution per run
+% using AFNI and want to automatically extract the relevant images used for
 % classification, as well as corresponding labels and decoding chunk numbers
 % (e.g. run numbers). If you don't have this available, then use
 % decoding_template_nobetas.m
@@ -12,17 +12,21 @@ cfg = decoding_defaults;
 cfg.analysis = 'searchlight';
 cfg.searchlight.radius = 3; % use searchlight of radius 3 (by default in voxels), see more details below
 
-% Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
+% Set the output directory where data will be saved, e.g. '/misc/data/mystudy'
 cfg.results.dir = 
 
-% Set the filepath where your SPM.mat and all related betas are, e.g. 'c:\exp\glm\model_button'
+% Set the full path to the files where your coefficients for each run are stored e.g. 
+% {'/misc/data/mystudy/results1+orig.BRIK','/misc/data/mystudy/results2+orig.BRIK',...}
 beta_loc = 
 
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
-% for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
-% for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
+% for searchlight or wholebrain e.g. '/misc/data/mystudy/mask+orig.BRIK' OR 
+% for ROI e.g. {'/misc/data/mystudy/roimask1+orig.BRIK', '/misc/data/mystudy/roimask2+orig.BRIK'}
 % You can also use a mask file with multiple masks inside that are
 % separated by different integer values (a "multi-mask")
+%
+% If you don't have a brain mask, use 3dAutomask or run
+% cfg.files.mask = decoding_create_maskfile(cfg,beta_loc);
 cfg.files.mask = 
 
 % Set the label names to the regressor names which you want to use for 

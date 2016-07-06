@@ -1,3 +1,6 @@
+* 3.90 - 2016/07/07
+- Added AFNI support
+
 * 3.60 - 2016/06/29
 - Added support for reading 4D data (e.g. 4D nifti files)
 

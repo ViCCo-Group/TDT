@@ -1,4 +1,4 @@
-% function [out, regressor_names] = display_regressor_names(spm_folder, compress)
+% function [out, regressor_names] = display_regressor_names(beta_loc, compress)
 %
 % This function gives you an overview over the possible regressor names
 % that can be used as labels for a decoding analysis. This is helpful if
@@ -6,8 +6,8 @@
 % not have the regressor names created in the spm folder, yet.
 %
 % INPUT:
-% spm_folder: The folder where the design matrix is stored as SPM.mat.
-%   If spm_folder is not provided, the current folder will be used.
+% beta_loc: The folder where the design matrix is stored as SPM.mat.
+%   If beta_loc is not provided, the current folder will be used.
 %   Alternatively, the matrix can also be stored in a *_SPM.mat file (e.g.
 %   if you want to reduce the filesize when data is passed on to someone else).
 %
@@ -22,16 +22,20 @@
 %           yourcondition bin 16 (1:6)
 %
 % OUT:
-%   out: displayed text as struct, use char(out) to get text
+%   out: displayed text as cell, use char(out) to get text
 %   regressor_names: Regressor names from design_from_spm.m
 % 
 % If you want the regressor names as output, use the function
-% design_from_spm.m
+% design_from_spm.m or design_from_afni.m
 
-function [out, regressor_names] = display_regressor_names(spm_folder, compress)
+% Martin H. 2012
+%
+% History: 2016/07/07: Added AFNI compatibility
 
-if ~exist('spm_folder', 'var')
-    spm_folder = pwd;
+function [out, regressor_names] = display_regressor_names(beta_loc, compress)
+
+if ~exist('beta_loc', 'var')
+    beta_loc = pwd;
 end
 
 if ~exist('compress', 'var')
@@ -41,7 +45,11 @@ end
 
 decoding_defaults; % use only to add path
 
-regressor_names = design_from_spm(spm_folder,0);
+try % this is a bit ugly, but quite efficient 
+    regressor_names = design_from_spm(beta_loc,0);
+catch
+    regressor_names = design_from_afni(beta_loc,0);
+end
 
 [all_names,b] = unique(regressor_names(1,:),'first');
 [ignore,bb] = sort(b); %#ok<ASGLU> % to get the original order

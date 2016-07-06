@@ -15,19 +15,20 @@
 %                         = 1: overwrite results 
 %
 % Remark: if cfg.results.overwrite = 0 and if result files with the same
-% name exist, the result files (.hdr & .img) will be copied.
-% However this is very unlikely to occur, because decoding.m checks
-% whether the result files exist already when it is starts, and aborts
-% operation already then if the result files should not be overwritten.
-% Copying will only occur in the unlikely event that result files with
-% the same name are created between this initial check in decoding.m and
-% when they should be saved here.
+% name exist, the result files (.hdr & .img, .nii, or .HEAD & .BRIK) will
+% be copied. However this is very unlikely to occur, because decoding.m
+% checks whether the result files exist already when it is starts, and
+% aborts operation already then if the result files should not be
+% overwritten. Copying will only occur in the unlikely event that result
+% files with the same name are created between this initial check in
+% decoding.m and when they should be saved here.
 %
 % See also DECODING
 
 % by Martin Hebart and Kai Goergen
 %
 % HISTORY
+% MARTIN: 2016/07/05: Added compatibility with AFNI
 % KAI: 2016/03/11: Added check that new datainfo.mat agress with
 %   results_hdr.mat when writing image.
 % KAI: 2015/12/11: switched coding cfg.result.write to more intuitive 
@@ -166,9 +167,9 @@ if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
         end
         
         % Save overall results and save to returning variable
-        [trash1,trash2,ext] = fileparts(cfg.files.name{1});
+        [trash1,trash2,suffix,ext] = tdt_fileparts(cfg.files.name{1});
         ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
-        fname = sprintf('%s%s',cfg.results.resultsname{i_output},ext);
+        fname = sprintf('%s%s%s',cfg.results.resultsname{i_output},suffix,ext);
         resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
         resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
         resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3)); % prepare results volume with background value (default: 0)
@@ -185,7 +186,7 @@ if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
                 backup_fname = fullfile(old_results_path, [old_results_file, '_old_before_', datestr(now, 'yyyymmddTHHMMSS')]);
                 warning('decoding_write_results:overwrite_results', 'Resultfile %s already existed. Copying old files %s to %s (because cfg.results.overwrite = 0)',resultsvol_hdr.fname, old_fname, backup_fname);
                 
-                for fext = {'.hdr', '.img', '.nii'}
+                for fext = {'.hdr', '.img', '.nii', '.BRIK', '.HEAD'}
                     source = [old_fname, fext{1}];
                     if ~exist(source,'file'), continue, end
                     target = [backup_fname, fext{1}];
@@ -255,9 +256,9 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             outputname = cfg.results.output{i_output};
             
             % Save overall results and save to returning variable
-            [trash1,trash2,ext] = fileparts(cfg.files.name{1});
+            [trash1,trash2,suffix,ext] = tdt_fileparts(cfg.files.name{1});
             ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
-            fname = sprintf('%s_%s%s',cfg.results.resultsname{i_output},roi_names{i_roi},ext);
+            fname = sprintf('%s_%s%s%s',cfg.results.resultsname{i_output},roi_names{i_roi},suffix,ext);
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map on ROI %s',outputname,roi_names{i_roi});
             curr_output = results.(outputname).output(i_roi);
@@ -355,9 +356,9 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             outputname = cfg.results.output{i_output};
             
             % Save overall results and save to returning variable
-            [trash1,trash2,ext] = fileparts(cfg.files.name{1});
+            [trash1,trash2,suffix,ext] = tdt_fileparts(cfg.files.name{1});
             ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
-            fname = sprintf('%s_multiroi%s',cfg.results.resultsname{i_output},ext);
+            fname = sprintf('%s_multiroi%s%s',cfg.results.resultsname{i_output},suffix,ext);
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map on all ROIs (multi-ROI)',outputname);
             curr_output = results.(outputname).output;

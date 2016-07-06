@@ -22,7 +22,7 @@
 %
 % by Martin Hebart & Kai G?rgen, 2012/03/01, Update 13/04/16 Kai
 %
-% See also DECODING_DESCRIBE_DATA
+% See also DESIGN_FROM_AFNI DECODING_DESCRIBE_DATA
 
 % History:
 % 2013/08/14 Martin
@@ -86,8 +86,8 @@ regressors = SPM.xX.name;
 % SPM.Sess.C. However, this might become difficult (e.g. for FIR bf) and 
 % may be more error prone than the solution below.
 
-% Row 1: regressor names, row 2: run numbers
-regressor_names = cell(2,length(regressors));
+% Row 1: regressor names, row 2: run numbers, row 3: actual name of regressor in SPM format
+regressor_names = cell(3,length(regressors));
 % Number of basis function (e.g. for HRF all are 1, for FIR from 1 to n)
 bf_numbers = zeros(1,length(regressors)); 
 

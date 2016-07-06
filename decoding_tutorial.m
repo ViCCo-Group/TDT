@@ -10,21 +10,30 @@
 % If you want to know the defaults now, enter:
 %   cfg = decoding_defaults;
 % and now look at the cfg structure, you will see a lot of entries that have
-% been set automatically. You can change each of these manually. They are
-% all explained in the functions decoding.m and decoding_defaults.m.
+% been set automatically. You can change each of these manually. All fields
+% relevant to you now are explained in the functions decoding.m and
+% decoding_defaults.m.
 
 %% First, set the defaults and define the analysis you want to perform
 
-% Add path to this toolbox
-% If this function is in same path as the toolbox, simply comment the line
-% (then the path will be set automatically).
-% addpath($ADD PATH AS STRING$)
+% Add path of where this toolbox is (if you are in it just type pwd in the
+% command line and copy and paste between ' ')
+% If this script is in same path as the toolbox, simply run
+% decoding_defaults below (then the path will be set automatically).
+addpath('$ADD FULL PATH AS STRING$')
+
+% Did you add your software (SPM or AFNI) to the Matlab path?
+% If not use addpath to do so (for AFNI, you need afni_matlab, see:
+% http://afni.nimh.nih.gov/afni/matlab/
 
 % Clear cfg (otherwise if you re-run this script, previous parameters may still be present)
 clear cfg
 
-% To set the path, run
+% To set the path and add subdirectories to the path, run
 decoding_defaults; % use cfg = decoding_defaults to set the defaults, too
+
+% Since SPM is our default software, if you use AFNI set
+% cfg.software = 'afni';
 
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 
@@ -46,49 +55,65 @@ cfg.results.dir = FILLTHISOUT;
 % have done previously. The first way is easier.
 
 % === Automatic Preparation === 
-% a) If you generated all parameter estimates (beta images) in SPM and were 
+% a) If you generated all parameter estimates (beta images) in SPM and were
 % using only one model for all runs (i.e. have only one SPM.mat file), use
-% the following block. If not, go to "Manual Preparation".
+% the following block.
+% If you ran your deconvolutions in AFNI and have one file per run, use the
+% following block.
+% If not, go to "Manual Preparation".
 
-% Specify the directory to your SPM.mat and all related beta images,
-% e.g. 'c:\exp\glm\model_buttonpress'
-beta_dir = FILLTHISOUT;
+% SPM USERS: Specify the directory to your SPM.mat and all related beta
+%    images, e.g. 'c:\exp\glm\model_buttonpress'
+% AFNI USERS: Specify all BRIK files corresponding to your estimated models
+%    in a cell array, e.g. 
+%    {'/misc/data/mystudy/results1+orig.BRIK','/misc/data/mystudy/results2+orig.BRIK',...}
+beta_loc = FILLTHISOUT;
 % Specify the label names that you gave your regressors of interest in the 
-% SPM analysis (e.g. 'button left' and 'button right'). If you don't
-% remember, then run:
-% display_regressor_names(beta_dir)
+% SPM or AFNI analysis (e.g. 'button left' and 'button right'). If you
+% don't remember, then run:
+% display_regressor_names(beta_loc)
 % You may also use the wildcard * (but use with care!). Label names are
 % case sensitive!
 labelname1 = FILLTHISOUT;
 labelname2 = FILLTHISOUT;
 
-% Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
-% Alternatively, you can specify (multiple) ROI masks as a cell or string 
-% matrix). You can also pass one file with multiple integer values that
-% correspond to different (non-overlapping) masks.
-% for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
-% for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
+% Next you need to specify a mask file for which voxels to use in your
+% analysis. This would either one or multiple ROI masks or a whole brain
+% mask. SPM typically creates a whole brain mask for you (mask.img). For
+% AFNI, you can use 3dAutomask or simply run the following line of code
+% decoding_create_maskfile(cfg,beta_loc);
+
+% For searchlight or wholebrain pass one mask as a string e.g.
+% 'c:\exp\glm\model_button\mask.img'
+% For ROI analyses, you can specify one or multiple ROI masks as a cell or
+% string matrix, e.g.
+% {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
+% You can also pass one file with multiple integer values that correspond
+% to different (non-overlapping) masks, but 4D files for masks are
+% currently not supported.
 cfg.files.mask = FILLTHISOUT;
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat. The function appends ' bin 1' to ' bin m' to
 % the beta names if multiple regressors have been used for each condition 
 % within a run, e.g. when using time derivatives or an FIR design.
-regressor_names = design_from_spm(beta_dir);
+regressor_names = design_from_spm(beta_loc);
+% For AFNI, the following function will do the same.
+% regressor_names = design_from_afni(beta_loc);
 
-% Now with the names of the labels, we can extract the filenames and the 
+% Now with the names of the labels, we can extract the file names and the 
 % run numbers of each label. The labels will be 1 and -1.
 % Important: You have to make sure to get the label names correct and that
 % they have been uniquely assigned, so please check them in regressor_names
-% or with decoding_plot_regressor_names(beta_dir)
-cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir);
+% or with display_regressor_names(beta_loc)
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_loc);
 %
 % Other examples:
 % For a cross classification, it would look something like this:
-% cfg = decoding_describe_data(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_dir,[1 1 2 2]);
+% cfg = decoding_describe_data(cfg,{labelname1classA labelname1classB labelname2classA labelname2classB},[1 -1 1 -1],regressor_names,beta_loc,[1 1 2 2]);
 %
 % Or for SVR with a linear relationship like this:
-% cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_dir);
+% cfg = decoding_describe_data(cfg,{labelname1 labelname2 labelname3 labelname4},[-1.5 -0.5 0.5 1.5],regressor_names,beta_loc);
 
 % === Manual Preparation ===
 % If you have used "Automatic Preparation", you can skip this step.
@@ -208,7 +233,7 @@ cfg.results.output = 'accuracy_minus_chance';
 
 %% Not necessary, but nice: Decide what you want to plot
 
-% It's really fascinating and informative to look at how a searchlight 
+% It's really fascinating and informative to look at what a searchlight 
 % (or your ROIs/etc.) look like. However, 3d plotting is very slow.
 % Thus, you have different options to look at your searchlight:
 %   0: Don't draw it at all (default)
@@ -217,31 +242,30 @@ cfg.results.output = 'accuracy_minus_chance';
 %    ...
 % 100: Every 100th step
 % You got it. 
-% Just try different values and observe the running time you get.
+% Just try different values and observe the run time you get.
 
 cfg.plot_selected_voxels = 500;
 
 % Or switch online plotting off completely:
 %   cfg.plot_selected_voxels = 0;
 
-cfg.plot_design = 1; % this is by default set to 1, but if you repeat the same design again and again, it can get annoying...
+% This is by default set to 1, but if you repeat the same design again and again, it can get annoying...
+cfg.plot_design = 1; % this will call display_design(cfg);
 
 % The following calls allow you to look at your design. The design will
 % also be shown when you perform the decoding.
 
-% If you want to display the design in textform in the Matlab window
+% If you want to display the design in a text format in the Matlab command window
 display_design(cfg);
-% Display the design as a plot (will be done later anyway, so it can stay deactivated)
-% plot_design(cfg);
 
 %% Fifth, run the decoding analysis
 
 % Fingers crossed it will not generate any error messages ;)
 results = decoding(cfg);
 
-% This will generate some results that are written, some of which are used
+% This will generate results that are written, some of which are used
 % only for sanity checks:
-% (a) your decoding results as res_XX.nii or res_XX.img files
+% (a) your decoding results as res_XX.nii, res_XX.img or res_XX.BRIK files
 % (b) a res_XX.mat file containing all information in the images and more
 % (c) a cfg.mat file containing the settings
 % (d) the decoding design as an image in multiple formats
@@ -255,20 +279,24 @@ results = decoding(cfg);
 % currently only provided as indices.
 
 %% Sixth, inspect the results visually or do statistics
+
 % Visual inspection of searchlight results can be done e.g. using software
 % such as MRIcron: Open a background image, select your decoding results
 % (typically res_accuracy_minus_chance.img) as overlay and set the range
 % between 5 and e.g. 20. Increase the lower value until you can see blobs
-% that may look meaningful. These regions may contain information. For
-% statistical analysis at the group-level, normalize and smooth your images
-% if not done previously and run a classical second-level t-test against 0
+% that may look meaningful. These regions may contain information, but may
+% not. For statistical analysis at the group-level, normalize and smooth
+% your images if not done previously and run a classical second-level
+% t-test against 0 (we may change this suggestion in the future)
 % 
 % ROI or wholebrain analysis:
-% See right below "results = decoding(cfg);" for visual inspection. For
-% statistical analysis at the group-level, extract all decoding results and
-% do a t-test either with Matlab, SPSS or the software of your choice.
+% Many results are written as images and can be visually inspected using
+% MRIcron or similar software. For statistical analysis at the group-level,
+% extract all decoding results from the written .mat files and do a t-test
+% either with Matlab, SPSS or the software of your choice.
 %
 % For subject-level statistics, run help decoding_statistics.
+
 %% Some more hints for potentially useful features
 
 % All of these need to be specified BEFORE calling decoding(cfg), of

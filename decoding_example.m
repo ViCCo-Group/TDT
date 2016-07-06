@@ -1,8 +1,8 @@
 % function [results, cfg] = decoding_example(decoding_type,labelname1,labelname2,beta_dir,output_dir,radius,cfg)
 %
-% This is a general function for two class classification, using a linear 
-% SVM as implemented in the libsvm software, with accuracy images (for
-% searchlight) or variables (for ROI or wholebrain) as output. All 
+% This is a general function for two class classification with SPM, using a
+% linear SVM as implemented in the libsvm software, with accuracy images
+% (for searchlight) or variables (for ROI or wholebrain) as output. All 
 % variables that are not specified in the input will be set automatically 
 % in the function. An SPM.mat containing the label names as regressor names
 % must also exist.
@@ -29,7 +29,7 @@
 %   results: the results
 %   cfg:     the cfg created in the example (can be use for decoding(cfg) )
 %
-% See also DECODING
+% See also DECODING DECODING_EXAMPLE_AFNI
 
 % Martin H.
 % History: 

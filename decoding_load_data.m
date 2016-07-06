@@ -42,6 +42,7 @@
 % Kai, 2012-03-12
 
 % HISTORY:
+% MARTIN: 2016/06/28: Added possibility to pass multiple files and/or 4D data
 % KAI: 2016/03/11: Added adding translation mat to cfg.datainfo.mat, also
 %   checking that mats from different data files and masks agree
 % MH 2015/10/12: allow reducing size of misc.residuals for NaN removal

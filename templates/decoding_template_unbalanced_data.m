@@ -19,7 +19,7 @@ cfg.searchlight.radius = 3; % use searchlight of radius 3 (by default in voxels)
 cfg.results.dir = 
 
 % Set the filepath where your SPM.mat and all related betas are, e.g. 'c:\exp\glm\model_button'
-beta_dir = 
+beta_loc = 
 
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
@@ -30,7 +30,7 @@ cfg.files.mask =
 
 % Set the label names to the regressor names which you want to use for 
 % decoding, e.g. 'button left' and 'button right'
-% don't remember the names? -> run display_regressor_names(beta_dir)
+% don't remember the names? -> run display_regressor_names(beta_loc)
 labelname1 = 
 labelname2 = 
 
@@ -69,10 +69,10 @@ cfg.plot_design = 0;
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat
-regressor_names = design_from_spm(beta_dir);
+regressor_names = design_from_spm(beta_loc);
 
 % Extract all information for the cfg.files structure (labels will be [1 -1] )
-cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_dir);
+cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_loc);
 
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 

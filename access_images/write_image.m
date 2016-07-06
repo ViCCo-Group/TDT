@@ -33,7 +33,7 @@ function varargout = write_image(software,varargin)
 %   % update infos and write
 %   hdr.fname = 'test.img';
 %   hdr.descrip = 'This image contains important information';
-%   write_image(cfg.software, hdr, volulme);
+%   write_image(cfg.software, hdr, volume);
 
 check_software(software);
 fname = [mfilename '_' lower(software)];

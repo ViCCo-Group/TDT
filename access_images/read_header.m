@@ -19,9 +19,13 @@ function varargout = read_header(software,filename,varargin)
 %           TODO: Add which header-fields are important, how they are built
 %                   and what they mean
 
+if ndims(filename) ~= 2 || ~any(size(filename)==1) %#ok<ISMAT>
+    error('read_header only works when passing individual file names.')
+end
 
 filename = strsplit(filename,',');
 filename = filename{1}; % remove everything after a potential comma (we read all headers)
+filename = strtrim(filename); % remove trailing whitespaces
 
 if ~exist(filename, 'file')
     error('File %s does not exist', filename)

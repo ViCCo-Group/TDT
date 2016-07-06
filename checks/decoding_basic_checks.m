@@ -8,6 +8,7 @@
 % Second, some parameters are set that are later needed.
 
 % History 
+% Martin (2016/06/05): Added compatibility with AFNI
 % Kai (2015/21/08): Automatic check for mask.img if not provided
 % Martin (2014/16/06): Allowing only Matlab versions > 7.3 (all others have
 %   not been tested)
@@ -19,6 +20,10 @@ function [cfg, n_files, n_steps] = decoding_basic_checks(cfg,output_arguments)
 
 % Display image access software that is used
 dispv(1, 'Image access with: %s',cfg.software);
+
+if strcmpi(cfg.software,'AFNI')
+    warningv('DECODING_BASIC_CHECKS:AFNI_BETA_MODE','AFNI support in TDT is still in beta mode. Use with care and report bugs!')
+end
 
 % Check Matlab version
 vers = sscanf(version,'%d.%d');
@@ -273,11 +278,11 @@ if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
 end
 
 % check if masks exist, and maybe correct it. Otherwise set it to "auto"
-if isfield(cfg.files, 'mask')
+if isfield(cfg.files, 'mask') && ~isempty(cfg.files.mask)
     if ischar(cfg.files.mask)
         cfg.files.mask = num2cell(cfg.files.mask,2);
     end
-else % mask not specified, check if all input files come from one directory and if this contains a mask.img/.nii, else use all voxels
+else % mask not specified, check if all input files come from one directory and if this contains a mask.img/.nii/+orig.BRIK/+tlrc.BRIK, else use all voxels
     set_auto = 1; % by default, set mask to 'all voxels'
     try % if something doesn't work, we don't care and just use the auto version below
         dispv(1, 'No mask specified in cfg.file.mask, checking if all images are from the same directory')
@@ -287,7 +292,7 @@ else % mask not specified, check if all input files come from one directory and 
         for file_ind = 2:length(cfg.files.name)
             [p, fn, ext] = fileparts(cfg.files.name{file_ind});
             if ~strcmp(p1, p) % if directory is not the same as for first file, break
-                dispv(2, 'Not all inputfiles are from the same directory, so not checking for mask.img/.nii')
+                dispv(2, 'Not all inputfiles are from the same directory, so not checking for mask.img/.nii/+orig.BRIK/+tlrc.BRIK')
                 all_from_same_directory = 0;
                 break
             end
@@ -295,21 +300,27 @@ else % mask not specified, check if all input files come from one directory and 
         
         if all_from_same_directory
             % all images are from the same directory
-            % check if the directory contains a mask.img/.nii
+            % check if the directory contains a mask.img/.nii/.BRIK
             potential_mask_img = fullfile(p1, 'mask.img');
             if ~exist(potential_mask_img, 'file') % it might also be a .nii file
                 potential_mask_img = fullfile(p1, 'mask.nii');
             end
+            if ~exist(potential_mask_img, 'file') % it might also be a +orig.BRIK file
+                potential_mask_img = fullfile(p1, 'mask+orig.BRIK');
+            end
+            if ~exist(potential_mask_img, 'file') % it might also be a +tlrc.BRIK file
+                potential_mask_img = fullfile(p1, 'mask+tlrc.BRIK');
+            end
             if exist(potential_mask_img,'file')
                 cfg.files.mask = potential_mask_img;
-                dispv(1, 'All files in same directory that contains a mask.img. Setting cfg.files.mask=%s', cfg.files.mask)
+                dispv(1, 'All files in same directory that contains a mask.img/.nii/+orig.BRIK/+tlrc.BRIK. Setting cfg.files.mask=%s', cfg.files.mask)
                 set_auto = 0; % do nothing more 
             else
-                dispv(2, 'All files from same directory but no mask.img in this directory, so switching to auto. Directory was: %s', p1)
+                dispv(2, 'All files from same directory but no mask.img/.nii/+orig.BRIK/+tlrc.BRIK in this directory, so switching to auto. Directory was: %s', p1)
             end
         end
     catch %#ok<*CTCH>
-        warningv('mask_img_detection_failed', 'Something did not work with automatic detection of mask.img/.nii, using all voxels')
+        warningv('mask_img_detection_failed', 'Something did not work with automatic detection of mask.img/.nii/+orig.BRIK/+tlrc.BRIK, using all voxels')
     end
 
     if set_auto % set it to auto
@@ -430,7 +441,7 @@ if cfg.results.write
 
         % Check if it is ok and possible to overwrite existing files
 
-        ext = {'.img','.hdr','.mat','.nii'};
+        ext = {'.img','.hdr','.mat','.nii','+orig.BRIK','+orig.HEAD','+tlrc.BRIK','+tlrc.HEAD'};
         if cfg.results.write == 2, ext = {'.mat'}; end % check matfile only
         for ext_ind = 1:length(ext)
             if isfield(cfg.design,'function') && isfield(cfg.design.function,'permutation')
@@ -508,7 +519,7 @@ if exist(output_fname,'file')
     end
     
     % Get permissions and check if we can write
-    [ignore,permissions] = fileattrib(output_fname); %#ok<ASGLU>
+    [ignore,permissions] = fileattrib(output_fname); 
     if permissions.UserWrite ~=1
         error('Results cannot be written to %s \nCheck that you have writing permission.',output_fname)
     end

@@ -1,3 +1,6 @@
+* 3.91 - 2016/07/09
+- Minor bugfix in decoding_example_afni.m
+
 * 3.90 - 2016/07/07
 - Added AFNI support
 

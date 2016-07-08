@@ -41,6 +41,9 @@
 
 % 2016/07/07 Martin H.
 
+% History:
+% MH 2016/07/09 Fixed small bug
+
 function [results, cfg] = decoding_example_afni(decoding_type,labelname1,labelname2,beta_loc,output_dir,radius,cfg)
 
 warningv('DECODING_EXAMPLE_AFNI:BETA_MODE','decoding_example_afni is still in beta mode, use with care...')
@@ -114,10 +117,12 @@ elseif length(beta_loc) == 1 && any(strfind(beta_loc{1},'*'))
     
     % if the asterisk method is used, this can deal with a lot of possible ways of entering data
     [fpath,fn,fext] = fileparts(beta_loc{1});
+    if ~isdir(fpath), error('Path %s not found.',fpath); end
     ffn = [fn fext];
     ffn = wildcard2regexp(ffn);
     ffn = strrep(ffn,'.*','\d.*');
     fname = get_filenames(cfg.software,fpath,['REGEXP:' ffn]);
+    if isempty(fname), error('No files with wildcard search %s%s found in %s.',fn,fext,fpath), end
     fname = num2cell(fname,2);
     % Remove filepath and rejoin fname and fext
     [fp,fname,fext] = cellfun(@fileparts,fname,'uniformoutput',0);

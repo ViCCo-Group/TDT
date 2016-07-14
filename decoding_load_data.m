@@ -89,14 +89,18 @@ if exist('passed_data', 'var')
 
     % check mask(s)
     if length(cfg.files.mask) ~= length(passed_data.files.mask)
-        warning('decoding_load_data:passed_data_not_equal', 'Number of mask files in passed_data is not equal to number of mask files in cfg.files.mask')
-        checks_ok = 0;
+        if isempty(passed_data.files.mask) && length(cfg.files.mask) == 1
+            warningv('decoding_load_data:passed_data_not_equal_but_probably_ok', 'No mask file names are provided in passed_data, but there is only 1 mask file in cfg.files.mask, assuming that is ok.')
+        else
+            warningv('decoding_load_data:passed_data_not_equal', 'Number of mask files in passed_data is not equal to number of mask files in cfg.files.mask')
+            checks_ok = 0;
+        end
         % Possibly, this generates an error when multi-masks are passed)
     else
         for i_mask = 1:length(cfg.files.mask)
             % check that mask-filename(s) are equal to cfg (if both are empty, then pass the check, too
             if ~strcmp(cfg.files.mask{i_mask}, passed_data.files.mask{i_mask}) && ~isempty([cfg.files.mask{i_mask} passed_data.files.mask{i_mask}])
-                warning('decoding_load_data:passed_data_not_equal', 'Names of mask files in passed_data are not equal to names of mask files in cfg.files.mask (or they are at least not in the same order)')
+                warningv('decoding_load_data:passed_data_not_equal', 'Names of mask files in passed_data are not equal to names of mask files in cfg.files.mask (or they are at least not in the same order)')
                 checks_ok = 0;
             end
         end

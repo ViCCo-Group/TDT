@@ -48,9 +48,13 @@
 %       cfg.dont_clear_fig: Set 1 to not clear the figure (e.g. to use a 
 %           subplot)
 
-% Martin Hebart, Kai Goergen, 2016/04/21
+% Martin Hebart, Kai Goergen, 2016/07/14
 
 % History: 
+%   Kai: 2016/07/14: Removed little bugs that ROI figure was overwritten
+%       and that tick values were not set when dimensions were 1 (and all
+%       code below was not executed either). Default position of new window
+%       is now next to the design figure, if that exists.
 %   Kai: 2016/04/21 Added cfg.handle_focus, can be set to 0 to avoid that 
 %       function cares about focus at all (e.g. to save subplots), needs to 
 %       be used with cfg.dont_clear_fig.
@@ -119,10 +123,21 @@ if  cfg.handle_focus
     try
         set(0,'CurrentFigure',fighdl)
     catch %#ok<CTCH>
-    %     disp(lasterr)
         display('Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
-    %     warningv('plot_selected_voxels:could_not_get_figure', 'Could not select previous figure handle, maybe figure has been closed. Creating a new one!')
-        fighdl = figure('name', ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)']);
+        fig_name = ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)'];
+        % check if a design figure exists, if so, put this figure next to it
+        pos = [];
+        try % will put the position in pos, if sucessfull
+            pos = get(0,'defaultfigureposition'); % get the default position of a new figure
+            design_pos = get(cfg.fighandles.plot_design, 'Position'); % get position of the design
+            pos(1) = design_pos(1) + design_pos(3); % set figure directly next to it
+            pos(2) = design_pos(2); % set figure directly next to it (aligned to bottom)
+        end
+        if isempty(pos)
+            fighdl = figure('name', fig_name); % let matlab determine the position
+        else
+            fighdl = figure('name', fig_name, 'Position', pos); % use the determined position
+        end
         if exist('created_fighdl', 'var')
             created_fighdl = fighdl; % remember change
         end
@@ -207,9 +222,9 @@ set(gca,'XLim',[0.5 sz(1)+0.5],...
         'view',[-37.5,30]);
     
 % axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
-set(gca, 'XTick', [1, sz(1)])
-set(gca, 'YTick', [1, sz(2)])
-set(gca, 'ZTick', [1, sz(3)])
+set(gca, 'XTick', uniqueq([1, sz(1)])) % uniqueq necessary if sz in one dimension is 1, or if the number would be negative (then the numbers are sorted)
+set(gca, 'YTick', uniqueq([1, sz(2)]))
+set(gca, 'ZTick', uniqueq([1, sz(3)]))
 
 %% Plot brain on x,y,z plane, if provided
 try

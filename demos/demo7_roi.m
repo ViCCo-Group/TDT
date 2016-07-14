@@ -123,7 +123,7 @@ cfg.files.chunk = chunk2; % Update chunk
 cfg.results.output = {'accuracy'};
 cfg.design = make_design_cv(cfg);
 
-plot_design(cfg)
+cfg.fighandles.plot_design = plot_design(cfg);
 
 %% Show ROIS during plotting
 cfg.plot_selected_voxels = 1; % 1 means: plot every ROI/searchlight, ok for ROIs, slow for searchlight

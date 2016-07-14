@@ -20,7 +20,7 @@
 
 
 function figure_handle = plot_design(cfg,visible_on)
-
+drawnow; % fixes a display problem with plot_selected_voxels
 % switch alternative on for a different color scheme
 alternative = 0;
 

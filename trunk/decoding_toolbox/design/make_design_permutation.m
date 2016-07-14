@@ -29,6 +29,9 @@
 % Using multiple sets is not supported, because permutations can be
 % calculated separately for them and then combined using combine_designs.
 %
+% If data has a xclass variable, permutations are done within each unique 
+% xclass x chunk combination.
+%
 % INPUT:
 %   cfg: configuration struct variable that was used for the original
 %     decoding analysis. In fact, mainly the contents of cfg.files are
@@ -94,6 +97,12 @@
 % Martin Hebart, 2013/08/31
 
 % Version History:
+%   KG (2016/06/21):
+%   - Added compatibility for designs with multiple xclasses and multiple
+%     chunks, e.g. for xclasses cv. Permutations were before done for each
+%     chunk ignoring that different xclasses are for this purpose multiple
+%     chunks (because permutations must be done for each chunk for each 
+%     xclasses independently).
 %   MH (2014/10/26):
 %   - Removed bug in npermk and improved use
 %   MH (2014/08/21):
@@ -114,7 +123,7 @@
 function design = make_design_permutation(cfg,n_perms_select,combine)
 
 fn = 'make_design_permutation';
-fv = 'v20140804';
+fv = 'v20160621';
 
 design = [];
 % if there are more than max_n_perms possible combinations, only sample some of them.
@@ -146,6 +155,40 @@ warningv('MAKE_DESIGN_PERMUTATION:beta_stage','This function is still in beta mo
 if nargin > 1
     dispv(1,'Creating permutation designs...')
 end
+
+%% Handle multiple xclass values
+
+if isfield(cfg.files, 'xclass') && length(unique(cfg.files.xclass)) > 1
+    % If decoding is performed for different xclasses, permutations are
+    % allowed within each chunk for each xclass. 
+    % To compute this, this is the same as if we had different chunks for 
+    % different xclasses. Thus, we change the chunk vector here to have one 
+    % chunk per unique xclass x chunk combination. The original chunk 
+    % vector is restored before creating new designs, because it is only 
+    % needed to create the permuted labels.
+    n_xclass = length(unique(cfg.files.xclass));
+    warningv('make_design_permutation:xclass', 'make_design_permutation: The xclass variable contains more than one value (%i xclasses). Permuting labels within each unique chunk x xclass combination independently. Please remove the xclass variable if you do not use a xclass design. For details, see explanation in %s', n_xclass, mfilename);
+    if ~exist('org_chunk', 'var') % only if we did not already store it before
+        org_chunk = cfg.files.chunk;
+    end
+    % The easiest way to get unique labels is just to put the xclass
+    % infront of the chunk, potentially adding 0s. As an extreme example:
+    % xclass 15 for chunk 100 would be 15100, or for chunk 1 (if 100
+    % chunks exist) 15001.
+    % To make sure we do not run into problems with negativ chunks, we set
+    % the smallest chunk value to 1
+    xclass_chunks = cfg.files.chunk;
+    xclass_chunks = xclass_chunks - min(xclass_chunks) + 1;
+    % get number of digits we need for the chunks (e.g. 3 if the max chunk
+    % value is >= 10
+    next_chunk_power = 10 ^ floor(log(max(xclass_chunks)));
+    % get unique value for each combination
+    xclass_chunks = (cfg.files.xclass * next_chunk_power) + xclass_chunks;
+    % and finally we use this as chunk for this function
+    cfg.files.chunk = xclass_chunks;
+end
+
+%% Get values
 
 all_chunks = unique(cfg.files.chunk);
 all_labels = unique(cfg.files.label);
@@ -292,18 +335,9 @@ if n_perms <= max_n_perms
         pick_ind = pick_ind(1:n_perms_select);
         pick_ind = sort(pick_ind);
     end
-    
-    % Finally, fill designs (only need to change the label variable)
-    fhandle = str2func(cfg.design.function.name);
-    design = cell(n_perms_select,1);
-    for i_perm = 1:n_perms_select
-        cfg.files.label = all_perms(:,pick_ind(i_perm));
-        design{i_perm} = feval(fhandle,cfg);
-    end
-    
-    
+        
 else % in case that number of permutations is very large, calculate only a random subset
-    
+   
     % Get all possible permutations within each chunk if the number is not
     % too large (i.e. if in all chunks the number of permutations does not exceed max_n_perms_chunk)
     if all(n_perms_chunk<=max_n_perms_chunk)
@@ -360,16 +394,30 @@ else % in case that number of permutations is very large, calculate only a rando
     
     % Flip all_perms
     all_perms = all_perms';
-   
-    % Finally, fill designs (only need to change the label variable)
-    fhandle = str2func(cfg.design.function.name);
-    design = cell(n_perms_select,1);
-    for i_perm = 1:n_perms_select
-        cfg.files.label = all_perms(:,i_perm);
-        design{i_perm} = feval(fhandle,cfg);
-    end
     
 end
+
+%% Create new designs with permuted data
+% Restore original chunk vector if it has been replaced before
+if exist('org_chunk', 'var')
+    dispv(2, 'make_design_permutation: Replacing cfg.files.chunk with original chunk labels.');
+    cfg.files.chunk = org_chunk;
+end
+
+% And do it
+fhandle = str2func(cfg.design.function.name);
+design = cell(n_perms_select,1);
+
+for i_perm = 1:n_perms_select
+    if exist('pick_ind', 'var') % this is the case if few permutations are possible
+        cfg.files.label = all_perms(:,pick_ind(i_perm));
+    else
+        cfg.files.label = all_perms(:,i_perm); % this is the case if many permutations are possible
+    end
+    design{i_perm} = feval(fhandle,cfg);
+end
+
+%% combine designs
 
 if combine
     design_orig = cell2mat(design);
@@ -389,6 +437,7 @@ if combine
     end
 end
         
+%% done
 disp('done.')
 
 

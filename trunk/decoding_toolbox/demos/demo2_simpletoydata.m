@@ -85,8 +85,9 @@ cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see 
 % Create a leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
 
-figure('name', 'Design')
 cfg.fighandles.plot_design = plot_design(cfg);
+
+cfg.plot_selected_voxels = 1;
 
 %% Decoding Parameters
 

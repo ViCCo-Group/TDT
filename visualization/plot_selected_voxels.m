@@ -47,10 +47,14 @@
 %           (e.g. to use a subplot)
 %       cfg.dont_clear_fig: Set 1 to not clear the figure (e.g. to use a 
 %           subplot)
+%    cfg.plot_selected_voxels_settings.plot_3dvoxels: If 0, the mask voxels
+%       will not be shown (but e.g. it's shadow might be shown).
 
 % Martin Hebart, Kai Goergen, 2016/07/14
 
 % History: 
+%   Kai: 2016/07/20: Removed a number of further little bugs for drawing 2d
+%       data, can also show whole brain and not only
 %   Kai: 2016/07/14: Removed little bugs that ROI figure was overwritten
 %       and that tick values were not set when dimensions were 1 (and all
 %       code below was not executed either). Default position of new window
@@ -86,6 +90,7 @@
 
 function fighdl = plot_selected_voxels(position_index,sz,brain_data,mask_index,border_images, fighdl, cfg)
 
+%%
 % check that the correct arguments are provided
 if exist('brain_data', 'var')
     if ~exist('mask_index', 'var')
@@ -99,6 +104,12 @@ end
 
 if ~isfield(cfg, 'plot_selected_voxels')
     cfg.plot_selected_voxels = 1;
+end
+if ~isfield(cfg, 'plot_selected_voxels_settings')
+    cfg.plot_selected_voxels_settings = [];
+end
+if ~isfield(cfg.plot_selected_voxels_settings, 'plot_3dvoxels')
+    cfg.plot_selected_voxels_settings.plot_3dvoxels = 1; % really show the voxels in red in 3d (default)
 end
 
 if ~isfield(cfg, 'handle_focus')
@@ -144,74 +155,82 @@ if  cfg.handle_focus
     end
 end
 
-%%
+%% Plot voxels in 3d
 % position_index: indices of all voxel positions
 % sz: size of volume (optional)
+if cfg.plot_selected_voxels_settings.plot_3dvoxels
+    vertex_matrix = [0 0 0
+    1 0 0
+    1 1 0
+    0 1 0
+    0 0 1
+    1 0 1
+    1 1 1
+    0 1 1];
+    faces_matrix = [1 2 6 5
+    2 3 7 6
+    3 4 8 7
+    4 1 5 8
+    1 2 3 4
+    5 6 7 8];
 
-vertex_matrix = [0 0 0
-1 0 0
-1 1 0
-0 1 0
-0 0 1
-1 0 1
-1 1 1
-0 1 1];
-faces_matrix = [1 2 6 5
-2 3 7 6
-3 4 8 7
-4 1 5 8
-1 2 3 4
-5 6 7 8];
+    % check if position_index really is indeed a binary filter, and if so,
+    % convert it
+    if numel(position_index) == prod(sz) && numel(unique(position_index)) < prod(sz)
+        warningv('plot_selected_voxels:position_index_is_volumefilter', 'position_index provided to plot_selcted_voxels seems to be a filter, converting it to position indices using find(position_index). Providing the position_index directly can increase speed.')
+        position_index = find(position_index(:));
+    end
 
-% check if position_index really is indeed a binary filter, and if so,
-% convert it
-if numel(position_index) == prod(sz) && numel(unique(position_index)) < prod(sz)
-    warningv('plot_selected_voxels:position_index_is_volumefilter', 'position_index provided to plot_selcted_voxels seems to be a filter, converting it to position indices using find(position_index). Providing the position_index directly can increase speed.')
-    position_index = find(position_index(:));
+
+    [P(:,1) P(:,2) P(:,3)] = ind2sub(sz,position_index);
+    n_vox = size(P,1);
+
+    % TODO: Check if we are dealing with one or several connected components
+
+    % BEGINNING OF CHECK (doesn't work properly for rois, so deactivated)
+    % % Check if voxel is visible and remove voxels that are not
+    % removeind = false(n_vox,1);
+    % for i = 1:n_vox
+    %     Pdiff = bsxfun(@minus,P(i,:),P);
+    %     keepind = sum(abs(Pdiff),2)>1;
+    %     if sum(keepind)<6 % if there are less than six imminent neighbors
+    %         removeind(i) = true; % remove
+    %     end
+    % end
+    % 
+    % P(removeind,:) = [];
+    % n_vox = size(P,1);
+    % position_index(removeind) = [];
+    % END OF CHECK
+
+    large_vertex_matrix = zeros(n_vox* size(vertex_matrix,1), size(vertex_matrix,2));
+    large_faces_matrix = zeros(n_vox * size(faces_matrix,1), size(faces_matrix,2));
+
+    for i = 1:n_vox
+        xpos = (i-1)*8 + (1:8);
+    %     large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,[M.X(position_index(i)) M.Y(position_index(i)) M.Z(position_index(i))]);
+        large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,P(i,:))-.5;    
+        xpos = (i-1)*6 + (1:6);
+        large_faces_matrix(xpos,:) = faces_matrix + (i-1)*8;
+    end
+
+    % Tried to speed-up by clearing only the child, but didn't speed-up
+    % Ideally, load only the values that patch loads and replace them
+    if ~isfield(cfg, 'dont_clear_fig') || ~cfg.dont_clear_fig 
+        clf(fighdl)
+    end
+
+    patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
+    'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
+    'EdgeColor',[0.2 0.2 0.2]);
 end
 
-
-[P(:,1) P(:,2) P(:,3)] = ind2sub(sz,position_index);
-n_vox = size(P,1);
-
-% TODO: Check if we are dealing with one or several connected components
-
-% BEGINNING OF CHECK (doesn't work properly for rois, so deactivated)
-% % Check if voxel is visible and remove voxels that are not
-% removeind = false(n_vox,1);
-% for i = 1:n_vox
-%     Pdiff = bsxfun(@minus,P(i,:),P);
-%     keepind = sum(abs(Pdiff),2)>1;
-%     if sum(keepind)<6 % if there are less than six imminent neighbors
-%         removeind(i) = true; % remove
-%     end
-% end
-% 
-% P(removeind,:) = [];
-% n_vox = size(P,1);
-% position_index(removeind) = [];
-% END OF CHECK
-
-large_vertex_matrix = zeros(n_vox* size(vertex_matrix,1), size(vertex_matrix,2));
-large_faces_matrix = zeros(n_vox * size(faces_matrix,1), size(faces_matrix,2));
-
-for i = 1:n_vox
-    xpos = (i-1)*8 + (1:8);
-%     large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,[M.X(position_index(i)) M.Y(position_index(i)) M.Z(position_index(i))]);
-    large_vertex_matrix(xpos,:) = bsxfun(@plus,vertex_matrix,P(i,:))-.5;    
-    xpos = (i-1)*6 + (1:6);
-    large_faces_matrix(xpos,:) = faces_matrix + (i-1)*8;
+%% Set axes and viewing mode
+if size(sz(3) == 1)
+    viewing_angle = [0.5,90]; % 2d or less, set default xy mode (view from top)
+else
+    viewing_angle = [-37.5,30]; %full 3d, azimut and elevation
 end
-
-% Tried to speed-up by clearing only the child, but didn't speed-up
-% Ideally, load only the values that patch loads and replace them
-if ~isfield(cfg, 'dont_clear_fig') || ~cfg.dont_clear_fig 
-    clf(fighdl)
-end
-
-patch('Vertices',large_vertex_matrix,'Faces',large_faces_matrix,...
-'FaceVertexCData',ones(8*n_vox,1) * [.9 .2 .4],'FaceColor','interp',...
-'EdgeColor',[0.2 0.2 0.2]);
 
 set(gca,'XLim',[0.5 sz(1)+0.5],...
         'Ylim',[0.5 sz(2)+0.5],...
@@ -219,12 +238,22 @@ set(gca,'XLim',[0.5 sz(1)+0.5],...
         'XLimMode','manual',...
         'YLimMode','manual',...
         'ZLimMode','manual',...
-        'view',[-37.5,30]);
-    
+        'view',viewing_angle);
+
 % axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
 set(gca, 'XTick', uniqueq([1, sz(1)])) % uniqueq necessary if sz in one dimension is 1, or if the number would be negative (then the numbers are sorted)
 set(gca, 'YTick', uniqueq([1, sz(2)]))
 set(gca, 'ZTick', uniqueq([1, sz(3)]))
+
+%% Descript axis
+try
+    xlabel('x');
+    ylabel('y');
+    zlabel('z');
+catch e
+    e
+    warning('Labeling axis failed')
+end
 
 %% Plot brain on x,y,z plane, if provided
 try
@@ -251,11 +280,14 @@ try
         % put brain into a full volume (at the moment, we only have the masked
         % brain)
         brain = zeros(sz);
-        brain(mask_index) = brain_data*0.9+0.1; % *.9 + .1 serves to differentiate between inmask and outmask voxels
+        if numel(brain_data) == numel(brain)
+            brain(:) = brain_data; % *.9 + .1 serves to differentiate between inmask and outmask voxels
+            brain(mask_index) = brain_data(mask_index)*0.9+0.1; % *.9 + .1 serves to differentiate between inmask and outmask voxels
+        else
+            brain(mask_index) = brain_data*0.9+0.1; % *.9 + .1 serves to differentiate between inmask and outmask voxels
+        end
 
         % % TODO: only project outer voxels 
-        %
-
         if ~exist('border_image', 'var') || isempty(border_image)
             border_images = 'projection+slices'; % choose if you want to project slice (e.g. the middle) or the projection
         end
@@ -304,12 +336,12 @@ try
         sl_3d(position_index) = 1;
         % add projection to slices
         z_sl_projection = sum(sl_3d, 3) > 0;
-        z_background(z_sl_projection') = 1;
+        z_background(z_sl_projection') = z_background(z_sl_projection') + .3;
         x_sl_projection = squeeze(sum(sl_3d, 2) > 0);
-        x_background(x_sl_projection') = 1;
+        x_background(x_sl_projection') = x_background(x_sl_projection') + .3;
         y_sl_projection = squeeze(sum(sl_3d, 1) > 0);
-        y_background(y_sl_projection') = 1;
-
+        y_background(y_sl_projection') = y_background(y_sl_projection') + .3;
+        
         % REMARK: When plotting the background image using surface, we need to
         % plot x and y from 1:sz(1)+1, because surface(x,y,z)  plot the value z 
         % to the square x..x+1, y..y+1. 
@@ -317,10 +349,19 @@ try
         % BOUNDARY, and these are 1 more than the containing data.
         edgeCol = 'none';
         % x and y are flipped
+        
+        % normalize again all images between 0 and 1
+        min_value = min([z_background(:); x_background(:); y_background(:)]);
+        max_value = max([z_background(:); x_background(:); y_background(:)]);
+        x_background = (x_background-min_value)/(max_value-min_value);
+        y_background = (y_background-min_value)/(max_value-min_value);
+        z_background = (z_background-min_value)/(max_value-min_value);
+
+        % plot all
         [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
-        surface(x,y,ones(size(x))-.5,z_background, 'EdgeColor', edgeCol); 
+        surface(x,y,ones(size(x))-.5,z_background, 'EdgeColor', edgeCol);
         [x,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); x=x-.5; z=z-.5;
-        surface(sz(1)*ones(size(x)),x,z,y_background, 'EdgeColor', edgeCol);
+        surface(sz(1)*ones(size(x)),x,z,y_background', 'EdgeColor', edgeCol);
         [y,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); y=y-.5; z=z-.5;
         surface(y,sz(2)*ones(size(y)),z,x_background, 'EdgeColor', edgeCol);
         % set colormap to gray for current axes only
@@ -332,10 +373,12 @@ try
     end
 catch e
     e
+    keyboard
     warningv('plot_selected_voxels:drawing_backgroundbrain_failed', 'Drawing backgroundbrain failed, continue nonetheless');
 end
 
 %% draw image
+% warning off MATLAB:hg:surface:CDataSizeMustEqualZDataSizeForFlagShading; % annoying warning that comes even if everything works
 drawnow;
 
 %% Store to video (or any given writer, if passed)

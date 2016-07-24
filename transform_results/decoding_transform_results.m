@@ -21,7 +21,7 @@
 %   SPM 2nd level)
 % decision_values: 'raw' decision values for all input patterns as returned 
 %   by the method
-% predicted_label: predicted labels for  all input patterns as returned 
+% predicted_labels: predicted labels for  all input patterns as returned 
 %   by the method
 % sensitivity: accuracy of first label
 % sensitivity_minus_chance: sensitivity minus chance level

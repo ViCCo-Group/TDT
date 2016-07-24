@@ -191,7 +191,7 @@ end
 
 fh = figure;
 fprintf('\ngenerating %d of %d permutations\n\n', P2, P1 ^ N)
-fprintf('computation can be stopped by closing output window\n\n')
+fprintf('computation can be stopped by closing output window (can take a bit before the window will appear)\n\n')
 gamma0max = alpha^(1/N);
 nPermsReport = 10000;
 uRank = zeros(1, V);
@@ -262,7 +262,7 @@ for j = 1 : P2
         
         % plot
         if ~ishandle(fh)
-            fh = figure;
+            fh = figure('name', 'Prevalence analysis');
         else
             figure(fh)
             clf
@@ -273,11 +273,11 @@ for j = 1 : P2
         xlim([0, V + 1])
         xlabel('voxel')
         ylabel('\gamma_0')
-        title('prevalence')
+        title({'Prevalence', 'Close window to stop and wait for the results (can take a bit)'})
         
         drawnow
         if stop
-            fprintf('stopping...\n')
+            fprintf('stopping, please wait, writing output files...\n')
             break
         end
     end

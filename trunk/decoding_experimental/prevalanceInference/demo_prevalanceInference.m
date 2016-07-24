@@ -33,6 +33,11 @@
 % The code for the prevalence inference has been written by Carsten
 % Allefeld (with slight modifications for TDT by Kai).
 
+%% Check that SPM and TDT are available on the path
+if isempty(which('SPM')), error('Please add SPM to the path and restart'), end
+if isempty(which('decoding_defaults')), error('Please add TDT to the path and restart'), end
+decoding_defaults; % add all important directories to the path
+
 %% Inputdata
 
 % The analysis needs permutation data for multiple subjects as input.
@@ -52,18 +57,49 @@
 % to create permutations for each subject in TDT.
 
 % Here, we load some example images for each of 10 subjects.
+
+n_sbjs = 10;
+decoding_measure = 'accuracy_minus_chance';
+
+clear orig_* perm_*
+orig_inputdir(1:n_sbjs) = {'/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight'};
+orig_filemask(1:n_sbjs) = {['res_' decoding_measure '.mat']}; % regular expression, for more see help spm_select
+%                                                      From  help spm_select:
+%                                                      e.g. DCM*.mat files should have a typ of '^DCM.*\.mat$'
+perm_inputdir(1:n_sbjs) = {'/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight/perm'};
+perm_filemask(1:n_sbjs) = {['^perm.*_' decoding_measure '\.mat$']}; % 
+
 inputimages = {};
-for sbj = 1:10
-    % In the demo, we get the same images for all "sbjs".
-    % In a real analysis the data should of course be different for every subj!
-    inputimages(sbj, :) = cellstr(spm_select('FPList','C:\TDT_perm_example\perm_res\','.*.mat'));
+for sbj = 1:n_sbjs   
+    % get the original unpermuted result image as first image (required by the package)
+    orig_image = cellstr(spm_select('FPList',orig_inputdir{sbj},orig_filemask{sbj}));
+    if length(orig_image) ~= 1
+        error('There should be exactly 1 unpermuted image, but we found %i, please check', length(orig_image))
+    end
+    inputimages(sbj, 1) = orig_image;
+    
+    % put permuted images afterwards
+    permuted_images = cellstr(spm_select('FPList',perm_inputdir{sbj},perm_filemask{sbj}));
+    inputimages(sbj, 2:length(permuted_images)+1) = permuted_images;
 end
+
+warning(['In this demo, we use the same images for all "sbjs". ' ...
+    'In a real analysis the data should of course be different for every subj!'])
+display('Type "dbcont" to acknowledge that you have understood the warning above')
+keyboard
+
+%% Define where to save the results
+resultdir = fullfile(orig_inputdir{1}, 'prevalence');
+mkdir(resultdir);
+resultfilenames = fullfile(resultdir, 'prevalence');
 
 %% Do the analysis
 % The call will start the processing. As the function says, calculation can
 % be stopped any time by closing the Figure that pops up (which might take 
 % a bit). The result at this moment in time will be saved as image.
-prevalence(inputimages);
+
+% run prevalence analysis
+prevalence(inputimages, [], resultfilenames);
 
 % The function returns three images: 
 %   prevalence_gamma0.nii: The prevalance value, see paper
@@ -72,7 +108,11 @@ prevalence(inputimages);
 %       of all accuracies)
 %   prevalence_mask.nii: The mask where permutations have been computed.
 
-% TODO: Check toy data or remove option: Probably remove option
+% TODO: Check toy data or remove option
+
+display('Prevalence analysis finished.')
+display(['Results in: ' resultfilenames])
+
 
 
 

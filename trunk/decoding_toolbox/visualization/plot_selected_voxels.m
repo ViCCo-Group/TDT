@@ -50,11 +50,11 @@
 %    cfg.plot_selected_voxels_settings.plot_3dvoxels: If 0, the mask voxels
 %       will not be shown (but e.g. it's shadow might be shown).
 
-% Martin Hebart, Kai Goergen, 2016/07/14
+% Martin Hebart, Kai Goergen, 2016/07/24
 
 % History: 
-%   Kai: 2016/07/20: Removed a number of further little bugs for drawing 2d
-%       data, can also show whole brain and not only
+%   Kai: 2016/07/24: Removed more little bugs when drawing 2d y_background,
+%       showing 1d or 2d decodings from top now
 %   Kai: 2016/07/14: Removed little bugs that ROI figure was overwritten
 %       and that tick values were not set when dimensions were 1 (and all
 %       code below was not executed either). Default position of new window
@@ -226,7 +226,7 @@ if cfg.plot_selected_voxels_settings.plot_3dvoxels
 end
 
 %% Set axes and viewing mode
-if size(sz(3) == 1)
+if length(sz) < 3 || (length(sz) == 3 && sz(3) == 1)
     viewing_angle = [0.5,90]; % 2d or less, set default xy mode (view from top)
 else
     viewing_angle = [-37.5,30]; %full 3d, azimut and elevation
@@ -357,13 +357,25 @@ try
         y_background = (y_background-min_value)/(max_value-min_value);
         z_background = (z_background-min_value)/(max_value-min_value);
 
-        % plot all
-        [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
-        surface(x,y,ones(size(x))-.5,z_background, 'EdgeColor', edgeCol);
-        [x,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); x=x-.5; z=z-.5;
-        surface(sz(1)*ones(size(x)),x,z,y_background', 'EdgeColor', edgeCol);
-        [y,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); y=y-.5; z=z-.5;
-        surface(y,sz(2)*ones(size(y)),z,x_background, 'EdgeColor', edgeCol);
+        try
+            % plot all
+            [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
+            z = ones(size(x))-.5;
+            surface(x,y,z,z_background, 'EdgeColor', edgeCol);
+            [y,z] = meshgrid(1:sz(2)+1,1:sz(3)+1); y=y-.5; z=z-.5;
+            x = sz(1)*ones(size(y))+.5;
+            % check if y image is flipped (can happen if data is 2d)
+            if ~isequal(size(x)-1, size(y_background)) && isequal(size(x)-1, size(y_background'))
+                y_background = y_background';
+            end
+            surface(x,y,z,y_background, 'EdgeColor', edgeCol);
+            [x,z] = meshgrid(1:sz(1)+1,1:sz(3)+1); x=x-.5; z=z-.5;
+            y = sz(2)*ones(size(x))+.5;
+            % check if x image is flipped (can happen if data is 2d)
+            surface(x,y,z,x_background, 'EdgeColor', edgeCol);
+        catch
+            warningv('plot_selected_voxels:surface_in_background_failed', 'Something failed while calling surface to show the backgrounds, continue nonetheless');
+        end
         % set colormap to gray for current axes only
         try
             colormap(gca, 'gray');

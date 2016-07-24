@@ -55,7 +55,7 @@ if ~exist(spm_file,'file')
     % check if *_SPM.mat exists, if so, take this
     otherSPM = dir(fullfile(spm_folder, '*_SPM.mat'));
     if length(otherSPM) == 1
-        dispv(1, 'design_from_spm: Could not find SPM.mat in %s, but found %s instead.',spm_folder,otherSPM.name);
+        dispv(1, 'design_from_spm: Getting regressor names from %s in %s', otherSPM.name, spm_folder);
         spm_file = fullfile(spm_folder, otherSPM.name);
     elseif length(otherSPM) > 1
         error('Could not find an SPM.mat in %s, but multiple other *_SPM.mat files. Please make sure that only one such file exists.',spm_folder);

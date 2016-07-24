@@ -54,7 +54,7 @@
 
 % History: 
 %   Kai: 2016/07/24: Removed more little bugs when drawing 2d y_background,
-%       showing 1d or 2d decodings from top now
+%       showing 1d or 2d decodings from top now; keeps view when rotated
 %   Kai: 2016/07/14: Removed little bugs that ROI figure was overwritten
 %       and that tick values were not set when dimensions were 1 (and all
 %       code below was not executed either). Default position of new window
@@ -116,14 +116,16 @@ if ~isfield(cfg, 'handle_focus')
     cfg.handle_focus = 1; % care about the focus
 end
 
+persistent do_labeling_and_view % only care about layout once
+
 %% set focus silently
+persistent created_fighdl % fallback function, so that function does not popup new figures if called repeatedly with no figure handles
 if  cfg.handle_focus
     if exist('fighdl', 'var') && ~isempty(fighdl)
         previous_fig = gcf;
     else
         previous_fig = -1; % mark that fighdl has not been passed
         % check the function opened a figure before, if so, try to use it
-        persistent created_fighdl % fallback function, so that function does not popup new figures if called repeatedly with no figure handles
         if isempty(created_fighdl)
             created_fighdl = -1; % will create a new figure
         end
@@ -136,6 +138,7 @@ if  cfg.handle_focus
     catch %#ok<CTCH>
         display('Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
         fig_name = ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)'];
+        do_labeling_and_view = true;
         % check if a design figure exists, if so, put this figure next to it
         pos = [];
         try % will put the position in pos, if sucessfull
@@ -153,6 +156,19 @@ if  cfg.handle_focus
             created_fighdl = fighdl; % remember change
         end
     end
+end
+
+%% Check if the number of voxels to be plotted changed, and if so update the figure title
+persistent n_plot_selected_voxels
+if isempty(n_plot_selected_voxels) || n_plot_selected_voxels ~= cfg.plot_selected_voxels
+    n_plot_selected_voxels = cfg.plot_selected_voxels;
+    fig_name = ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)'];
+    set(gcf, 'name', fig_name);
+end
+
+%% get current viewing angle to set it again after plotting
+try
+    viewing_angle = get(gca, 'view'); % will be set specifically to 2d/3d view when a new figure is created
 end
 
 %% Plot voxels in 3d
@@ -226,34 +242,39 @@ if cfg.plot_selected_voxels_settings.plot_3dvoxels
 end
 
 %% Set axes and viewing mode
-if length(sz) < 3 || (length(sz) == 3 && sz(3) == 1)
-    viewing_angle = [0.5,90]; % 2d or less, set default xy mode (view from top)
-else
-    viewing_angle = [-37.5,30]; %full 3d, azimut and elevation
-end
+if isempty(do_labeling_and_view) || do_labeling_and_view % only do that once 
+    % reset viewing angle
+    if length(sz) < 3 || (length(sz) == 3 && sz(3) == 1)
+        viewing_angle = [0.5,90]; % 2d or less, set default xy mode (view from top)
+    else
+        viewing_angle = [-37.5,30]; %full 3d, azimut and elevation
+    end
 
+    % axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
+    set(gca, 'XTick', uniqueq([1, sz(1)])) % uniqueq necessary if sz in one dimension is 1, or if the number would be negative (then the numbers are sorted)
+    set(gca, 'YTick', uniqueq([1, sz(2)]))
+    set(gca, 'ZTick', uniqueq([1, sz(3)]))
+    do_labeling_and_view = false;
+    
+    % Descript axis
+    try
+        xlabel('x');
+        ylabel('y');
+        zlabel('z');
+    catch e
+        e
+        warning('Labeling axis failed')
+    end
+end
+set(gca,'view',viewing_angle);
+
+%% set wieing limits
 set(gca,'XLim',[0.5 sz(1)+0.5],...
         'Ylim',[0.5 sz(2)+0.5],...
         'Zlim',[0.5 sz(3)+0.5],...
         'XLimMode','manual',...
         'YLimMode','manual',...
-        'ZLimMode','manual',...
-        'view',viewing_angle);
-
-% axis([1 sz(1)+1 1 sz(2)+1 1 sz(3)+1]-.5)
-set(gca, 'XTick', uniqueq([1, sz(1)])) % uniqueq necessary if sz in one dimension is 1, or if the number would be negative (then the numbers are sorted)
-set(gca, 'YTick', uniqueq([1, sz(2)]))
-set(gca, 'ZTick', uniqueq([1, sz(3)]))
-
-%% Descript axis
-try
-    xlabel('x');
-    ylabel('y');
-    zlabel('z');
-catch e
-    e
-    warning('Labeling axis failed')
-end
+        'ZLimMode','manual')
 
 %% Plot brain on x,y,z plane, if provided
 try
@@ -336,11 +357,11 @@ try
         sl_3d(position_index) = 1;
         % add projection to slices
         z_sl_projection = sum(sl_3d, 3) > 0;
-        z_background(z_sl_projection') = z_background(z_sl_projection') + .3;
+        z_background(z_sl_projection') = z_background(z_sl_projection')*.7 + .3; % set original image to 70% lightness and add 30% white to each within SL/ROI voxel
         x_sl_projection = squeeze(sum(sl_3d, 2) > 0);
-        x_background(x_sl_projection') = x_background(x_sl_projection') + .3;
+        x_background(x_sl_projection') = x_background(x_sl_projection')*.7 + .3;
         y_sl_projection = squeeze(sum(sl_3d, 1) > 0);
-        y_background(y_sl_projection') = y_background(y_sl_projection') + .3;
+        y_background(y_sl_projection') = y_background(y_sl_projection')*.7 + .3;
         
         % REMARK: When plotting the background image using surface, we need to
         % plot x and y from 1:sz(1)+1, because surface(x,y,z)  plot the value z 
@@ -350,13 +371,6 @@ try
         edgeCol = 'none';
         % x and y are flipped
         
-        % normalize again all images between 0 and 1
-        min_value = min([z_background(:); x_background(:); y_background(:)]);
-        max_value = max([z_background(:); x_background(:); y_background(:)]);
-        x_background = (x_background-min_value)/(max_value-min_value);
-        y_background = (y_background-min_value)/(max_value-min_value);
-        z_background = (z_background-min_value)/(max_value-min_value);
-
         try
             % plot all
             [x,y] = meshgrid(1:sz(1)+1,1:sz(2)+1); x=x-.5; y=y-.5;
@@ -385,7 +399,6 @@ try
     end
 catch e
     e
-    keyboard
     warningv('plot_selected_voxels:drawing_backgroundbrain_failed', 'Drawing backgroundbrain failed, continue nonetheless');
 end
 

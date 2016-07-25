@@ -34,6 +34,8 @@
 % Allefeld (with slight modifications for TDT by Kai).
 
 %% Check that SPM and TDT are available on the path
+clear all
+
 if isempty(which('SPM')), error('Please add SPM to the path and restart'), end
 if isempty(which('decoding_defaults')), error('Please add TDT to the path and restart'), end
 decoding_defaults; % add all important directories to the path
@@ -89,9 +91,10 @@ display('Type "dbcont" to acknowledge that you have understood the warning above
 keyboard
 
 %% Define where to save the results
-resultdir = fullfile(orig_inputdir{1}, 'prevalence');
+resultdir = fullfile(orig_inputdir{1}, 'prevalenceModular');
 mkdir(resultdir);
 resultfilenames = fullfile(resultdir, 'prevalence');
+display(['Writing result to ' resultfilenames '*.*']);
 
 %% Do the analysis
 % The call will start the processing. As the function says, calculation can

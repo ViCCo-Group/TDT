@@ -20,6 +20,10 @@
 % This version takes assumes you use SPM, because the example data has been 
 % processed with SPM.
 %
+% You can change cfg.analysis = 'searchlight' to either 'ROI' or
+% 'wholebrain' and see how it works. The output of this script can be used
+% for demo9_permutation_analysis.
+%
 % Happy decoding!
 %
 % Kai 2016/07/24
@@ -30,33 +34,34 @@ if isempty(which('decoding_defaults')), error('Please add TDT to the path and re
 decoding_defaults; % add all important directories to the path
 
 %% Locate data directory
-% This part is only for convinience because it is a demo.
-% Typically you set the directory directly below
+% In you script, this part looks like 
+%   beta_loc = '/path_to_datadirectory'
+% Here it is only longer because its a demo
+
 if ispc, databasedir = 'C:\TDT'; else databasedir = '/TDT'; end
 check_subdirs = {'sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm'; 'sub01_firstlevel/sub01_GLM'};
-if ~exist(databasedir, 'dir'), databasedir = uigetdir('', 'Select directory that contains the demodata directory "sub01_firstlevel"'); end
-datadir = [];
 for c_ind = 1:length(check_subdirs)
     d = fullfile(databasedir, check_subdirs{c_ind});
     if exist(d, 'dir')
-        datadir = d;
+        beta_loc = d;
         break
     end
 end
-if isempty(datadir)
-    datadir = uigetdir('', 'Select the sub01_GLM* directory from the demo data (inside sub01_firstlevel*)');
+if isempty(beta_loc)
+    beta_loc = uigetdir('', 'Select the sub01_GLM* directory from the demo data (inside sub01_firstlevel*)');
 end
-display(['Reading conditions from ' datadir]);
+
+% Check that data is really in that directory
 try
-    c = design_from_spm(datadir);
+    c = design_from_spm(beta_loc);
 catch
-    error('Seems %s is not the correct directory with the demo data, because it does not contain any SPM or *_SPM.mat. Please check and restart the script', datadir)
+    error('Seems %s is not the correct directory with the demo data, because it does not contain any SPM or *_SPM.mat. Please check and restart the script', beta_loc)
 end
 expected_first_regressor = 'color';
 if ~strcmp(c{1}, expected_first_regressor)
-    error('The directory %s contains SPM data, but it does not seem to contain the demo data, because the first regressor is "%s" and not "%s" as expected. Please check and restart the script', datadir, c{1}, expected_first_regressor)
+    error('The directory %s contains SPM data, but it does not seem to contain the demo data, because the first regressor is "%s" and not "%s" as expected. Please check and restart the script', beta_loc, c{1}, expected_first_regressor)
 end
-dispv(1, 'Located demodata in %s, starting analysis', datadir);
+dispv(1, 'Located demodata in %s, starting analysis', beta_loc);
 
 %% First, set the defaults and define the analysis you want to perform
 cfg = decoding_defaults;
@@ -66,11 +71,12 @@ if cfg.testmode, display('Testmode'), keyboard, end
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 
 % it to be on the safe side.
-cfg.analysis = 'searchlight';
+cfg.analysis = 'searchlight'; % 'searchlight', 'wholebrain', 'ROI' (if ROI, set one or multiple ROI images as mask files below instead of the mask)
 
 % Specify where the results should be saved
-cfg.results.dir = fullfile(datadir, 'results', 'motion_up_vs_down', cfg.analysis); % e.g. /TDT/data_loc/results/searchlight
+cfg.results.dir = fullfile(beta_loc, 'results', 'motion_up_vs_down', cfg.analysis); % e.g. /TDT/data_loc/results/searchlight
 cfg.results.overwrite = 1;
+
 %% Second, get the file names, labels and run number of each brain image
 % file to use for decoding.
 
@@ -88,7 +94,7 @@ cfg.results.overwrite = 1;
 % the following block.
 
 % Specify the directory to your SPM.mat and all related beta images:
-beta_loc = datadir; % ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/Martin buttonpresses onehand/buttonpress_onehand'];
+% beta_loc = '/path_to_exampledata'; 
 % display regressors are in that directory
 display_regressor_names(beta_loc);
 % Specify the label names that you gave your regressors of interest in the 
@@ -97,12 +103,25 @@ display_regressor_names(beta_loc);
 labelname1 = ['up'];
 labelname2 = ['down'];
 
+%% Set brain mask or or ROIs
 % Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
 % Alternatively, you can specify (multiple) ROI masks as a cell or string 
 % matrix) if you want to perform a ROI analysis, e.g. 
 %   cfg.files.mask = fullfile('ROIdir', {'ROI1.img', 'ROI2.img'})
-cfg.files.mask = fullfile(beta_loc, 'mask.img');
+% Example data ROI files (here functionally defined V1 & MT, w indicates normalized image)
+if strcmp(cfg.analysis, 'ROI')
+    if exist(fullfile(beta_loc, '..', 'sub01_ROI_3x3x3mm'), 'dir')
+        cfg.files.mask = fullfile(beta_loc, '..', 'sub01_ROI_3x3x3mm', {'wv1.img', 'wmt_both.img'}); % reduce data
+    elseif exist(fullfile(beta_loc, '..', 'sub01_ROI'), 'dir')
+        cfg.files.mask = fullfile(beta_loc, '..', 'sub01_ROI', {'wv1.img', 'wmt_both.img'}); % reduce data
+    else
+        cfg.files.mask = uigetfile('', 'Could not automatically find ROI folder, please select which ROIs to use');
+    end
+else
+    cfg.files.mask = fullfile(beta_loc, 'mask.img');
+end
 
+%% Get information from SPM
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat (and adds 'bin 1' to 'bin m', if a FIR design 
 % was used)
@@ -215,7 +234,11 @@ cfg.verbose = 1;
 
 % Get different outputs
 cfg.results.output = {'accuracy_minus_chance'}; % here you can add other measures, e.g. 'predicted_labels' if you want to get the precited label for each input data point. See decoding_transform_results for more.
-cfg.plot_selected_voxels = 100; % Show the searchlight at every 100' steps
+if strcmp(cfg.analysis, 'searchlight')
+    cfg.plot_selected_voxels = 100; % Show the searchlight at every 100' steps to not waste much time with drawing
+else
+    cfg.plot_selected_voxels = 1; % Show every steps
+end
 
 %% Fifth, run the decoding analysis
 

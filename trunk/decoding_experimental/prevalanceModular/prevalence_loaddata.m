@@ -1,7 +1,8 @@
 % function [a, mask, vol] = prevalence_loaddata(fnames_in, decoding_measure, mask)
 %
-% This function loads data for the prevalence analysis and prepares some
-% variables.
+% Helper function to load data for the prevalence analysis and prepare some
+% variables. Can handle SPM images (.nii, .img) and TDT result .mat files
+% (searchlight, ROI, wholebrain).
 %
 % IN
 %   fnames_in: nsbj x n_images cellstr, where fnames_in(:, 1)
@@ -17,10 +18,11 @@
 %       from result (e.g. 'accuracy_minus_chance'). Only necessary if the
 %       result file contains more than one decoding_measure.
 %   mask: Only for SPM at the moment: Logical vector with inmask = true
-%       voxels, if the mask should not be determined from the data 
+%       voxels, if the mask should not be determined from the data. Should
+%       have the dimensions of the original images.
 % OUT
-%   a: ndim x N x P1 data matrix, where 
-%      ndim: number of inmask voxels (or in general number of dimensions, 
+%   a: ndim x N x P1 data matrix, where
+%      ndim: number of inmask voxels (or in general number of dimensions,
 %           e.g. ROIs)
 %         N: number of subjects (or in general units of observations)
 %        P1: number of permutations per subject (unit)
@@ -29,13 +31,14 @@
 %       a(:, k, i) contains all inmask data from fnames_in{k, i};
 %   mask: 1d/2d/3d logical matrix that contains the mask used to truncate
 %       the data. size(mask) is the size of the original input images.
-%       This is typicaslly retrieved from the data. Always 
-%       nvox >= ndim from above, and ndim = sum(mask(:)==true). All voxels 
-%       that are always nan or 0 in all images are considered to be out of 
-%       the brain.
-%   vol: Will contain a .mat field with the 4x4 rotation and translation 
+%       The mask is typically retrieved from the data.  
+%       All voxels that are in all input images always nan or 0 are set to
+%       be out of the mask (value set to false).
+%       The value of nvox is always larger than ndim above, because 
+%       ndim = sum(mask(:)==true).
+%   vol: Will contain a .mat field with the 4x4 rotation and translation
 %       matrix. If this cannot be extracted from the input image, the field
-%       is left empty. If SPM is used, vol will contain the full volume 
+%       is left empty. If SPM is used, vol will contain the full volume
 %       information of the first image. If TDT is used, .datainfo from the
 %       result will be available.
 %
@@ -123,25 +126,16 @@ for k = 1 : N
                 error('The first TDT analysis was of type %s, but the current analysis is of type %s. All analyses must have the same analysis. Aborting', first_analysis, currmat.results.analysis);
             end
             
-            if strcmp(currmat.results.analysis, 'searchlight')
-                a{k, i} = currmat.results.(decoding_measure).output;
-                % check output format & size
-                if ~isnumeric(a{k, i})
-                    error('%s: Input measure %s is not numeric, aborting',  fnames_in{k, i}, decoding_measure)
-                elseif (size(a{k, i}, 1) ~= 1 && size(a{k, i}, 2) ~= 1) || length(size(a{k, i})) > 2
-                    size(a{k, i})
-                    error('%s: Input measure %s is not a vector but of size above, aborting', fnames_in{k, i}, decoding_measure)
-                elseif (k>1 || i>1) && length(a{k, i})~= length(a{1,1}) % check same number of entries for all input data by checking to the first
-                    error('%s: Data has a different length (%i) than the data of image 1 (%s: %i), aborting', fnames_in{k, i}, length(a{k, i}), fnames_in{1, 1}, length(a{1,1}))
-                end
-                
-                %% Load ROI/wholebrain analysis
-            elseif strcmp(lowercase(currmat.results.analysis), 'roi') || strcmp(lowercase(currmat.results.analysis), 'wholebrain')
-                error('TODO: Implement loading ROI/wholebrain loading analysis')
-                
-                %% Unkown TDT analysis
-            else
-                error('Unkown TDT analysis %s', currmat.results.analysis);
+            
+            a{k, i} = currmat.results.(decoding_measure).output;
+            % check output format & size
+            if ~isnumeric(a{k, i})
+                error('%s: Input measure %s is not numeric, aborting',  fnames_in{k, i}, decoding_measure)
+            elseif (size(a{k, i}, 1) ~= 1 && size(a{k, i}, 2) ~= 1) || length(size(a{k, i})) > 2
+                size(a{k, i})
+                error('%s: Input measure %s is not a vector but of size above, aborting', fnames_in{k, i}, decoding_measure)
+            elseif (k>1 || i>1) && length(a{k, i})~= length(a{1,1}) % check same number of entries for all input data by checking to the first
+                error('%s: Data has a different length (%i) than the data of image 1 (%s: %i), aborting', fnames_in{k, i}, length(a{k, i}), fnames_in{1, 1}, length(a{1,1}))
             end
             
             %% get transformation matrix and datainfo from loaded file
@@ -157,6 +151,17 @@ for k = 1 : N
                 catch
                     warning('Could not get datainfo from loaded mat file. This might be the case if the mat files have been created with an old version of TDT. In this case, you need to provide the orientation at the end of the function')
                     vol.datainfo = [];
+                end
+                
+                % Copy other fields that should be copied from results
+                % this will be checked for consistency between loaded files
+                % and returned in vol
+                copy_fields_to_vol = {'mask_index', 'mask_index_each', 'roi_names'};
+                for f_ind = 1:length(copy_fields_to_vol)
+                    curr_field = copy_fields_to_vol{f_ind};
+                    if isfield(currmat.results, curr_field)
+                        vol.(curr_field) = currmat.results.(curr_field);
+                    end
                 end
             end
             
@@ -177,6 +182,20 @@ for k = 1 : N
             end
         end
         
+        % check other fields for consistency
+        if exist('copy_fields_to_vol', 'var')
+            for f_ind = 1:length(copy_fields_to_vol)
+                if isfield(currmat.results, curr_field)
+                    if ~isequal(vol.(curr_field), currmat.results.(curr_field))
+                        disp(vol.(curr_field))
+                        disp(currmat.results.(curr_field))
+                        error(['prevalence_loaddatat:inconsistentField_' curr_field], ...
+                            'results.%s differ between first loaded file (%s) and current file (%s), please check.', curr_field, fnames_in{1}, fnames_in{k, i});
+                    end
+                end
+            end
+        end
+        
         fprintf('.')
     end
     fprintf('\n')
@@ -184,7 +203,7 @@ end
 % a is now a cell array of size N x P1, where each cell contains voxel
 % values in one column vector
 a = cell2mat(reshape(a, [1, N, P1]));
-% a is now a matrix of size 
+% a is now a matrix of size
 %  (number of voxels) x N (number of subjects) x P1 (number of permutations per subject)
 
 %% get mask (SPM)
@@ -202,25 +221,32 @@ if strcmp(inputformat, 'SPM')
     
     % truncate data to in-mask voxels
     a = a(mask, :, :);
- 
+    
     %% get mask (TDT)
 elseif strcmp(inputformat, 'mat')
+    
+    % we already have only the inmaskvoxels, so our job here is to create a
+    % mask image that can later be used to generate the outputimages, and
+    % not to mask all data like for SPM
+    
     if exist('mask', 'var')
-        error('External masking for TDT not implement yet, consider to simply do it afterwards')
+        error('External masking for TDT not implement yet, consider to simply mask images afterwards')
     end
     
-    if strcmp(currmat.results.analysis, 'searchlight')
-        % get mask from datainfo of last file
+    if strcmpi(currmat.results.analysis, 'ROI')
+        % save mask_index_each instead of mask
+        for m_ind = 1:length(currmat.results.mask_index_each)
+            mask{m_ind} = false(currmat.results.datainfo.dim);
+            mask{m_ind}(currmat.results.mask_index_each{m_ind}) = true;
+        end
+    elseif strcmpi(currmat.results.analysis, 'searchlight') || strcmpi(currmat.results.analysis, 'wholebrain')
         mask = false(currmat.results.datainfo.dim);
-        mask(currmat.results.mask_index) = true; % set all imboxvoxels to true
+        mask(currmat.results.mask_index) = true;
     else
-        mask = true(size(a{1})); % just use every dimension if its not a searchlight analysis
-        error('TODO: Store names of ROIs or whatever somewhere (e.g. in vol) and add description above');
+        error(['Unkown TDT results.analysis=' currmat.results.analysis]);
     end
     
     %% get mask (through error for unkown type)
 else
     error('Unkown type %s to get mask, please implement')
-end
-
 end

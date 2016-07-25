@@ -1,4 +1,4 @@
-% prevalence(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, trans_mat, decoding_measure)
+% prevalence(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, decoding_measure)
 %
 % permutation-based prevalence inference
 %
@@ -11,61 +11,67 @@
 %         2. .mat filenames (cellstr) from TDT that contain
 %                 OR
 %     Struct containing the fields
-%       inputfilenames.a:    a is datamatrix with dimensions V x N x P1, see below
-%       inputfilenames.mask: logical 1d/2d/3d matrix with size(mask) of the original image. Inmask voxels are true, outmask voxels are false. The numer of entries is always larger or equal to V, because V is the number of inmask voxels (V = sum(mask(:)));  
+%       inputfilenames.a:    a is datamatrix with dimensions V x N x P1, 
+%           (number of voxels x number of subjects x first level
+%           permutations per subject).
+%           Note that the original unpermuted result image should be passed
+%           as P1=1 for each subject.
+%       inputfilenames.mask: logical 1d/2d/3d/probably nd matrix with 
+%           size(mask) of the original data. Inmask voxels are true. The 
+%           number of entries is always larger or equal to V, because V is 
+%           the number of inmask voxels (V = sum(mask(:)));  
 %     	inputfilenames.vol:  struct with at least these fields: 
-%              .vol.dim: 1x3 vector dimension of original image, empty if not provided
-%              .vol.mat: 4x4 matrix with rotation and translation, empty if not provided
+%              .vol.dim: 1xn vector dimension of original image
+%              .vol.mat: 4x4 matrix with rotation and translation
+%                        Will be set to eye(4) if not provided
 % OPTIONAL
 %   P2:               number of second-level permutations to perform
-%   outputfilename:   output image filename, set to 'DONTWRITE' if results
-%                     should not be written
+%   outputfilename:   output image filename start. Set to 'DONTWRITE' if 
+%                     results should not be written
 %   alpha:            significance level
 %   decoding_measure: decoding measure that should be used to calculate the
 %                     prevalanced statistic (e.g. 'accuracy_minus_chance'),
 %                     for .mat files only. Only necessary if the mat file
 %                     contains multiple decoding measures.
 % OUT
-%   Results will be typically be written to the current folder staring with
-%   'prevalence'. See input argument how to suppress that.
-%   A struct with all results can be returned are passed back containing:
+%   Results will be written to the current folder staring with 'prevalence'
+%   if no outputfilename is provided (see there how to avoid that).
+%   A struct with all results can be returned, containing:
 %     all_results.mask = mask; % true where data comes from, size(mask) is size of the original image. Use e.g.
 %                              %    data = nan(size(all_results.mask));
 %                              %    data(all_results.mask) = all_results.typical;
-%                              % to reconstruct the datafields        
-%     all_results.gamma0 =  gamma0; 
-%     all_results.typical = at;
-%     all_results.vol = vol; % will contain e.g.
+%                              % to reconstruct the datafields   
+%                              % Note: For ROI analysis, mask{n_rois} is
+%                              % returned, where each mask{i} contains the
+%                              % voxels that belong to that ROI.
+%     all_results.gamma0 =  gamma0;  % the prevalence image values
+%     all_results.typical = at;      % the typical image values
+%     all_results.vol = vol; % contains infos about the data, e.g.
+%                            % transformation matrices, dimensions, roi 
+%                            % names, etc.
 %
-% Please cite as: Allefeld, Goergen, Haynes (2016). TODO: ADD TITLE AND STUFF (ADD as var citation below) Neuroimage
-% Old citation   
+% Please cite as: Allefeld, Goergen, Haynes (2016). 
+%       TODO: ADD TITLE AND STUFF (ADD as var citation below) Neuroimage
+% Old citation:   
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). Valid population 
 %       inference for information-based imaging: Information prevalence 
 %       inference. arXiv:1512.00810 [q-Bio, Stat]. 
 %       Retrieved from http://arxiv.org/abs/1512.00810
 %
-% Author: Carsten Allefeld, 2016/3/9, adaptation to TDT by Kai
+% Author: Carsten Allefeld, adaptation to TDT by Kai
+%
+% HIST:
+%   2016/07/25: Version 1.alpha for TDT based on Carstens function from 2016/3/9
 %
 % DISCLAIMER: This function is work in progress.
-%   It indeed works for TDT (and probably for SPM-files, too), but it
-%   remains to be improved.
+%   It seem to work for TDT and SPM files, but needs still to be used with
+%   care.
 
-% Changes:
-%   Kai, 2016/07/25
-%   - Added possibility to provide data directly as inputfilenames
-%   - Added possibility to load data from .mat-files
-%
-%
-% Current TODOs or restrictions:
-%   Add carstens correct GPL
-%   Issues with TDT output in .mat-files
-%       - Works only for SL maps if mat-files are used
-%   No checks there
 
 function all_results = prevalence(inputfilenames, P2, outputfilename, alpha, decoding_measure)
 
-prevalence_version = 'TDT_alpha0.5, 2016/07/25';
-citation = 'Allefeld, Goergen, Haynes (2016) Neuroimage';
+prevalence_version = 'TDT_alpha1, 2016/07/25';
+citation = 'Allefeld, Goergen, Haynes (2016) Neuroimage (TODO: Add full citation)';
 
 fprintf('\n*** prevalence ***\n\n')
 display(prevalence_version);
@@ -222,8 +228,8 @@ if strcmp(outputfilename, 'DONTWRITE')
     display('Skip writing outputfiles because outputfilename = ''DONTWRITE''')
 else
     fprintf('Writing output files...\n')
-    data = nan(size(mask));
-    data(mask) = gamma0;
+    
+    % set a default transformation matrix in case we have non
     if ~exist('vol', 'var') || ~isfield(vol, 'mat') || isempty(vol.mat)
         % check if the tranformation matrix has been provided as trans_mat
         if exist('trans_mat', 'var')
@@ -232,18 +238,26 @@ else
             warning('The transformation matrix has not been stored in the file. The transformation matrix is set to the identity, which is most likely wrong.')
             vol.mat = eye(4); % default
             if strcmp(inputformat, 'mat')
-               vol.mat(eye(4)==1) = [currmat.results.datainfo.voxelsize, 1]; % we are nice and at least have the right voxels size
+                vol.mat(eye(4)==1) = [currmat.results.datainfo.voxelsize, 1]; % we are nice and at least have the right voxels size
             end
             disp(vol.mat)
         end
     end
-
-    saveMRImage(data, [outputfilename '_gamma0.nii'], vol.mat, 'prevalence map')
-    data = nan(size(mask));
-    data(mask) = at;
-    saveMRImage(data, [outputfilename '_typical.nii'], vol.mat, 'typical map')
-    saveMRImage(uint8(mask), [outputfilename '_mask.nii'], vol.mat, 'prevalence map mask')
-    % stored mask values end up to be 1.00000005913898 instead of 1 - why?
+    
+    if iscell(mask)
+        % ROI analysis, write each ROI separately
+        for m_ind = 1:length(mask)
+            if isfield(vol, 'roi_names')
+                curr_outputfilename = [outputfilename '_' vol.roi_names{m_ind}]; % add ROI name to image
+            else
+                curr_outputfilename = [outputfilename '_mask' int2str(m_ind)]; % add mask number to image
+            end
+            prevalence_savedata_to_images(curr_outputfilename, mask{m_ind}, gamma0(m_ind), at(m_ind), vol); % save value of current ROI to all voxels of the current ROI
+        end
+    else
+        % write as is
+        prevalence_savedata_to_images(outputfilename, mask, gamma0, at, vol);
+    end
 end
 
 %% Return data 
@@ -251,7 +265,9 @@ if nargout >= 1
     all_results.mask = mask; % true where data comes from, size(mask) is size of the original image. Use e.g.
                              %    data = nan(size(all_results.mask));
                              %    data(all_results.mask) = all_results.typical;
-                             % to reconstruct the datafields        
+                             % to reconstruct the datafields
+                             % For ROI analyses, mask is a struct, which
+                             % contains the location of the ROI.
     all_results.gamma0 =  gamma0; 
     all_results.typical = at;
     all_results.vol = vol; % will contain e.g. transformation mat and other things

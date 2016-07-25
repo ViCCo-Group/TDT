@@ -1,37 +1,23 @@
-% DISCLAIMER: This function is work in progress.
-%   It indeed works for TDT (and probably for SPM-files, too), but it
-%   remains to be improved.
-%
-% Current TODOs or restrictions:
-%   Issues with TDT output in .mat-files
-%       - Works only for SL maps if mat-files are used
-%       - Cannot put the result at the correct location because the affine
-%         parameters are currently not stored stored in the mat-files
-%       - Can only deal with Searchlight results so far (not a bit issue to 
-%         implement ROI analyses as well, we just need to use the usual
-%         output format instead of only writing an image)
-%  Issues with directly providing preloaded data
-%       - Not implemented yet
-%  General potential improvement: Show remaining time in addition to passed 
-%       time (plus Carstens message that the user can stop any time).
-%
-% MAKE SURE TO UPDATE THE prevalence.m header in the end!
+% TODO MAKE SURE TO UPDATE THE prevalence.m header in the end!
 %
 %
 % This demo shows how to apply prevalence inference as statistics to a toy
-% dataset. Find further explanations about the analysis in the paper below.
+% dataset. This example shows shows you how to use images that can be read
+% with SPM (.nii or .img) or .mat result files from TDT to run an analysis 
+% (works with searchlight, ROI or wholebrain analysis). Find further 
+% explanations about the analysis in the paper below.
 %
 % If you employ the analysis, please cite as:
-%   !Please check if a newer reference is available (currently in revision 
-%                           at Neuroimage)!
-%   otherwise use:   
+%   !Please check if a newer reference is available 
+%       (just accepted at Neuroimage)!
+%   old citation:   
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). Valid population 
 %       inference for information-based imaging: Information prevalence 
 %       inference. arXiv:1512.00810 [q-Bio, Stat]. 
 %       Retrieved from http://arxiv.org/abs/1512.00810
 %
-% The code for the prevalence inference has been written by Carsten
-% Allefeld (with slight modifications for TDT by Kai).
+% The original code for the prevalence inference has been written by Carsten
+% Allefeld. Adaptation to TDT by Kai.
 
 %% Check that SPM and TDT are available on the path
 clear all
@@ -52,23 +38,28 @@ decoding_defaults; % add all important directories to the path
 %    1. .img/.nii filenames (cellstr)
 %    2. .mat filenames (cellstr) from TDT that contain
 % or
-%    3. directly 3d data in each cell
+%    3. directly 3d data as struct (see help prevalence or 
+%         demo_prevalanceInference_provide_own_data.m)
 %
 % You can use
 %    make_design_permutation()
-% to create permutations for each subject in TDT.
+% to create permutations for each subject in TDT (see e.g. demo8 and demo9)
 
-% Here, we load some example images for each of 10 subjects.
-
+%% Load data
+% Here, we load some example images for each of 10 subjects
 n_sbjs = 10;
 decoding_measure = 'accuracy_minus_chance';
 
-clear orig_* perm_*
-orig_inputdir(1:n_sbjs) = {'/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight'};
+% folder that contains the original image directly and the permuted images
+% in a "perm" subfolder (or change respective folders individually below)
+datadir = '/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight';
+
+% directories and file masks for unpermuted and permuted images
+orig_inputdir(1:n_sbjs) = {datadir};
 orig_filemask(1:n_sbjs) = {['res_' decoding_measure '.mat']}; % regular expression, for more see help spm_select
 %                                                      From  help spm_select:
 %                                                      e.g. DCM*.mat files should have a typ of '^DCM.*\.mat$'
-perm_inputdir(1:n_sbjs) = {'/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight/perm'};
+perm_inputdir(1:n_sbjs) = {fullfile(datadir, 'perm')};
 perm_filemask(1:n_sbjs) = {['^perm.*_' decoding_measure '\.mat$']}; % 
 
 inputimages = {};
@@ -98,8 +89,8 @@ display(['Writing result to ' resultfilenames '*.*']);
 
 %% Do the analysis
 % The call will start the processing. As the function says, calculation can
-% be stopped any time by closing the Figure that pops up (which might take 
-% a bit). The result at this moment in time will be saved as image.
+% be stopped any time by closing the Figure that pops up. The result at 
+% this moment in time will be saved as image and/or returned.
 
 % run prevalence analysis
 prevalence(inputimages, [], resultfilenames);
@@ -110,8 +101,13 @@ prevalence(inputimages, [], resultfilenames);
 %       positions where the majority of subject shows an effect (the median 
 %       of all accuracies)
 %   prevalence_mask.nii: The mask where permutations have been computed.
-
-% TODO: Check toy data or remove option
+%
+% If you really wish not to get write the result images to disk, use
+% all_results = prevalence(inputimages, [], 'DONTWRITE');
+%
+% For all further options, see help prevalence
+%
+% Enjoy!
 
 display('Prevalence analysis finished.')
 display(['Results in: ' resultfilenames])

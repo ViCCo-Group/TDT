@@ -73,9 +73,8 @@
 % HIST:
 %   2016/07/26: Version 0.9 (beta) for TDT based on Carstens function from 2016/3/9
 %
-% DISCLAIMER: This function is work in progress.
-%   It seem to work for TDT and SPM files, but needs still to be used with
-%   care.
+% DISCLAIMER: This function is in beta stage. It seem to work as it should,
+%   but has not been extensively tested by the public, thus use with care.
 
 
 function all_results = prevalence(inputfilenames, P2, outputfilename, alpha, decoding_measure)

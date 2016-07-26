@@ -1,23 +1,21 @@
-% TODO MAKE SURE TO UPDATE THE prevalence.m header in the end!
+% This demo shows how to apply prevalence inference as statistics. It 
+% takes SPM images (.nii or .img) or TDT .mat result as input (works for 
+% searchlight, ROI or wholebrain analysis). Further explanations about the 
+% analysis in the paper below.
 %
+% For data in a different format, see demo_prevalanceInference_provide_own_data.m
 %
-% This demo shows how to apply prevalence inference as statistics to a toy
-% dataset. This example shows shows you how to use images that can be read
-% with SPM (.nii or .img) or .mat result files from TDT to run an analysis 
-% (works with searchlight, ROI or wholebrain analysis). Find further 
-% explanations about the analysis in the paper below.
+% Please CITE as: 
+%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
+%       Valid population inference for information-based imaging: From the 
+%       second-level t-test to prevalence inference. NeuroImage. 
+%       http://doi.org/10.1016/j.neuroimage.2016.07.040
 %
-% If you employ the analysis, please cite as:
-%   !Please check if a newer reference is available 
-%       (just accepted at Neuroimage)!
-%   old citation:   
-%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). Valid population 
-%       inference for information-based imaging: Information prevalence 
-%       inference. arXiv:1512.00810 [q-Bio, Stat]. 
-%       Retrieved from http://arxiv.org/abs/1512.00810
+% A longer, more didactic, previous version of the manuscript exists here:   
+%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
 %
-% The original code for the prevalence inference has been written by Carsten
-% Allefeld. Adaptation to TDT by Kai.
+% The original code for the prevalence inference has been written by 
+% Carsten Allefeld. Adaptation to TDT by Kai. 2016/07/26
 
 %% Check that SPM and TDT are available on the path
 clear all
@@ -82,7 +80,7 @@ display('Type "dbcont" to acknowledge that you have understood the warning above
 keyboard
 
 %% Define where to save the results
-resultdir = fullfile(orig_inputdir{1}, 'prevalenceModular');
+resultdir = fullfile(orig_inputdir{1}, 'prevalenceDemo');
 mkdir(resultdir);
 resultfilenames = fullfile(resultdir, 'prevalence');
 display(['Writing result to ' resultfilenames '*.*']);

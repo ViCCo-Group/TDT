@@ -1,22 +1,19 @@
-% TODO MAKE SURE TO UPDATE THE prevalence.m header in the end!
-%
-%
 % This demo shows how to apply prevalence inference as statistics to a toy
-% dataset. This example shows you what you minimally have to do to provide
-% your own data (i.e. if you do not want to use TDT or images). Find 
+% dataset. This example shows you what you minimally have to do to PROVIDE 
+% YOUR OWN DATA (i.e. if you do not want to use TDT or images). Find 
 % further explanations about the analysis in the paper below.
 %
-% If you employ the analysis, please cite as:
-%   !Please check if a newer reference is available 
-%       (just accepted at Neuroimage)!
-%   old citation:   
-%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). Valid population 
-%       inference for information-based imaging: Information prevalence 
-%       inference. arXiv:1512.00810 [q-Bio, Stat]. 
-%       Retrieved from http://arxiv.org/abs/1512.00810
+% Please CITE as: 
+%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
+%       Valid population inference for information-based imaging: From the 
+%       second-level t-test to prevalence inference. NeuroImage. 
+%       http://doi.org/10.1016/j.neuroimage.2016.07.040
 %
-% The original code for the prevalence inference has been written by Carsten
-% Allefeld. Adaptation to TDT by Kai.
+% A longer, more didactic, previous version of the manuscript exists here:   
+%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
+%
+% The original code for the prevalence inference has been written by 
+% Carsten Allefeld. Adaptation to TDT by Kai. 2016/07/26
 
 %% Check that SPM and TDT are available on the path
 clear all
@@ -31,12 +28,12 @@ decoding_defaults; % add all important directories to the path
 inputdata = [];
 
 % Provide data description as .vol
-inputfilenames.vol.dim = [12 10 4]; % dimension of individual image (probaly larger in real data)
-inputfilenames.vol.mat = eye(4); % 4x4 affine transformation matrix mapping from voxel coordinates to real world coordinatestransformation and rotation matrix (see e.g. spm_vol)
+inputimages.vol.dim = [12 10 4]; % dimension of individual image (probaly larger in real data)
+inputimages.vol.mat = eye(4); % 4x4 affine transformation matrix mapping from voxel coordinates to real world coordinatestransformation and rotation matrix (see e.g. spm_vol)
 
 % Provide mask as .mask where the data was in the original volume (1d/2d/3d/or probably nd)
-inputfilenames.mask = false(inputfilenames.vol.dim); % initialize volume with all false
-inputfilenames.mask(:) = true; % set true were data was - in this demo, we set everything to true
+inputimages.mask = false(inputimages.vol.dim); % initialize volume with all false
+inputimages.mask(:) = true; % set true were data was - in this demo, we set everything to true
 
 % Provide data matrix as .a
 
@@ -44,7 +41,7 @@ inputfilenames.mask(:) = true; % set true were data was - in this demo, we set e
 % of course
 
 % Dimension of datamatrix V x N x P1
-V = sum(inputfilenames.mask(:)); % V is the number of voxels (or dimensions) that should be tested, must be the same like the number of trues in the mask (exception: ROI analysis: There you can set one mask per ROI and use mask as a cell, e.g. mask{roi_ind} = mask;
+V = sum(inputimages.mask(:)); % V is the number of voxels (or dimensions) that should be tested, must be the same like the number of trues in the mask (exception: ROI analysis: There you can set one mask per ROI and use mask as a cell, e.g. mask{roi_ind} = mask;
 N = 15; % number of individual subjects that you have (or units of indipendent measurements) 
 P1 = 17; % number of "first-level" permutations you have for each subject (at the moment, the code expects the same number for all subjects)
 
@@ -54,7 +51,7 @@ for sbj_ind = 1:N
     for perm_level1_ind = 1:P1
         % the first permutation P1=1 is the unpermuted real results, the rest 
         % are results from permutated analyses
-        if p == 1
+        if perm_level1_ind == 1
            display(sprintf('Setting results of original/unpermuted analysis for subject %i at a(%i, %i)', sbj_ind, sbj_ind, perm_level1_ind));
         else
            display(sprintf('Setting results or permuted analysis for subject %i at a(%i, %i)', sbj_ind, sbj_ind, perm_level1_ind));
@@ -63,10 +60,14 @@ for sbj_ind = 1:N
     end
 end
 
+% and finally we put the data to the struct
+inputimages.a = a;
+
+
 %% Define where to save the results (optional)
 % In principle, we are ready to go, but it's often nice to save your data
 % at a suitable place, so define it
-resultfiles = fullfile('myresultdir', 'prevalence'); % all files will start with that, so resultfiles should contain folder + start of filename as best practice
+resultfiles = fullfile('prevalenceDemoOwnData', 'prevalence'); % all files will start with that, so resultfiles should contain folder + start of filename as best practice
 
 %% Do the analysis
 % Run prevalence analysis, explanation below

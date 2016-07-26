@@ -27,16 +27,23 @@
 % OPTIONAL
 %   P2:               number of second-level permutations to perform
 %   outputfilename:   output image filename start. Set to 'DONTWRITE' if 
-%                     results should not be written
+%                     results should not be written. By default, results
+%                     will be written to prevalence* in the current
+%                     directory.
 %   alpha:            significance level
 %   decoding_measure: decoding measure that should be used to calculate the
 %                     prevalanced statistic (e.g. 'accuracy_minus_chance'),
 %                     for .mat files only. Only necessary if the mat file
 %                     contains multiple decoding measures.
 % OUT
-%   Results will be written to the current folder staring with 'prevalence'
-%   if no outputfilename is provided (see there how to avoid that).
-%   A struct with all results can be returned, containing:
+%   Results will be written to files (see outputfilename above). For your 
+%   convenience, the script checks if files can be written when starting, 
+%   to avoid tears on your side). Outputfiles are:
+%            _gamma0.nii: the prevalence map (gamma0)
+%           _typical.nii: the prevalence value where they are typical
+%              _mask.nii: the mask that was used
+%               _cfg.mat: all parameters necessary to restart the analysis.
+%   The result is also returned as first argument.
 %     all_results.mask = mask; % true where data comes from, size(mask) is size of the original image. Use e.g.
 %                              %    data = nan(size(all_results.mask));
 %                              %    data(all_results.mask) = all_results.typical;
@@ -44,24 +51,27 @@
 %                              % Note: For ROI analysis, mask{n_rois} is
 %                              % returned, where each mask{i} contains the
 %                              % voxels that belong to that ROI.
-%     all_results.gamma0 =  gamma0;  % the prevalence image values
-%     all_results.typical = at;      % the typical image values
+%     all_results.gamma0 = gamma0;  % the prevalence values
+%     all_results.typical = at;     % the typical prevalence values
 %     all_results.vol = vol; % contains infos about the data, e.g.
 %                            % transformation matrices, dimensions, roi 
 %                            % names, etc.
+%     all_results.prevalence_cfg: a struct that contains all parameters to
+%                                 redo the analysis.
 %
-% Please cite as: Allefeld, Goergen, Haynes (2016). 
-%       TODO: ADD TITLE AND STUFF (ADD as var citation below) Neuroimage
-% Old citation:   
-%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). Valid population 
-%       inference for information-based imaging: Information prevalence 
-%       inference. arXiv:1512.00810 [q-Bio, Stat]. 
-%       Retrieved from http://arxiv.org/abs/1512.00810
+% Please CITE as: 
+%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
+%       Valid population inference for information-based imaging: From the 
+%       second-level t-test to prevalence inference. NeuroImage. 
+%       http://doi.org/10.1016/j.neuroimage.2016.07.040
+%
+% A longer, more didactic, previous version of the manuscript exists here:   
+%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
 %
 % Author: Carsten Allefeld, adaptation to TDT by Kai
 %
 % HIST:
-%   2016/07/25: Version 1.alpha for TDT based on Carstens function from 2016/3/9
+%   2016/07/26: Version 0.9 (beta) for TDT based on Carstens function from 2016/3/9
 %
 % DISCLAIMER: This function is work in progress.
 %   It seem to work for TDT and SPM files, but needs still to be used with
@@ -70,12 +80,19 @@
 
 function all_results = prevalence(inputfilenames, P2, outputfilename, alpha, decoding_measure)
 
-prevalence_version = 'TDT_alpha1, 2016/07/25';
-citation = 'Allefeld, Goergen, Haynes (2016) Neuroimage (TODO: Add full citation)';
+prevalence_version = 'prevalence TDT 0.9 (beta), 2016/07/26';
+citation = [char(10) 'Please cite as:' char(10) ...
+'Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). Valid population' char(10) ...
+'  inference for information-based imaging: From the second-level t-test to ' char(10) ...
+'  prevalence inference. NeuroImage. ' char(10) ...
+'  http://doi.org/10.1016/j.neuroimage.2016.07.040' char(10)];
+date_started = datestr(now);
 
 fprintf('\n*** prevalence ***\n\n')
-display(prevalence_version);
-display(citation);
+disp(prevalence_version);
+disp(['Started: ' date_started])
+disp(citation);
+
 
 %% Check input arguments
 if ~exist('P2', 'var') || isempty(P2)
@@ -90,12 +107,24 @@ end
 if ~exist('decoding_measure', 'var')
     decoding_measure = '';
 end
-
+if ~exist('prevalence_cfg', 'var')
+    prevalence_cfg = [];
+end
 %% Check output arguments
 if nargout < 1 && strcmp(outputfilename, 'DONTWRITE')
     error('Files should not be written (outputfilename=''DONTWRITE'' but results are also not returned, aborting')
 end
 
+%% Check if we can write output files (otherwise better to abort here already)
+if strcmp(outputfilename, 'DONTWRITE')
+    display('No outputfiles will be written because outputfilename = ''DONTWRITE''')
+else
+    fprintf('Testing if output files can be written...\n');
+    [fdir, fname, fext] = fileparts(outputfilename);
+    if ~exist(fdir, 'dir'), [s, m] = mkdir(fdir); end
+    save([outputfilename '_test.mat'], 'date_started'); % test if we can save something, here the start date
+    delete([outputfilename '_test.mat']);
+end
 %% load and prepare accuracies
 if iscellstr(inputfilenames)
     if exist('decoding_measure', 'var')
@@ -223,12 +252,38 @@ at = nan(V, 1);
 % where the majority show an effect, compute median
 at(gamma0 >= 0.5) = median(a(gamma0 >= 0.5, :, 1), 2);
 
+%% gather and save parameters
+% save filenames or info that data has been passed directly
+try
+    if iscellstr(inputfilenames)
+        prevalence_cfg.inputfilenames = inputfilenames;
+    else
+        prevalence_cfg.inputfilenames = sprintf('No filenames have been provided, but a data matrix directly (size data matrix a [V x N x P1]: [%s], size mask: [%s]. See prevalence_cfg.dbstack(2) which function provided the data.', num2str(size(a)), num2str(size(mask)));
+    end
+    prevalence_cfg.dbstack = dbstack; % caller functions
+    prevalence_cfg.datestr_started = datestr(date_started);
+    prevalence_cfg.datestr_finished = datestr(now);
+    prevalence_cfg.P2 = P2;
+    prevalence_cfg.outputfilename = outputfilename;
+    prevalence_cfg.alpha = alpha;
+    if exist('decoding_measure', 'var'), prevalence_cfg.decoding_measure = decoding_measure; end
+    
+    % write to file
+    if ~strcmp(outputfilename, 'DONTWRITE')
+        prevalence_cfg_file = [outputfilename '_cfg.mat'];
+        display(['Saving parameters to  ' prevalence_cfg_file]);
+        save(prevalence_cfg_file, 'prevalence_cfg');
+    end
+catch e
+    try e.getReport, end %#ok<TRYNC>
+    keyboard
+    warning('prevalence:writing_config_failed', 'Could not write config file for prevalence, please check why.')
+end
+
 %% save results to disk
 if strcmp(outputfilename, 'DONTWRITE')
     display('Skip writing outputfiles because outputfilename = ''DONTWRITE''')
 else
-    fprintf('Writing output files...\n')
-    
     % set a default transformation matrix in case we have non
     if ~exist('vol', 'var') || ~isfield(vol, 'mat') || isempty(vol.mat)
         % check if the tranformation matrix has been provided as trans_mat
@@ -279,6 +334,9 @@ if nargout >= 1
                         'typical: typical map';
                         'mask:    original volume use e.g. as data = nan(size(all_results.mask)); data(all_results.mask) = all_results.typical; to reconstruct';
                         };
+    all_results.prevalence_cfg = prevalence_cfg;
 end
 %% Done
+disp(prevalence_version);
+disp(citation);
 display('Prevalence done')

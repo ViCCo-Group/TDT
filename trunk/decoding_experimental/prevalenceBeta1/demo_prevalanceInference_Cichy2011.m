@@ -27,8 +27,8 @@
 % A longer, more didactic, previous version of the manuscript exists here:   
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
 %
-% The original code for the prevalence inference has been written by 
-% Carsten Allefeld. Adaptation to TDT by Kai. 2016/07/26
+% Author: Demos and adaption to TDT by Kai, original prevalence code by 
+%   Carsten Allefeld. 2016/08/02
 
 %% Check that SPM and TDT are available on the path
 clear all

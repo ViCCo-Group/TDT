@@ -142,118 +142,13 @@ end
 
 
 %% generate second-level permutations
-fh = figure('name', 'Prevalence analysis');
-title({'Prevalence', 'Close window to stop and wait for the results (that then will take a bit)'})
-drawnow
 
-% get dimensions of inputdata
-[V, N, P1] = size(a); %: V: number of inmask voxels, N: number of subjects, P1: number of permutations per subject (have to be all the same at the moment)
-fprintf('\ngenerating %d of %d permutations\n\n', P2, P1 ^ N)
-fprintf('computation can be stopped by closing output window\n\n')
-gamma0max = alpha^(1/N);
-nPermsReport = 10000;
-uRank = zeros(1, V);
-cRank = zeros(1, V);
-tic
-for j = 1 : P2
-    % select first-level permutations
-    if j == 1
-        % neutral permutations
-        sp = ones(N, 1);
-    else
-        % randomly selected permutations
-        sp = randi(P1, N, 1);
-    end
-    % select permutation values for each subject
-    ind = sub2ind([N, P1], (1 : N)', sp);
-    
-    % test statistic: minimum across subjects
-    m = min(a(:, ind)');                                                        %#ok<UDIM>
-    % store result of neutral permutation,
-    % i.e. actual value, for each voxel
-    if j == 1
-        m1 = m;
-    end
-    
-    % compare actual value with permutation value
-    % for each voxel separately:
-    % determines uncorrected p-values for global null
-    uRank = uRank + (m >= m1);
-    % compare actual value at each voxel
-    % with maximum of permutation values across voxels:
-    % determines corrected p-values for global null
-    cRank = cRank + (max(m) >= m1);
-    
-    % compute and report results
-    if (mod(j, nPermsReport) == 0) || (j == P2)
-        drawnow
-        stop = (j == P2) || ~ishandle(fh);
-        
-        % uncorrected p-values for global null hypothesis
-        puGN = uRank / j;
-        % corrected p-values for global null hypothesis
-        pcGN = cRank / j;
-        % corrected significance level for global null hypothesis
-        alphac = (alpha - pcGN) ./ (1 - pcGN);
-        % significant voxels for global null hypothesis
-        sigGN = (puGN <= alphac);      % not necessarily the same as (pcGN <= alpha)!
-        % lower bound for gamma
-        alphac(~sigGN) = nan;
-        gamma0 = (alphac .^ (1/N) - puGN .^ (1/N)) ./ (1 - puGN .^ (1/N));
-        
-%         gamma0_c = 0.5;
-%         % uncorrected p-values for prevalence null hypothesis
-%         puPN = ((1 - gamma0_c) * puGN .^ (1/N) + gamma0_c) .^ N;
-%         % corrected p-values for prevalence null hypothesis
-%         pcPN = pcGN + (1 - pcGN) .* puPN;
-        
-        % print
-        fprintf('\n  %d permutations  = %.1f %%,  in %.1f min\n', ...
-            j, j / P2 * 100, toc / 60)
-        fprintf('    minimal uncorrected rank: %d, reached at %d voxels\n', min(uRank), sum(uRank == min(uRank)))
-        fprintf('    minimal corrected rank: %d, reached at %d voxels\n', min(cRank), sum(cRank == min(cRank)))
-        fprintf('    minimal uncorrected p-value for global null: %g\n', min(puGN))
-        fprintf('    minimal corrected p-value for global null: %g\n', min(pcGN))
-        fprintf('    significant voxels for global null: %d\n', sum(sigGN))
-        fprintf('    maximal prevalence: %g\n', max(gamma0))
-        fprintf('\n')
-        
-        % plot
-        if ~ishandle(fh)
-            fh = figure('name', 'Prevalence analysis');
-        else
-            figure(fh)
-            clf
-        end
-        % plot prevalences
-        plot(gamma0, '.')
-        line([0, V + 1], gamma0max * [1 1], 'Color', 'k')
-        xlim([0, V + 1])
-        xlabel('voxel')
-        ylabel('\gamma_0')
-        title({'Prevalence', 'Close window to stop and wait for the results (can take a bit)'})
-        
-        drawnow
-        if stop
-            fprintf('stopping, please wait...\n')
-            break
-        end
-    end
-    
-end
-if nargout == 0
-    clear gamma0max
-end
-
-%% determine typical above-chance accuracies
-V = size(a, 1);
-at = nan(V, 1);
-% where the majority show an effect, compute median
-at(gamma0 >= 0.5) = median(a(gamma0 >= 0.5, :, 1), 2);
+[results, params] = prevalenceCore(a, P2, alpha);
 
 %% gather and save parameters
 % save filenames or info that data has been passed directly
 try
+    prevalence_cfg.params = params;
     if iscellstr(inputfilenames)
         prevalence_cfg.inputfilenames = inputfilenames;
     else
@@ -262,9 +157,7 @@ try
     prevalence_cfg.dbstack = dbstack; % caller functions
     prevalence_cfg.datestr_started = datestr(date_started);
     prevalence_cfg.datestr_finished = datestr(now);
-    prevalence_cfg.P2 = P2;
     prevalence_cfg.outputfilename = outputfilename;
-    prevalence_cfg.alpha = alpha;
     if exist('decoding_measure', 'var'), prevalence_cfg.decoding_measure = decoding_measure; end
     
     % write to file
@@ -298,7 +191,9 @@ else
         end
     end
     
+    % Check if ROI analysis or normal analys
     if iscell(mask)
+        
         % ROI analysis, write each ROI separately
         for m_ind = 1:length(mask)
             if isfield(vol, 'roi_names')
@@ -306,34 +201,37 @@ else
             else
                 curr_outputfilename = [outputfilename '_mask' int2str(m_ind)]; % add mask number to image
             end
-            prevalence_savedata_to_images(curr_outputfilename, mask{m_ind}, gamma0(m_ind), at(m_ind), vol); % save value of current ROI to all voxels of the current ROI
+            prevalence_savedata_to_images(curr_outputfilename, mask{1}, vol, results, m_ind); % save value of current ROI to all voxels of the current ROI
         end
     else
-        % write as is
-        prevalence_savedata_to_images(outputfilename, mask, gamma0, at, vol);
+        
+        % normal anlysis, write all fields to one image
+        prevalence_savedata_to_images(outputfilename, mask, vol, results);
     end
+end
+
+%% Write params as extra txt/mat file
+try
+    params_txtfile = [outputfilename '_params.txt'];
+    display(['Trying to write parameters to text file ' params_txtfile ])
+    writetable(struct2table(params), params_txtfile); % works from matlab 2013b
+catch
+    warning('Writing parameters to txt file failed, maybe because matlab is too old (should work from 2013b). Use the parameters from the .mat file')
 end
 
 %% Return data 
 if nargout >= 1
-    all_results.mask = mask; % true where data comes from, size(mask) is size of the original image. Use e.g.
-                             %    data = nan(size(all_results.mask));
-                             %    data(all_results.mask) = all_results.typical;
-                             % to reconstruct the datafields
-                             % For ROI analyses, mask is a struct, which
-                             % contains the location of the ROI.
-    all_results.gamma0 =  gamma0; 
-    all_results.typical = at;
+    all_results = results;
+    all_results.prevalence_cfg = prevalence_cfg; % contains params    
     all_results.vol = vol; % will contain e.g. transformation mat and other things
     all_results.info = {'Prevalence result, see ';
                         citation;
                         prevalence_version;
                         datestr(now);
-                        'gamma0:  prevalance map';
-                        'typical: typical map';
-                        'mask:    original volume use e.g. as data = nan(size(all_results.mask)); data(all_results.mask) = all_results.typical; to reconstruct';
+                        'gamma0:   prevalance map';
+                        'aTypical: typical map';
+                        'mask:     original volume, use to reconstruct data, e.g. as data = nan(size(all_results.mask)); data(all_results.mask) = all_results.typical;';
                         };
-    all_results.prevalence_cfg = prevalence_cfg;
 end
 %% Done
 disp(prevalence_version);

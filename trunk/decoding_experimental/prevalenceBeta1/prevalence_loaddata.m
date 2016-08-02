@@ -55,7 +55,7 @@ end
 [fd, fn, ext] = fileparts(fnames_in{1});
 if  strcmp(ext, '.mat')
     inputformat = 'mat';
-elseif strcmp(ext, '.img') || strcmp(ext, '.nii') || strcmp(ext, '.hdr')
+elseif strcmp(ext, '.img') || strcmp(ext, '.nii') || strcmp(ext, '.hdr') || strcmp(ext, '.gz')
     inputformat = 'SPM';
 else
     error('prevalence_loaddata:unkown_dataformat', 'Unkown extension "%s", please implement detection and loading', ext);
@@ -92,9 +92,18 @@ for k = 1 : N
         
         %% Read SPM
         if strcmp(inputformat, 'SPM')
-            vol = spm_vol(fnames_in{k, i});
+            curr_fname = fnames_in{k, i};
+            gz = strcmp(ext, '.gz'); % gzipped image?
+            if gz
+                curr_fname = gunzip(curr_fname, tempdir);   % gunzip to temporary directory
+                curr_fname = curr_fname{1};
+            end
+            vol = spm_vol(curr_fname);
             Y = spm_read_vols(vol);
             a{k, i} = Y(:);
+            if gz
+                delete(curr_fname); % delete temporary file again
+            end
             
             %% Read TDT
         elseif strcmp(inputformat, 'mat')

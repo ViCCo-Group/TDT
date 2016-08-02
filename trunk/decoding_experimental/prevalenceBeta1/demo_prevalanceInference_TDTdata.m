@@ -3,7 +3,10 @@
 % searchlight, ROI or wholebrain analysis). Further explanations about the 
 % analysis in the paper below.
 %
-% For data in a different format, see demo_prevalanceInference_provide_own_data.m
+% For data in a different format, see 
+%    demo_prevalanceInference_provide_own_data.m
+% For the data analysis from the paper, see 
+%    demo_prevalanceInference_Cichy2011.m
 %
 % Please CITE as: 
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
@@ -23,6 +26,10 @@ clear all
 if isempty(which('SPM')), error('Please add SPM to the path and restart'), end
 if isempty(which('decoding_defaults')), error('Please add TDT to the path and restart'), end
 decoding_defaults; % add all important directories to the path
+
+%% Settings
+
+P2 = 20000; % number of 2nd level permutations, should be put to something like 1e6 or 1e7 for a real analysis
 
 %% Inputdata
 
@@ -51,6 +58,7 @@ decoding_measure = 'accuracy_minus_chance';
 % folder that contains the original image directly and the permuted images
 % in a "perm" subfolder (or change respective folders individually below)
 datadir = '/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight';
+if ~exist(datadir, 'dir'), error('Could not find directory %s, please check', datadir); end
 
 % directories and file masks for unpermuted and permuted images
 orig_inputdir(1:n_sbjs) = {datadir};
@@ -65,17 +73,27 @@ for sbj = 1:n_sbjs
     % get the original unpermuted result image as first image (required by the package)
     orig_image = cellstr(spm_select('FPList',orig_inputdir{sbj},orig_filemask{sbj}));
     if length(orig_image) ~= 1
-        error('There should be exactly 1 unpermuted image, but we found %i, please check', length(orig_image))
+        error('There should be exactly 1 unpermuted input file for %s, but we found %i, please check', orig_image, length(orig_image))
+    elseif isempty(orig_image{1})
+        error('No file found for %s %s, please check', orig_inputdir{sbj}, orig_filemask{sbj}, length(orig_image))
     end
     inputimages(sbj, 1) = orig_image;
     
     % put permuted images afterwards
     permuted_images = cellstr(spm_select('FPList',perm_inputdir{sbj},perm_filemask{sbj}));
+    if length(permuted_images) == 1 && isempty(permuted_images{1})
+        error('  No permuted images found for sbj %i with %s %s', sbj, perm_inputdir{sbj},perm_filemask{sbj});
+    else
+        display(sprintf('  Found %i permuted images for sbj %i', length(permuted_images), sbj));
+    end
+    
     inputimages(sbj, 2:length(permuted_images)+1) = permuted_images;
 end
 
 warning(['In this demo, we use the same images for all "sbjs". ' ...
-    'In a real analysis the data should of course be different for every subj!'])
+    'In a real analysis the data should of course be different for every subj! ' ...
+    'We also use a unrealistic low number of second level permutations (P2=' int2str(P2) '). ', ...
+    'You should clearly increase that for a real analysis. See prevalenceCore.m and the paper.'])
 display('Type "dbcont" to acknowledge that you have understood the warning above')
 keyboard
 
@@ -91,19 +109,15 @@ display(['Writing result to ' resultfilenames '*.*']);
 % this moment in time will be saved as image and/or returned.
 
 % run prevalence analysis
-prevalence(inputimages, [], resultfilenames);
+prevalence(inputimages, P2, resultfilenames);
 
-% The function returns three images: 
-%   prevalence_gamma0.nii: The prevalance value, see paper
-%   prevalence_typical.nii: The typical above-chance accuracies at
-%       positions where the majority of subject shows an effect (the median 
-%       of all accuracies)
-%   prevalence_mask.nii: The mask where permutations have been computed.
+% The function returns images with the resuilts. See prevalenceCore.m for
+% information about the output files.
 %
-% If you really wish not to get write the result images to disk, use
+% If you really wish not to write the result images to disk, use
 % all_results = prevalence(inputimages, [], 'DONTWRITE');
 %
-% For all further options, see help prevalence
+% For all further options, see help prevalence.m
 %
 % Enjoy!
 

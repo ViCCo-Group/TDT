@@ -2,6 +2,9 @@
 % dataset. This example shows you what you minimally have to do to PROVIDE 
 % YOUR OWN DATA (i.e. if you do not want to use TDT or images). Find 
 % further explanations about the analysis in the paper below.
+% 
+% Alternatively, consider taking the corre code from github directly:
+%   https://github.com/allefeld/prevalence-permutation
 %
 % Please CITE as: 
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 

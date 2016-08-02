@@ -1,3 +1,13 @@
+* 3.93 - 2016/08/02
+- Prevalence Inference added. For details, see
+  Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
+      Valid population inference for information-based imaging: From the 
+      second-level t-test to prevalence inference. NeuroImage. 
+      http://doi.org/10.1016/j.neuroimage.2016.07.040
+- Fixed premutation for xclass_cv designs
+- Demos for creating permutation designs and using our demo data
+- Improved figure handling for plotting selected voxels
+
 * 3.91 - 2016/07/09
 - Minor bugfix in decoding_example_afni.m
 

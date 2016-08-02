@@ -1,6 +1,10 @@
-% prevalence(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, decoding_measure)
+% prevalenceTDT(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, decoding_measure)
 %
-% permutation-based prevalence inference
+% This function is adapted from the original prevalence.m function from 
+%   https://github.com/allefeld/prevalence-permutation/
+% to perform permutation-based prevalence inference with TDT.
+%
+% See the demo_prevalence*.m files for more information on how to use.
 %
 % IN
 %   inputfilenames: EITHER
@@ -68,18 +72,18 @@
 % A longer, more didactic, previous version of the manuscript exists here:   
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
 %
-% Author: Carsten Allefeld, adaptation to TDT by Kai
-%
+% Author: Kai, adapted from Code by Carsten Allefeld
+
 % HIST:
-%   2016/07/26: Version 0.9 (beta) for TDT based on Carstens function from 2016/3/9
+%   2016/08/02: Version beta 1 for TDT based on Carstens function from  2016/08/02
 %
 % DISCLAIMER: This function is in beta stage. It seem to work as it should,
 %   but has not been extensively tested by the public, thus use with care.
 
 
-function all_results = prevalence(inputfilenames, P2, outputfilename, alpha, decoding_measure)
+function all_results = prevalenceTDT(inputfilenames, P2, outputfilename, alpha, decoding_measure)
 
-prevalence_version = 'prevalence TDT 0.9 (beta), 2016/07/26';
+prevalence_version = 'prevalence TDT beta 1, 2016/08/02';
 citation = [char(10) 'Please cite as:' char(10) ...
 'Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). Valid population' char(10) ...
 '  inference for information-based imaging: From the second-level t-test to ' char(10) ...

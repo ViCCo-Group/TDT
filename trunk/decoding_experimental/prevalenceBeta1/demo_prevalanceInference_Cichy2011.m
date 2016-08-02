@@ -9,6 +9,10 @@
 %   demo_prevalanceInference_provide_own_data.m
 % or the github page: https://github.com/allefeld/prevalence-permutation
 %
+% To run the script, DOWNLOAD the INPUT DATA Cichy2011 here:
+%   https://github.com/allefeld/cichy-2011-category-smoothedaccuracy/releases
+% Unzip it, and adapt the input path below accordingly.
+% 
 % If you like, you can compare the results of this script (with the same 
 % paramters and the same seed) to the results saved in 
 % prevalenceResultsDemoCichy11.zip contained in this folder. See comment at

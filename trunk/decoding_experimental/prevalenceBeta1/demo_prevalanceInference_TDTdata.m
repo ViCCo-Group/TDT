@@ -109,7 +109,7 @@ display(['Writing result to ' resultfilenames '*.*']);
 % this moment in time will be saved as image and/or returned.
 
 % run prevalence analysis
-prevalence(inputimages, P2, resultfilenames);
+prevalenceTDT(inputimages, P2, resultfilenames);
 
 % The function returns images with the resuilts. See prevalenceCore.m for
 % information about the output files.

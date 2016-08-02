@@ -74,7 +74,7 @@ resultfiles = fullfile('prevalenceDemoOwnData', 'prevalence'); % all files will 
 
 %% Do the analysis
 % Run prevalence analysis, explanation below
-prevalence(inputimages, [], resultfiles);
+prevalenceTDT(inputimages, [], resultfiles);
 
 % The function returns three images: 
 %   prevalence_gamma0.nii: The prevalance value, see paper

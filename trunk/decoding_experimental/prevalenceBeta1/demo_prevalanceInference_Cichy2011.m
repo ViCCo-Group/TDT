@@ -9,7 +9,12 @@
 %   demo_prevalanceInference_provide_own_data.m
 % or the github page: https://github.com/allefeld/prevalence-permutation
 %
-% Please CITE as: 
+% If you like, you can compare the results of this script (with the same 
+% paramters and the same seed) to the results saved in 
+% prevalenceResultsDemoCichy11.zip contained in this folder. See comment at
+% the end of this file. 
+%
+% Please CITE prevalence analysis as: 
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
 %       Valid population inference for information-based imaging: From the 
 %       second-level t-test to prevalence inference. NeuroImage. 
@@ -72,7 +77,7 @@ display(['Writing result to ' resultfilenames '*.*']);
 % this moment in time will be saved as image and/or returned.
 
 % run prevalence analysis
-prevalence(inputimages, P2, resultfilenames);
+prevalenceTDT(inputimages, P2, resultfilenames);
 
 % The function returns images with the resuilts. See prevalenceCore.m for
 % information about the output files.
@@ -102,6 +107,10 @@ display(['Results in: ' resultfilenames])
 % The checksums here have been produced with SPM12b (6080) and Matlab 2015a
 % on 2016/08/01.
 %
+% If the md5 checksums are not the same as you find below, check if the 
+% content is the same -- the checksums could be different just because e.g.
+% informations in the header are different.
+%
 % $/TDT/prevalenceResultsDemoCichy11$ md5sum *.nii
 % 217d4eaef80b138a0828ad85c6e64c7a  prevalence_aTypical.nii
 % 4d6d3f4e6d36e72972d54cf2c71f8661  prevalence_gamma0.nii
@@ -110,6 +119,3 @@ display(['Results in: ' resultfilenames])
 % 57dd6fde6c75a83c25ede268e0950d53  prevalence_pcMN.nii
 % aa8ab2b4e5ed54f87c16b1fb64e6792f  prevalence_puGN.nii
 % e295fd5d97d5f3ccc6f3fbf31d4ddeef  prevalence_puMN.nii
-
-
-

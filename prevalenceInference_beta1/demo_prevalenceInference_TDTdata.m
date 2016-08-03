@@ -49,6 +49,9 @@ P2 = 20000; % number of 2nd level permutations, should be put to something like 
 % You can use
 %    make_design_permutation()
 % to create permutations for each subject in TDT (see e.g. demo8 and demo9)
+% or you can download searchlight, wholebrain and ROI example data here:
+%    https://sites.google.com/site/tdtdecodingtoolbox/home/download
+% and then demo_prevalenceInference_TDTdata_demodata.zip.
 
 %% Load data
 % Here, we load some example images for each of 10 subjects
@@ -57,6 +60,7 @@ decoding_measure = 'accuracy_minus_chance';
 
 % folder that contains the original image directly and the permuted images
 % in a "perm" subfolder (or change respective folders individually below)
+% see above how to generate or where to download the data
 datadir = '/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight';
 if ~exist(datadir, 'dir'), error('Could not find directory %s, please check', datadir); end
 
@@ -124,7 +128,31 @@ prevalenceTDT(inputimages, P2, resultfilenames);
 display('Prevalence analysis finished.')
 display(['Results in: ' resultfilenames])
 
+%% Compare resulted .nii files to provide files, if these exist
 
+% Set directory to existing result files, see below for the download link
+compare_dir = '';
+if isempty(compare_dir)
+    display('If you want to compare the results, please set compare_dir above to the directory that contains the data')
+    display('You can download the result files here: https://sites.google.com/site/tdtdecodingtoolbox/home/download/prevalenceResultsDemoCichy11.zip?attredirects=0&d=1')
+    break
+end
 
+display(['Comparing new files to ' compare_dir])
+compare_files = dir(fullfile(compare_dir, '*.nii'));
 
+if isempty(compare_files)
+    error('No *.nii files found in %s, please check', compare_dir)
+end
 
+for c_ind = 1:length(compare_files)
+    c1_file = fullfile(compare_dir, compare_files(c_ind).name);
+    c2_file = fullfile(resultdir, compare_files(c_ind).name);
+    display(['Comparing ' compare_files(c_ind).name])
+    [all_same,diff_vol,diff_ind,maxabs_diff] = compare_volumes({c1_file, c2_file});
+    if ~all_same
+        warning('Found some differences (maximal absolute diff = %g) between %s and %s, please check', maxabs_diff, c1_file, c2_file)
+    end
+end
+
+display('All done')

@@ -93,7 +93,7 @@ for i_step = 1:n_step
     dv  = decoding_out(i_step).decision_values;
     
     if isequal(all_labels(:),test_labels(:)) % each label occurs only once and in the correct order
-        acc = acc + mean((sum(dv.*M>0)./sum(occurrence)));
+        acc(i_step) = mean((sum(dv.*M>0)./sum(occurrence)));
     else
         % get the index of occurrence of all instances
         [~,idx] = ismember(test_labels,ulabel);
@@ -105,10 +105,10 @@ for i_step = 1:n_step
         % It respects the order of occurrence of each label and will
         % rearrange the matrix M accordingly (or increase its size if
         % there are multiple occurrences of each)
-        acc = acc + mean(sum(dv.*M(idx,:)>0)./sum(occurrence(idx,:)));
+        acc(i_step) = mean(sum(dv.*M(idx,:)>0)./sum(occurrence(idx,:)));
         
     end
     
 end
 
-output = 100*acc/n_step; % get mean accuracy by dividing sum by number of occurrences and arrange in right format
+output = 100*sum(acc)/n_step; % get mean accuracy by dividing sum by number of occurrences and arrange in right format

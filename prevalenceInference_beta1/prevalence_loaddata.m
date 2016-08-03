@@ -122,7 +122,7 @@ for k = 1 : N
                     error('%s: Found multiple decoding measures (above), please provide one of those as argument to the function', fnames_in{k, i})
                 else
                     decoding_measure = fnames{decoding_measure_ind};
-                    dispv(1, '%s: Detected decoding measure: %s, using this for prevalance analysis', fnames_in{k, i}, decoding_measure);
+                    dispv(1, '%s: Detected decoding measure: %s, using this for prevalence analysis', fnames_in{k, i}, decoding_measure);
                 end
                 clear fnames decoding_measure_ind
             end

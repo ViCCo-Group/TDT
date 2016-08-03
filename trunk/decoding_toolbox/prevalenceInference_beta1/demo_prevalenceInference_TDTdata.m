@@ -4,9 +4,9 @@
 % analysis in the paper below.
 %
 % For data in a different format, see 
-%    demo_prevalanceInference_provide_own_data.m
+%    demo_prevalenceInference_provide_own_data.m
 % For the data analysis from the paper, see 
-%    demo_prevalanceInference_Cichy2011.m
+%    demo_prevalenceInference_Cichy2011.m
 %
 % Please CITE as: 
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
@@ -22,7 +22,6 @@
 
 
 %% Check that SPM and TDT are available on the path
-clear all
 
 if isempty(which('SPM')), error('Please add SPM to the path and restart'), end
 if isempty(which('decoding_defaults')), error('Please add TDT to the path and restart'), end
@@ -45,7 +44,7 @@ P2 = 20000; % number of 2nd level permutations, should be put to something like 
 %    2. .mat filenames (cellstr) from TDT that contain
 % or
 %    3. directly 3d data as struct (see help prevalence or 
-%         demo_prevalanceInference_provide_own_data.m)
+%         demo_prevalenceInference_provide_own_data.m)
 %
 % You can use
 %    make_design_permutation()

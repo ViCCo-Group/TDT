@@ -20,7 +20,6 @@
 
 
 %% Check that SPM and TDT are available on the path
-clear all
 
 if isempty(which('SPM')), error('Please add SPM to the path and restart'), end
 if isempty(which('decoding_defaults')), error('Please add TDT to the path and restart'), end
@@ -78,7 +77,7 @@ resultfiles = fullfile('prevalenceDemoOwnData', 'prevalence'); % all files will 
 prevalenceTDT(inputimages, [], resultfiles);
 
 % The function returns three images: 
-%   prevalence_gamma0.nii: The prevalance value, see paper
+%   prevalence_gamma0.nii: The prevalence value, see paper
 %   prevalence_typical.nii: The typical above-chance accuracies at
 %       positions where the majority of subject shows an effect (the median 
 %       of all accuracies)

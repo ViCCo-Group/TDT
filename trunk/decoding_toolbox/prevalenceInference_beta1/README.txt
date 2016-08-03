@@ -18,11 +18,11 @@ on https://github.com/allefeld/prevalence-permutation/releases.
 
 Demonstrations how to use it can be found in
 
-   demo_prevalanceInference_TDTdata.m
-   demo_prevalanceInference_provide_own_data.m
+   demo_prevalenceInference_TDTdata.m
+   demo_prevalenceInference_provide_own_data.m
 
 The file
-   demo_prevalanceInference_Chicy2011.m
+   demo_prevalenceInference_Cichy2011.m
 can be used to run the same analysis that is also in the paper.
 The results of that file can be compared to the content of
    prevalenceResultsDemoCichy11.zip
@@ -33,9 +33,9 @@ The original version of the code, that ca be found at
 is included as 
    prevalence-permutation-1.0.0_org.zip 
 in this folder. It also contains a prevalenceTest.m function that 
-effectively calculates the same as demo_prevalanceInference_Chicy2011.m, 
+effectively calculates the same as demo_prevalenceInference_Cichy2011.m, 
 but writes slightly different headers and thus does not produce the exact 
-same checksum.
+same files when comparing them directly.
 
 Please CITE prevalence analysis as: 
   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 

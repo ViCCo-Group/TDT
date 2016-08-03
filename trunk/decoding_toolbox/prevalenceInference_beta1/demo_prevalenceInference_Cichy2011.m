@@ -5,8 +5,8 @@
 % Further explanations about the analysis in the paper below.
 %
 % For how to use TDT data or your own data, see 
-%   demo_prevalanceInference_TDTdata.m
-%   demo_prevalanceInference_provide_own_data.m
+%   demo_prevalenceInference_TDTdata.m
+%   demo_prevalenceInference_provide_own_data.m
 % or the github page: https://github.com/allefeld/prevalence-permutation
 %
 % To run the script, DOWNLOAD the INPUT DATA Cichy2011 here:
@@ -31,7 +31,6 @@
 %   Carsten Allefeld. 2016/08/02
 
 %% Check that SPM and TDT are available on the path
-clear all
 
 if isempty(which('SPM')), error('Please add SPM to the path and restart'), end
 if isempty(which('decoding_defaults')), error('Please add TDT to the path and restart'), end

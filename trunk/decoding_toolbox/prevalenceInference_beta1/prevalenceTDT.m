@@ -36,7 +36,7 @@
 %                     directory.
 %   alpha:            significance level
 %   decoding_measure: decoding measure that should be used to calculate the
-%                     prevalanced statistic (e.g. 'accuracy_minus_chance'),
+%                     prevalenced statistic (e.g. 'accuracy_minus_chance'),
 %                     for .mat files only. Only necessary if the mat file
 %                     contains multiple decoding measures.
 % OUT
@@ -120,7 +120,7 @@ end
 
 %% Check if we can write output files (otherwise better to abort here already)
 if strcmp(outputfilename, 'DONTWRITE')
-    display('No outputfiles will be written because outputfilename = ''DONTWRITE''')
+    disp('No outputfiles will be written because outputfilename = ''DONTWRITE''')
 else
     fprintf('Testing if output files can be written...\n');
     [fdir, fname, fext] = fileparts(outputfilename);
@@ -136,7 +136,7 @@ if iscellstr(inputfilenames)
         
     end
 elseif isstruct(inputfilenames)
-    display('Data seem loaded already, using fields from provided struct without checking anything');
+    disp('Data seem loaded already, using fields from provided struct without checking anything');
     a = inputfilenames.a; % a is datamatrix with dimensions V x N x P1, see below
     mask = inputfilenames.mask; % logical 1d/2d/3d matrix with size(mask) of the original image. Inmask voxels are true, outmask voxels are false. The numer of entries is always larger or equal to V, because V is the number of inmask voxels (V = sum(mask(:)));  
     vol = inputfilenames.vol; % .volneeds to contain at least these fields: 
@@ -167,7 +167,7 @@ try
     % write to file
     if ~strcmp(outputfilename, 'DONTWRITE')
         prevalence_cfg_file = [outputfilename '_cfg.mat'];
-        display(['Saving parameters to  ' prevalence_cfg_file]);
+        disp(['Saving parameters to  ' prevalence_cfg_file]);
         save(prevalence_cfg_file, 'prevalence_cfg');
     end
 catch e
@@ -178,7 +178,7 @@ end
 
 %% save results to disk
 if strcmp(outputfilename, 'DONTWRITE')
-    display('Skip writing outputfiles because outputfilename = ''DONTWRITE''')
+    disp('Skip writing outputfiles because outputfilename = ''DONTWRITE''')
 else
     % set a default transformation matrix in case we have non
     if ~exist('vol', 'var') || ~isfield(vol, 'mat') || isempty(vol.mat)
@@ -217,7 +217,7 @@ end
 %% Write params as extra txt/mat file
 try
     params_txtfile = [outputfilename '_params.txt'];
-    display(['Trying to write parameters to text file ' params_txtfile ])
+    disp(['Trying to write parameters to text file ' params_txtfile ])
     writetable(struct2table(params), params_txtfile); % works from matlab 2013b
 catch
     warning('Writing parameters to txt file failed, maybe because matlab is too old (should work from 2013b). Use the parameters from the .mat file')
@@ -232,7 +232,7 @@ if nargout >= 1
                         citation;
                         prevalence_version;
                         datestr(now);
-                        'gamma0:   prevalance map';
+                        'gamma0:   prevalence map';
                         'aTypical: typical map';
                         'mask:     original volume, use to reconstruct data, e.g. as data = nan(size(all_results.mask)); data(all_results.mask) = all_results.typical;';
                         };
@@ -240,4 +240,4 @@ end
 %% Done
 disp(prevalence_version);
 disp(citation);
-display('Prevalence done')
+disp('Prevalence done')

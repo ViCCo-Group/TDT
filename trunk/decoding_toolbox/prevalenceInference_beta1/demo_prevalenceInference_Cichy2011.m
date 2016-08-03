@@ -10,7 +10,7 @@
 % or the github page: https://github.com/allefeld/prevalence-permutation
 %
 % To run the script, DOWNLOAD the INPUT DATA Cichy2011 here:
-%   https://github.com/allefeld/cichy-2011-category-smoothedaccuracy/releases
+%   https://github.com/allefeld/cichy-2011-category-smoothedaccuracy
 % Unzip it, and adapt the input path below accordingly.
 % 
 % If you like, you can compare the results of this script (with the same 
@@ -45,8 +45,13 @@ warning(['In this demo, we use an unrealistic low number of second level permuta
     'You should clearly increase that for a real analysis. ', ...
     'You should also remove the randomization seed that we set above.', ...
     'See prevalenceCore.m and the paper.'])
-display('Type "dbcont" to acknowledge that you have understood the warning above')
-keyboard
+str = input('If you have understood the above warning, type ''yes'': ','s');
+if strcmpi(str,'yes') || strcmpi(str,'y')
+    % do nothing
+else
+    disp('Quitting demo...')
+    return
+end
 
 %% Load data
 
@@ -54,8 +59,10 @@ keyboard
 % accuracy maps that were used as demo in Allefeld et al, 2016 as
 % subdirectories.
 
-datadir = '/TDT/cichy-2011-category-smoothedaccuracy';
-if ~exist(datadir, 'dir'), error('Could not find directory %s, please check', datadir); end
+datadir = '/Users/hebartmn/Downloads/cichy-2011-category-smoothedaccuracy-master';
+if ~exist(datadir, 'dir')
+    error('Could not find directory %s, please check if that is where you put the data. If you don''t have them, download them from https://github.com/allefeld/prevalence-permutation/releases.', datadir);
+end
 
 % collect input image filenames (The first image is always the unpermuted one)
 N = 12;
@@ -72,7 +79,7 @@ end
 resultdir = fullfile(datadir, 'prevalenceResultsDemoCichy11');
 mkdir(resultdir);
 resultfilenames = fullfile(resultdir, 'prevalence');
-display(['Writing result to ' resultfilenames '*.*']);
+disp(['Writing result to ' resultfilenames '*.*']);
 
 %% Do the analysis
 % The call will start the processing. As the function says, calculation can
@@ -92,8 +99,8 @@ prevalenceTDT(inputimages, P2, resultfilenames);
 %
 % Enjoy!
 
-display('Prevalence analysis finished.')
-display(['Results in: ' resultfilenames])
+disp('Prevalence analysis finished.')
+disp(['Results in: ' resultfilenames])
 
 % On Linux or with an matlab md5 implementation, you can check that the
 % files are as they should be. Or you can compare the results to the

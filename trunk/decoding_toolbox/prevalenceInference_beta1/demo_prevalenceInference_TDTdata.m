@@ -59,18 +59,28 @@ n_sbjs = 10;
 decoding_measure = 'accuracy_minus_chance';
 
 % folder that contains the original image directly and the permuted images
+<<<<<<< .mine
+% in a "perm" subfolder (or set datadir manually below)
+cwd = fileparts(mfilename('fullpath'));
+datadir = fullfile(cwd,'motion_up_vs_down/searchlight');
+if ~exist(datadir, 'dir'), error('Could not find directory %s, please check if that is where you put the data. If you don''t have them, download them from the TDT website.', datadir); end
+=======
 % in a "perm" subfolder (or change respective folders individually below)
 % see above how to generate or where to download the data
 datadir = '/TDT/sub01_firstlevel_reducedResolution/sub01_GLM_3x3x3mm/results/motion_up_vs_down/searchlight';
 if ~exist(datadir, 'dir'), error('Could not find directory %s, please check', datadir); end
+>>>>>>> .r301
 
 % directories and file masks for unpermuted and permuted images
-orig_inputdir(1:n_sbjs) = {datadir};
-orig_filemask(1:n_sbjs) = {['res_' decoding_measure '.mat']}; % regular expression, for more see help spm_select
+orig_inputdir = {};
+orig_inputdir(1:n_sbjs,1) = {datadir};
+orig_filemask(1:n_sbjs,1) = {['res_' decoding_measure '.mat']}; % regular expression, for more see help spm_select
 %                                                      From  help spm_select:
 %                                                      e.g. DCM*.mat files should have a typ of '^DCM.*\.mat$'
-perm_inputdir(1:n_sbjs) = {fullfile(datadir, 'perm')};
-perm_filemask(1:n_sbjs) = {['^perm.*_' decoding_measure '\.mat$']}; % 
+perm_inputdir = {};
+perm_inputdir(1:n_sbjs,1) = {fullfile(datadir, 'perm')};
+perm_filemask = {};
+perm_filemask(1:n_sbjs,1) = {['^perm.*_' decoding_measure '\.mat$']}; % 
 
 inputimages = {};
 for sbj = 1:n_sbjs   
@@ -88,7 +98,7 @@ for sbj = 1:n_sbjs
     if length(permuted_images) == 1 && isempty(permuted_images{1})
         error('  No permuted images found for sbj %i with %s %s', sbj, perm_inputdir{sbj},perm_filemask{sbj});
     else
-        display(sprintf('  Found %i permuted images for sbj %i', length(permuted_images), sbj));
+        fprintf('  Found %i permuted images for sbj %i\n', length(permuted_images), sbj);
     end
     
     inputimages(sbj, 2:length(permuted_images)+1) = permuted_images;
@@ -98,14 +108,19 @@ warning(['In this demo, we use the same images for all "sbjs". ' ...
     'In a real analysis the data should of course be different for every subj! ' ...
     'We also use a unrealistic low number of second level permutations (P2=' int2str(P2) '). ', ...
     'You should clearly increase that for a real analysis. See prevalenceCore.m and the paper.'])
-display('Type "dbcont" to acknowledge that you have understood the warning above')
-keyboard
+str = input('If you have understood the above warning, type ''yes'': ','s');
+if strcmpi(str,'yes') || strcmpi(str,'y')
+    % do nothing
+else
+    disp('Quitting demo...')
+    return
+end
 
 %% Define where to save the results
 resultdir = fullfile(orig_inputdir{1}, 'prevalenceDemo');
 mkdir(resultdir);
 resultfilenames = fullfile(resultdir, 'prevalence');
-display(['Writing result to ' resultfilenames '*.*']);
+disp(['Writing result to ' resultfilenames '*.*']);
 
 %% Do the analysis
 % The call will start the processing. As the function says, calculation can
@@ -125,8 +140,8 @@ prevalenceTDT(inputimages, P2, resultfilenames);
 %
 % Enjoy!
 
-display('Prevalence analysis finished.')
-display(['Results in: ' resultfilenames])
+disp('Prevalence analysis finished.')
+disp(['Results in: ' resultfilenames])
 
 %% Compare resulted .nii files to provide files, if these exist
 

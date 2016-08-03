@@ -55,9 +55,9 @@ for sbj_ind = 1:N
         % the first permutation P1=1 is the unpermuted real results, the rest 
         % are results from permutated analyses
         if perm_level1_ind == 1
-           display(sprintf('Setting results of original/unpermuted analysis for subject %i at a(%i, %i)', sbj_ind, sbj_ind, perm_level1_ind));
+           fprintf('Setting results of original/unpermuted analysis for subject %i at a(%i, %i)\n', sbj_ind, sbj_ind, perm_level1_ind);
         else
-           display(sprintf('Setting results or permuted analysis for subject %i at a(%i, %i)', sbj_ind, sbj_ind, perm_level1_ind));
+           fprintf('Setting results or permuted analysis for subject %i at a(%i, %i)\n', sbj_ind, sbj_ind, perm_level1_ind);
         end
         a(:, sbj_ind, perm_level1_ind) = randn(1, V); % here you choose your real/permuted data of course, put it as a 1xV vector at that position
     end
@@ -90,8 +90,8 @@ prevalenceTDT(inputimages, [], resultfiles);
 %
 % Enjoy!
 
-display('Prevalence analysis finished.')
-display(['Results saved as ' resultfiles '*.nii'])
+disp('Prevalence analysis finished.')
+disp(['Results saved as ' resultfiles '*.nii'])
 
 
 

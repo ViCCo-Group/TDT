@@ -60,7 +60,7 @@ elseif strcmp(ext, '.img') || strcmp(ext, '.nii') || strcmp(ext, '.hdr') || strc
 else
     error('prevalence_loaddata:unkown_dataformat', 'Unkown extension "%s", please implement detection and loading', ext);
 end
-display(sprintf('Datatype has been determined as %s', inputformat));
+fprintf('Datatype has been determined as %s\n', inputformat);
 
 %% Load all data
 [N, P1] = size(fnames_in);
@@ -221,7 +221,7 @@ if strcmp(inputformat, 'SPM')
         if ~islogical(mask)
             error('mask should be a logical vector here if provided, please check why that''s not the case');
         end
-        display('using externally provided mask to mask files, assuming it is a vector for the moment (if you implement loading the mask, put it at front and then check the orientation matrix)');
+        disp('using externally provided mask to mask files, assuming it is a vector for the moment (if you implement loading the mask, put it at front and then check the orientation matrix)');
     else
         % determine mask from data; out-of-mask voxels may be NaN or 0
         mask = all(all(~isnan(a), 2), 3) & ~any(all(a == 0, 3), 2);

@@ -24,7 +24,7 @@
 
 function prevalence_savedata_to_images(outputfilename, mask, vol, results, result_indcs)
 
-display(['Saving images to ' outputfilename])
+disp(['Saving images to ' outputfilename])
 fnames = fieldnames(results);
 
 for fname_ind = 1:length(fnames)
@@ -39,7 +39,7 @@ for fname_ind = 1:length(fnames)
         % create output image
     data = nan(size(mask));
     data(mask) = results.(curr_fname)(result_indcs);
-    display(['  Saving ' curr_outputfile])
+    disp(['  Saving ' curr_outputfile])
     saveMRImage(data, curr_outputfile, vol.mat, [curr_fname, ' from prevalence inference, Allefeld et al 2016, Neuroimage'])
 end
 

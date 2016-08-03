@@ -1,10 +1,12 @@
-% prevalenceTDT(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, decoding_measure)
+% all_results = prevalenceTDT(inputfilenames, P2 = 1e6, outputfilename = 'prevalence', alpha = 0.05, decoding_measure)
 %
 % This function is adapted from the original prevalence.m function from 
 %   https://github.com/allefeld/prevalence-permutation/
 % to perform permutation-based prevalence inference with TDT.
 %
 % See the demo_prevalence*.m files for more information on how to use.
+% prevalenceCore.m and especially the paper explain the meaning of the
+% outputfiles.
 %
 % IN
 %   inputfilenames: EITHER
@@ -43,20 +45,16 @@
 %   Results will be written to files (see outputfilename above). For your 
 %   convenience, the script checks if files can be written when starting, 
 %   to avoid tears on your side). Outputfiles are:
+%        one file for each result of prevalenceCore.m
 %            _gamma0.nii: the prevalence map (gamma0)
-%           _typical.nii: the prevalence value where they are typical
+%          _aTypical.nii: the median data value (e.g. accuracy) where the
+%                          prevalence is higher than 50% (i.e. typical)
+%              _pXXX.nii: p maps for different null hypotheses (see
+%                         prevalenceCore.m)
 %              _mask.nii: the mask that was used
 %               _cfg.mat: all parameters necessary to restart the analysis.
-%   The result is also returned as first argument.
-%     all_results.mask = mask; % true where data comes from, size(mask) is size of the original image. Use e.g.
-%                              %    data = nan(size(all_results.mask));
-%                              %    data(all_results.mask) = all_results.typical;
-%                              % to reconstruct the datafields   
-%                              % Note: For ROI analysis, mask{n_rois} is
-%                              % returned, where each mask{i} contains the
-%                              % voxels that belong to that ROI.
-%     all_results.gamma0 = gamma0;  % the prevalence values
-%     all_results.typical = at;     % the typical prevalence values
+%   The result is also returned as first argument all_results.
+%   In addition, the struct contains:
 %     all_results.vol = vol; % contains infos about the data, e.g.
 %                            % transformation matrices, dimensions, roi 
 %                            % names, etc.
@@ -75,7 +73,7 @@
 % Author: Kai, adapted from Code by Carsten Allefeld
 
 % HIST:
-%   2016/08/02: Version beta 1 for TDT based on Carstens function from  2016/08/02
+%   2016/08/03: Version 1 for TDT based on Carstens function from  2016/08/02
 %
 % DISCLAIMER: This function is in beta stage. It seem to work as it should,
 %   but has not been extensively tested by the public, thus use with care.
@@ -83,7 +81,7 @@
 
 function all_results = prevalenceTDT(inputfilenames, P2, outputfilename, alpha, decoding_measure)
 
-prevalence_version = 'prevalence TDT beta 1, 2016/08/02';
+prevalence_version = 'prevalence TDT v1, 2016/08/03';
 citation = [char(10) 'Please cite as:' char(10) ...
 'Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). Valid population' char(10) ...
 '  inference for information-based imaging: From the second-level t-test to ' char(10) ...

@@ -28,7 +28,7 @@
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
 %
 % Author: Demos and adaption to TDT by Kai, original prevalence code by 
-%   Carsten Allefeld. 2016/08/02
+%   Carsten Allefeld. 2016/08/03
 
 %% Check that SPM and TDT are available on the path
 
@@ -59,7 +59,7 @@ end
 % accuracy maps that were used as demo in Allefeld et al, 2016 as
 % subdirectories.
 
-datadir = '/Users/hebartmn/Downloads/cichy-2011-category-smoothedaccuracy-master';
+datadir = '/TDT/cichy-2011-category-smoothedaccuracy';
 if ~exist(datadir, 'dir')
     error('Could not find directory %s, please check if that is where you put the data. If you don''t have them, download them from https://github.com/allefeld/prevalence-permutation/releases.', datadir);
 end
@@ -67,11 +67,11 @@ end
 % collect input image filenames (The first image is always the unpermuted one)
 N = 12;
 P1 = 16;
-ifnPat = '%02d/sa_C0002_P%04d.nii.gz';
+inputfilenamePatttern = '%02d/sa_C0002_P%04d.nii.gz';
 inputimages = cell(N, P1);
 for k = 1 : N
     for i = 1 : P1
-        inputimages{k, i} = fullfile(datadir, sprintf(ifnPat, k, i));
+        inputimages{k, i} = fullfile(datadir, sprintf(inputfilenamePatttern, k, i));
     end
 end
 
@@ -102,30 +102,37 @@ prevalenceTDT(inputimages, P2, resultfilenames);
 disp('Prevalence analysis finished.')
 disp(['Results in: ' resultfilenames])
 
-% On Linux or with an matlab md5 implementation, you can check that the
-% files are as they should be. Or you can compare the results to the
-% results in this folder manually.
-%
-% The checksum only will be the same if the seed has been set to rng(42) at
-% the beginning. For a random seed, the images might deviate a bit, and
-% thus the checksums are different.
-% 
+%% Compare results to uploaded results
+
+%% Compare resulted .nii files to provide files, if these exist
+
+% Set directory to existing result files, see below for the download link
+compare_dir = '';
+if isempty(compare_dir)
+    display('If you want to compare the results, please set compare_dir above to the directory that contains the data')
+    display('You can download the result files here: https://sites.google.com/site/tdtdecodingtoolbox/home/download/prevalenceResultsDemoCichy11.zip?attredirects=0&d=1')
+    break
+end
+
+display(['Comparing new files to ' compare_dir])
+compare_files = dir(fullfile(compare_dir, '*.nii'));
+
+if isempty(compare_files)
+    error('No *.nii files found in %s, please check', compare_dir)
+end
+
+for c_ind = 1:length(compare_files)
+    c1_file = fullfile(compare_dir, compare_files(c_ind).name);
+    c2_file = fullfile(resultdir, compare_files(c_ind).name);
+    display(['Comparing ' compare_files(c_ind).name])
+    [all_same,diff_vol,diff_ind,maxabs_diff] = compare_volumes({c1_file, c2_file});
+    if ~all_same
+        warning('Found some differences (maximal absolute diff = %g) between %s and %s, please check', maxabs_diff, c1_file, c2_file)
+    end
+end
+
+display('All done')
+
 % The checksums here are different to the checksums produced by 
 % prevalenceTest.m from the github page because we write a slightly 
 % different header, and thus the chechsums are completely different.
-%
-% The checksums here have been produced with SPM12b (6080) and Matlab 2015a
-% on 2016/08/01.
-%
-% If the md5 checksums are not the same as you find below, check if the 
-% content is the same -- the checksums could be different just because e.g.
-% informations in the header are different.
-%
-% $/TDT/prevalenceResultsDemoCichy11$ md5sum *.nii
-% 217d4eaef80b138a0828ad85c6e64c7a  prevalence_aTypical.nii
-% 4d6d3f4e6d36e72972d54cf2c71f8661  prevalence_gamma0.nii
-% 93e2c146befe174c08547dedec47f717  prevalence_mask.nii
-% 08f89af34d8167d9dcbd15535a113d9e  prevalence_pcGN.nii
-% 57dd6fde6c75a83c25ede268e0950d53  prevalence_pcMN.nii
-% aa8ab2b4e5ed54f87c16b1fb64e6792f  prevalence_puGN.nii
-% e295fd5d97d5f3ccc6f3fbf31d4ddeef  prevalence_puMN.nii

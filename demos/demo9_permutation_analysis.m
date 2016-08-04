@@ -77,4 +77,7 @@ for i_perm = 1:n_perms
     end
 end
 
+%% Use results to calculate statistic
+display('A function to use the premuted results to create p-values is currently missing here.')
+display('If you have permutation maps from multiple subjects, see prevalence_inference.m')
 display('Permutation analyses finished')

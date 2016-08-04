@@ -44,7 +44,7 @@ the remaining license.
 The Decoding Toolbox is distributed together with the following third-party software, 
 each with their own software license, included below:
 
-prevalence-permutation 1.0.0
+prevalence-permutation 1.0.1
 libsvm 3.17
 Newton SVM
 liblinear 1.94
@@ -57,7 +57,7 @@ ADDITIONAL COPYRIGHT NOTICES
 ============================
 
 ----------------------------
-prevalence-permutation 1.0.0
+prevalence-permutation 1.0.1
 ----------------------------
 
 Copyright (c) 2016 by Carsten Allefeld

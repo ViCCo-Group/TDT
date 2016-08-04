@@ -46,7 +46,7 @@
 %   convenience, the script checks if files can be written when starting, 
 %   to avoid tears on your side). Outputfiles are:
 %        one file for each result of prevalenceCore.m
-%            _gamma0.nii: the prevalence map (gamma0)
+%           _gamma0c.nii: the prevalence map (gamma0c)
 %          _aTypical.nii: the median data value (e.g. accuracy) where the
 %                          prevalence is higher than 50% (i.e. typical)
 %              _pXXX.nii: p maps for different null hypotheses (see

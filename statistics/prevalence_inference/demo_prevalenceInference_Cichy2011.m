@@ -14,9 +14,10 @@
 % Unzip it, and adapt the input path below accordingly.
 % 
 % If you like, you can compare the results of this script (with the same 
-% paramters and the same seed) to the results saved in 
-% prevalenceResultsDemoCichy11.zip contained in this folder. See comment at
-% the end of this file. 
+% paramters and the same seed) to the results provided at
+% https://sites.google.com/site/tdtdecodingtoolbox/home/download/
+%         demo_prevalenceInference_Cichy11_results.zip
+% Add the path to the content of this zip file below.
 %
 % Please CITE prevalence analysis as: 
 %   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
@@ -59,7 +60,7 @@ end
 % accuracy maps that were used as demo in Allefeld et al, 2016 as
 % subdirectories.
 
-datadir = '/TDT/cichy-2011-category-smoothedaccuracy';
+datadir = 'cichy-2011-category-smoothedaccuracy';
 if ~exist(datadir, 'dir')
     error('Could not find directory %s, please check if that is where you put the data. If you don''t have them, download them from https://github.com/allefeld/prevalence-permutation/releases.', datadir);
 end
@@ -76,7 +77,7 @@ for k = 1 : N
 end
 
 %% Define where to save the results
-resultdir = fullfile(datadir, 'prevalenceResultsDemoCichy11');
+resultdir = fullfile(datadir, 'prevalence_results_cichy11');
 mkdir(resultdir);
 resultfilenames = fullfile(resultdir, 'prevalence');
 disp(['Writing result to ' resultfilenames '*.*']);
@@ -107,10 +108,10 @@ disp(['Results in: ' resultfilenames])
 %% Compare resulted .nii files to provide files, if these exist
 
 % Set directory to existing result files, see below for the download link
-compare_dir = '';
+compare_dir = ''; % e.g. TDT/testdata/demo_prevalenceInference_Cichy11_results_compare
 if isempty(compare_dir)
     display('If you want to compare the results, please set compare_dir above to the directory that contains the data')
-    display('You can download the result files here: https://sites.google.com/site/tdtdecodingtoolbox/home/download/prevalenceResultsDemoCichy11.zip?attredirects=0&d=1')
+    display('You can download the result files here: https://sites.google.com/site/tdtdecodingtoolbox/home/download/demo_prevalenceInference_Cichy11_results.zip')
     break
 end
 

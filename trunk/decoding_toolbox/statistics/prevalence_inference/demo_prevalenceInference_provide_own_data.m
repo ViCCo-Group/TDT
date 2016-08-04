@@ -76,17 +76,13 @@ resultfiles = fullfile('prevalenceDemoOwnData', 'prevalence'); % all files will 
 % Run prevalence analysis, explanation below
 prevalenceTDT(inputimages, [], resultfiles);
 
-% The function returns three images: 
-%   prevalence_gamma0.nii: The prevalence value, see paper
-%   prevalence_typical.nii: The typical above-chance accuracies at
-%       positions where the majority of subject shows an effect (the median 
-%       of all accuracies)
-%   prevalence_mask.nii: The mask where permutations have been computed.
+% The function returns images with the resuilts. See prevalenceCore.m for
+% information about the output files.
 %
-% If you really wish not to get write the result images to disk, use
+% If you really wish not to write the result images to disk, use
 % all_results = prevalence(inputimages, [], 'DONTWRITE');
 %
-% For all further options, see help prevalence
+% For all further options, see help prevalence.m
 %
 % Enjoy!
 

@@ -1,4 +1,4 @@
-* 3.93 - 2016/08/03
+* 3.93 - 2016/08/04
 - Prevalence Inference added. For details, see
   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
       Valid population inference for information-based imaging: From the 

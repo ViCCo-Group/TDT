@@ -245,7 +245,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2016/08/03 3.93'; % also change header of this file and in LOG.txt
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2016/08/04 3.93'; % also change header of this file and in LOG.txt
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

@@ -12,11 +12,24 @@
 %
 % For more than two classes, the most positive correlation receives the
 % class label. In other words, the classifier is by definition a one-vs-one
-% classifier. The decision values are set up pairwise accordingly.
+% classifier. The decision values are set up pairwise accordingly (example:
+% 4 classes, for each of the for classes one row with predictions assuming
+% 1vs2, 1vs3, 1vs4, 2vs3, 2vs4, 3vs4). Important: Class labels are sorted
+% in ascending order.
 %
+% For consistency in terms of its use in the literature, the output will
+% only create one prediction per class label, not one prediction per
+% sample. TDT will also change true labels to fit to this prediction. For
+% generating a separate prediction for each sample a separate classifier is
+% required or the design has to be set up to repeatedly use the same
+% training data, but always a different subset of the test data.
+
 % 2009 Martin H.
 
 % History:
+% 2016-08-08 Martin:
+%   Replaced enumeration using nchoosek with own code which is a great
+%   lot faster for many labels
 % 2015-11-25 Kai (thanks to Carlo):
 %   Removed bug in correlation_classifier that prediction was done using 
 %   unique_labels_test instead of unique_labels_train
@@ -86,7 +99,7 @@ if n_vox > 1 % normal case in which more than one voxel is present
     % force finite values for later z-transformation
     r1 = (abs(r)+eps)>=1; % eps corrects for rounding errors in r
     if any(r1(:))
-        warning('CORRELATION_CLASSIFIER:ZCORRINF','Correlations of +1 or -1 found. Correcting to +/-0.99999 to avoid infinity for z-transformed correlations!')
+        warningv('CORRELATION_CLASSIFIER:ZCORRINF','Correlations of +1 or -1 found. Correcting to +/-0.99999 to avoid infinity for z-transformed correlations!')
         r(r1) = 0.99999*r(r1); % forces finite values
     end
     
@@ -94,9 +107,11 @@ if n_vox > 1 % normal case in which more than one voxel is present
     z = atanh(r);
 
     % these are not the same as decision values, but they give a useful distance metric from the classification boundary
-    g = nchoosek(1:n_labels_train,2);
+    [a,b] = meshgrid(1:n_labels_train,1:n_labels_train);
+    c = tril(true(n_labels_train),-1); % this is our logical index selecting the lower triangular matrix
+    g = [a(c) b(c)]; % this will give us all combinations
     decision_values = z(:,g(:,1))-z(:,g(:,2));
-    [ignore,predict_ind] = max(z,[],2); %#ok<ASGLU>
+    [ignore,predict_ind] = max(z,[],2); %#ok<ASGLU> % the largest positive correlation value will determine the predicted label
     predicted_labels = unique_labels_train(predict_ind);
 
     opt.r = r;
@@ -104,11 +119,11 @@ if n_vox > 1 % normal case in which more than one voxel is present
 
 else % if only one voxel is present, a correlation is not possible
    
-warning('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxel (may happen at borders of mask). No correlation possible, setting value to NaN!')
+warningv('CORRELATION_CLASSIFIER:ONEVOXEL','Searchlight or ROI with only one voxel (may happen at borders of mask). No correlation possible, setting value to NaN!')
 
 opt.r = NaN(n_labels_test,n_labels_train);
 opt.z = NaN(n_labels_test,n_labels_train);
-decision_values = NaN(n_labels_test,nchoosek(n_labels_train,2));
+decision_values = NaN(n_labels_test,n_labels_train*(n_labels_train-1)/2);
 predicted_labels = NaN(n_labels_test,1);
 
 end

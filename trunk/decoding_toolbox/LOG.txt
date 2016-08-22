@@ -1,4 +1,17 @@
+<<<<<<< .mine
+* 3.94 - 2016/08/22
+- Allow using kernel classification for output SVM_weights
+- Order of weights and decision values as outputs now not dependent on 
+  order of labels in input (e.g. [3 1 2 5 4]), but now invariantly sorted 
+  by label (e.g. [1 2 3 4 5]) -> affects transres_SVM_ functions as well 
+  as libsvm_test and correlation_classifier
+- Removed bug in SPM5 and SPM8 functions with double &&
+- other small fixes
+
+* 3.93 - 2016/08/02
+=======
 * 3.93 - 2016/08/04
+>>>>>>> .r308
 - Prevalence Inference added. For details, see
   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
       Valid population inference for information-based imaging: From the 

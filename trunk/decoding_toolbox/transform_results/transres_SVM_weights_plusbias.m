@@ -134,7 +134,7 @@ for i_model = 1:n_models
             mask = bsxfun(@plus,mask,0:n_label-2);
             
             % init
-            w = zeros(size(m.SVs,2),nchoosek(n_label,2));
+            w = zeros(size(m.SVs,2),n_label*(n_label-1)/2);
             ct = 0;
             
             m.SVs = full(m.SVs); % this speeds everything up

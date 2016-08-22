@@ -19,7 +19,7 @@
 % Martin, 2014-01-15
 
 % History
-% 2016-08-03: Added multiclass capabilities
+% 2016-03-08: Added multiclass capabilities
 
 function output = transres_SVM_pattern(decoding_out, chancelevel, cfg, data)
 
@@ -80,7 +80,7 @@ for i_model = 1:n_models
                 mask(rangeind(i_label,1):rangeind(i_label,2)) = (i_label-1)*(n_label-1)+1;
             end
             mask = bsxfun(@plus,mask,0:n_label-2);
-            weights = zeros(size(m.SVs,2),nchoosek(n_label,2));
+            weights = zeros(size(m.SVs,2),n_label*(n_label-1)/2);
             ct = 0;
             m.SVs = full(m.SVs);
             for i_label = 1:n_label

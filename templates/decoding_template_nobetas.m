@@ -20,7 +20,8 @@ cfg.results.dir =
 cfg.files.mask = 
 
 % Set the following field:
-% File names (1xn cell array)
+% Full path to file names (1xn cell array) (e.g.
+% {'c:\exp\glm\model_button\im1.nii', 'c:\exp\glm\model_button\im2.nii', ... }
 cfg.files.name =  
 % and the other two fields if you use a make_design function (e.g. make_design_cv)
 %
@@ -53,7 +54,7 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 % Add additional output measures if you like
 % cfg.results.output = {'accuracy_minus_chance', 'AUC_minus_chance'}
 
-% This creates the leave-one-pair-out cross validation design (assuming there is only one step):
+% This creates the leave-one-pair-out cross validation design (assuming there is only one chunk):
 cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
 % If there are several unbalanced chunks, use this function:
 % cfg.design = make_design_boot_cv(cfg,100,1); % the 1 keeps test data balanced, too

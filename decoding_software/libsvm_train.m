@@ -54,7 +54,7 @@ try
                 cfg.decoding.method, cfg.decoding.software)
     end
 
-    if isempty(model), error('svmtrain returned an empty model - please check that svmtrain is working properly'), end
+    if isempty(model), error('svmtrain returned an empty model - please check that you are passing data, labels and parameters in the correct format to libsvm''s svmtrain function.'), end
     
     % end of normal function
 

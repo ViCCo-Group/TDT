@@ -61,7 +61,7 @@ if size(keepind,1) ~= n_label % if this is the first iteration or there was any 
     
     % For speeding everything up, we will use a matrix that we define here that
     % extracts accuracies from the multiclass classification decision values
-    M = zeros(n_label,nchoosek(n_label,2)); % init
+    M = zeros(n_label,n_label*(n_label-1)/2); % init
     
     % we just need the position of 1, 2, etc. in the lower diagonal matrix,
     % with one row where each of them appears

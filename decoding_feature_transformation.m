@@ -78,7 +78,7 @@ if strcmpi(estimation,'across')
     data_train = scaled(1:train_length,:);
     data_test = scaled(train_length+1:end,:);
 elseif strcmpi(estimation,'all')
-    data_train = decoding_scale_data(cfg.feature_transformation,data_train);
+    data_train = decoding_scale_data(cfg.feature_transformation,data_train); % for this method, all data have been passed into data_train (the name is misleading)
     % create dummy variable
     data_test = zeros(size(data_train));
 end

@@ -1,4 +1,9 @@
-<<<<<<< .mine
+* 3.95 - 2016/08/25
+- Allow using kernel classification for output SVM_pattern
+- Completed conversion of order to be correct
+- Updated decoding_feature_transformation and transfeat function
+- Added some test scripts to the benchmark folder
+
 * 3.94 - 2016/08/22
 - Allow using kernel classification for output SVM_weights
 - Order of weights and decision values as outputs now not dependent on 
@@ -8,10 +13,7 @@
 - Removed bug in SPM5 and SPM8 functions with double &&
 - other small fixes
 
-* 3.93 - 2016/08/02
-=======
 * 3.93 - 2016/08/04
->>>>>>> .r308
 - Prevalence Inference added. For details, see
   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
       Valid population inference for information-based imaging: From the 

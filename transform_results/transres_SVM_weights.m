@@ -30,18 +30,22 @@
 % Martin 2016-03-08: included case of multiclass classification (a
 %                    lot faster than many pairwise classifications)
 
+% TODO: re-implement Newton SVM:
+%   weights.w = m.w;
+%   weights.b = -m.gamma;
+
 function output = transres_SVM_weights(decoding_out, chancelevel, cfg, data)
 
 %% check that input data has not been changed without the user knowing it
 check_datatrans(mfilename, cfg); 
 
 %% check that the model was a linear SVM 
-% only works for libSVM for the moment
+% only works for libsvm for the moment
 if ~strcmpi(cfg.decoding.software,'libsvm')
     error('Can''t get primal weights for anything but libsvm at the moment');
 end
 % check that we indeed use a linear SVM
-% get the current libSVM parameters
+% get the current libsvm parameters
 libsvm_options = cfg.decoding.train.(cfg.decoding.method).model_parameters;
 
 % find '-t 0' in the current options (parameter for linear svm)

@@ -70,7 +70,7 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat
-regressor_names = design_from_spm(beta_loc);
+regressor_names = design_from_afni(beta_loc);
 
 % Extract all information for the cfg.files structure (labels will be [1 -1] )
 cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,beta_loc);

@@ -1,5 +1,8 @@
 OPEN BUGS
 
+B23: inverted results for leave-one-sample out CV (which is unusual) for 
+AUC_minus_chance.
+
 B22: make_design_cv in combination with sets doesn't seem to do the right
 job.
 

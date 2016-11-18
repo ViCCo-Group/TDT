@@ -52,8 +52,8 @@
 %                               sense for your method, set it to 0
 %
 %               results:
-%                   write:     If 1, then results are written as .mat, if
-%                              2, then also as .img/.nii. The path and
+%                   write:     If 2, then results are written as .mat, if
+%                              1, then also as .img/.nii. The path and
 %                              filename are determined automatically from
 %                              the files unless the field
 %                              cfg.stats.results.fpath is provided.
@@ -91,7 +91,7 @@
 %       cfg.stats.output = 'accuracy_minus_chance';
 %       p = decoding_statistics(cfg,results,chancelevel);
 %
-% See also DECODIGN_STATISTICS2
+% See also decoding_statistics2
 
 % 14/10/26 Martin Hebart
 %

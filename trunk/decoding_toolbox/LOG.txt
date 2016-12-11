@@ -1,3 +1,9 @@
+* 3.96 - 2016/12/10
+- Fixed small bug in make_design_cv that wouldn't allow using sets under 
+  all conditions
+- Fixed bug that prevented use of multiple models in transers_SVM_pattern
+- Added smaller utilities
+
 * 3.95 - 2016/08/25
 - Allow using kernel classification for output SVM_pattern
 - Completed conversion of order to be correct

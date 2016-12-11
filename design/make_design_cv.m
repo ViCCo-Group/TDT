@@ -121,7 +121,8 @@
 % See also MAKE_DESIGN_BOOT_CV, MAKE_DESIGN_XCLASS, MAKE_DESIGN_PERMUTATION
 
 % History:
-% - througing error if cfg.files.xclass is not empty
+% - removed bug with multiple sets MH: 16-12-01
+% - throwing error if cfg.files.xclass is not empty
 % - introduced sets variable MH: 11-06-13
 % - Changed fieldname cfg.cond to cfg.label, output of train and test
 %   to be binary and label names to be separately provided (more general
@@ -209,17 +210,18 @@ for i_set = 1:n_sets
         counter = counter + 1;
         
         % set all training entries
-        train_filter = cfg.files.chunk(set_filter) ~= chunk_numbers(i_step);
+        train_filter = (cfg.files.chunk ~= chunk_numbers(i_step)) & set_filter;
         design.train(train_filter, counter) = 1;
         
         % set all test entries
-        test_filter = cfg.files.chunk(set_filter) == chunk_numbers(i_step);
+        test_filter = (cfg.files.chunk == chunk_numbers(i_step)) & set_filter;
         design.test(test_filter, counter) = 1;
+        
+        design.label(:, counter) = cfg.files.label;
+        
+        design.set(counter) = i_set;
     end
-    
-    design.label = [design.label repmat(cfg.files.label(set_filter), 1, n_steps)];
-    design.set = [design.set repmat(i_set,1,n_steps)];
-    
+        
 end
 
 % introduce check that no column of design.train is zeros only

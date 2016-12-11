@@ -15,7 +15,7 @@ m = svmtrain(currlabels,currdata,'-s 0 -t 0 -q');
 decoding_out.model = m;
 
 cfg.design.train = ones(40,1);
-cfg.design.label = labels(currind);
+cfg.design.label = currlabels
 
 tmp = transres_SVM_pattern_old(decoding_out,[],cfg, currdata);
 w13 = tmp{1}{1};
@@ -113,3 +113,17 @@ tmp = transres_SVM_pattern(decoding_out,0,cfg,data);
 wk = tmp{1}{1};
 
 fprintf('Max error: %d\n',max(abs(w(:)-wk(:))))
+
+
+%% Now use with multiple runs
+
+cfg.design.train = [cfg.design.train cfg.design.train];
+cfg.design.label = [cfg.design.label cfg.design.label];
+decoding_out(2).model = decoding_out(1).model;
+
+tmp = transres_SVM_pattern(decoding_out,0,cfg,data);
+
+if isequal(tmp{1}{1},tmp{1}{2})
+    disp('result of all runs the same')
+end
+

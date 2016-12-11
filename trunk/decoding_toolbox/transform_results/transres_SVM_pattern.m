@@ -19,6 +19,7 @@
 %   
 % Martin, 2014-01-15
 
+% Updata MH: 2016-12-10: Fixed bug that would only allow running one model
 % Update MH 2016-08-22: Introduced compatibility with more than two classes
 % and with kernel methods
 
@@ -39,6 +40,7 @@ output{1} = cell(n_models,1);
 for i_model = 1:n_models
     
     weights = w{1}{i_model};    
+    currlabel = cfg.design.label(:,i_model);
 
 %% Get pattern    
 
@@ -51,9 +53,9 @@ for i_model = 1:n_models
     for i_label = 1:n_label
         for j_label = i_label+1:n_label
             ct = ct+1;
-            label_ind = cfg.design.label == ulabel(i_label) | cfg.design.label == ulabel(j_label);
+            label_ind = currlabel == ulabel(i_label) | currlabel == ulabel(j_label);
             data_train = data(cfg.design.train(:, i_model) > 0 & label_ind, :);
-            [n_samples n_dim] = size(data_train);
+            [n_samples, n_dim] = size(data_train);
             curr_weights = weights(:,ct);
             
             if n_dim^2<10^7 % if pattern doesn't have a very large number of voxels

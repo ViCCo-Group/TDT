@@ -26,7 +26,7 @@ cfg.searchlight.radius = 2; % set searchlight size in voxels
 cfg.plot_selected_voxels = 0; % all x steps, set 0 for not plotting, 1 for each step, 2 for each 2nd, etc
 cfg.plot_design = 1;
 
-cfg.results.output = {'accuracy_minus_chance'};
+cfg.results.output = {'accuracy_minus_chance'}; % Hint: If you like to know the SL size at around a voxel, add 'ninputdim';
 cfg.decoding.method = 'classification_kernel';
 
 %% Set the output directory where data will be saved

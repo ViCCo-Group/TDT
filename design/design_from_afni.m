@@ -24,6 +24,9 @@
 %
 % See also DESIGN_FROM_SPM DECODING_DESCRIBE_DATA
 
+% History:
+% 2017-02-05: replaced strsplit with regexp for downward compatibility
+
 function regressor_names = design_from_afni(brik_files,save_on)
 
 if ~exist('save_on','var'), save_on = 1; end
@@ -76,13 +79,13 @@ n_brik = length(brik_files);
 % Now load all headers of the BRIK files (treat each one as a run)
 hdr = read_header('afni',brik_files{1});
 labels_concat = hdr.BRICK_LABS;
-labels = strsplit(labels_concat,'~');
+labels = regexp(labels_concat,'~','split');
 if isempty(labels{end}), labels(end) = []; end % remove empty
 % Check if all have the same labels
 for i_brik = 2:n_brik
     hdr = read_header('afni',brik_files{i_brik});
     labels_concat = hdr.BRICK_LABS;
-    labels_ = strsplit(labels_concat,'~');
+    labels_ = regexp(labels_concat,'~','split');
     if ~isequal(labels,labels_)
         disp('Problem occurred!')
         disp('Labels of run 1:')

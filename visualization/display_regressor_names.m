@@ -30,7 +30,9 @@
 
 % Martin H. 2012
 %
-% History: 2016/07/07: Added AFNI compatibility
+% History:
+% 2016/07/07: Added AFNI compatibility
+% 2017-02-05: replaced strsplit with regexp for downward compatibility
 
 function [out, regressor_names] = display_regressor_names(beta_loc, compress)
 
@@ -48,7 +50,12 @@ decoding_defaults; % use only to add path
 try % this is a bit ugly, but quite efficient 
     regressor_names = design_from_spm(beta_loc,0);
 catch
+    try
     regressor_names = design_from_afni(beta_loc,0);
+    catch
+        fprintf('Both SPM and AFNI failed to find beta images in folder ''%s''\n',beta_loc)
+        error(lasterr) %#ok<LERR>
+    end
 end
 
 [all_names,b] = unique(regressor_names(1,:),'first');
@@ -85,7 +92,7 @@ else % compress bins
     
     % split everything at bin
     for i_out = 1:length(out)
-        curr_split = strsplit(out{i_out}, ' bin ');
+        curr_split = regexp(out{i_out}, ' bin ','split');
         split{i_out} = curr_split;
     end
     
@@ -101,7 +108,7 @@ else % compress bins
             currname = split{i_out}{1};
             
             % split again to get number of sessions e.g. (1:6) and startbin
-            second_part = strsplit(split{i_out}{2}, ' ');
+            second_part = regexp(split{i_out}{2}, ' ', 'split');
             
             start_bin = str2num(second_part{1});
             last_bin = start_bin; % init
@@ -118,7 +125,7 @@ else % compress bins
                     row_ok = true; % init
                     row_ok = row_ok && strcmp(currname, split{i_next_row}{1}); % check name is equal
                     
-                    second_part2 = strsplit(split{i_next_row}{2}, ' ');
+                    second_part2 = regexp(split{i_next_row}{2}, ' ','split');
                     curr_bin = str2num(second_part2{1});
                     
                     row_ok = row_ok && curr_bin == last_bin + 1; % check bins are in a row

@@ -6,9 +6,12 @@ function [fpath,fname,suffix,fext] = tdt_fileparts(fullfname)
 
 % Martin Hebart 16/07/06
 
+% History:
+% 2017-02-05: replaced strsplit with regexp for downward compatibility
+
 [fpath,fname_,fext] = fileparts(fullfname);
 
-tmp = strsplit(fname_,'+');
+tmp = regexp(fname_,'\+','split');
 switch length(tmp)
     case 1
         fname = fname_;

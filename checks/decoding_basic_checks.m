@@ -139,7 +139,7 @@ end
 % Using a precomputed kernel doesn't work for scaling across or separate
 if use_kernel && (strcmpi(cfg.scale.estimation,'across') || strcmpi(cfg.scale.estimation,'separate'))
     newmethod = strrep(cfg.decoding.method,'_kernel','');
-    str = sprintf(['Use of scaling method ''%s'' and decoding method ''%s'' does not make sense, because a kernel must calculated in this case in every step anyway.',...
+    str = sprintf(['Use of scaling method ''%s'' and decoding method ''%s'' does not make sense, because a kernel must calculated in this case in every step anyway (i.e. there is no benefit in using a kernel over the classical methods without kernels).',...
                    'Method is now reverted to ''%s'' (which will be slower).'],cfg.scale.estimation,cfg.decoding.method,newmethod);
     warningv('DECODING_BASIC_CHECKS:KernelAndScaling',str)
     cfg.decoding.method = newmethod;
@@ -275,6 +275,14 @@ end
 if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
     error(['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation '''. Unknown if you want to scale or not! Set both to ''none'' or both to a different value than ''none''!'])
 %     warningv('DECODING_BASIC_CHECKS:DisagreeingScalingMethodAndEstimation',['Scaling method is ''none'', but estimation type is ''' cfg.scale.estimation ''', changing type to ''none'''])
+end
+
+% Check if user flipped input to decoding_scale_data
+if any(strcmpi({'z','min0max1','cov'},cfg.scale.method))
+   error('cfg.scale.method = ''%s'', but this value is a valid input only to cfg.scale.estimation. Please check if you flipped the input.',cfg.scale.method) 
+end
+if any(strcmpi({'all','across','separate'},cfg.scale.estimation))
+   error('cfg.scale.estimation = ''%s'', but this value is a valid input only to cfg.scale.method. Please check if you flipped the input.',cfg.scale.estimation) 
 end
 
 % check if masks exist, and maybe correct it. Otherwise set it to "auto"

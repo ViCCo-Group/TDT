@@ -1,3 +1,13 @@
+* 3.97 - 2017/02/12
+- Fixed bug where AUCstats would report inverted values when the order of 
+  labels was different than in template (introduced in V3.94 and acci-
+  dentally not fixed in 3.95)
+- Added AUCstats_matrix and AUCstats_pairwise for AUC with more than two 
+  classes (all pairwise comparisons reported in a matrix or averaged) 
+- Replaces strsplit with regexp to reintroduce backward compatibility to 
+  at least R2009a.
+- Added additional checks and minor fixes.
+
 * 3.96 - 2016/12/10
 - Fixed small bug in make_design_cv that wouldn't allow using sets under 
   all conditions

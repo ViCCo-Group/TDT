@@ -16,14 +16,18 @@ function varargout = read_header(software,filename,varargin)
 %   hdr = read_header(cfg.software, 'test.img');
 %   vol = read_image(cfg.software, hdr);
 
+% History:
+% 2017-02-05: replaced strsplit with regexp for downward compatibility
+
 %           TODO: Add which header-fields are important, how they are built
 %                   and what they mean
+
 
 if ndims(filename) ~= 2 || ~any(size(filename)==1) %#ok<ISMAT>
     error('read_header only works when passing individual file names.')
 end
 
-filename = strsplit(filename,',');
+filename = regexp(filename,',','split');
 filename = filename{1}; % remove everything after a potential comma (we read all headers)
 filename = strtrim(filename); % remove trailing whitespaces
 

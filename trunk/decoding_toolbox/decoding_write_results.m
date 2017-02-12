@@ -168,7 +168,7 @@ if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
         
         % Save overall results and save to returning variable
         [trash1,trash2,suffix,ext] = tdt_fileparts(cfg.files.name{1});
-        ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
+        ext = regexp(ext,',','split'); ext = ext{1}; % in case we have a 4D nifti
         fname = sprintf('%s%s%s',cfg.results.resultsname{i_output},suffix,ext);
         resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
         resultsvol_hdr.descrip = sprintf('%s decoding map',outputname);
@@ -257,7 +257,7 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             
             % Save overall results and save to returning variable
             [trash1,trash2,suffix,ext] = tdt_fileparts(cfg.files.name{1});
-            ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
+            ext = regexp(ext,',','split'); ext = ext{1}; % in case we have a 4D nifti
             fname = sprintf('%s_%s%s%s',cfg.results.resultsname{i_output},roi_names{i_roi},suffix,ext);
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map on ROI %s',outputname,roi_names{i_roi});
@@ -357,7 +357,7 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             
             % Save overall results and save to returning variable
             [trash1,trash2,suffix,ext] = tdt_fileparts(cfg.files.name{1});
-            ext = strsplit(ext,','); ext = ext{1}; % in case we have a 4D nifti
+            ext = regexp(ext,',','split'); ext = ext{1}; % in case we have a 4D nifti
             fname = sprintf('%s_multiroi%s%s',cfg.results.resultsname{i_output},suffix,ext);
             resultsvol_hdr.fname = fullfile(cfg.results.dir,fname);
             resultsvol_hdr.descrip = sprintf('%s decoding map on all ROIs (multi-ROI)',outputname);

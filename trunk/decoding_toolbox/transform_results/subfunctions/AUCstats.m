@@ -8,6 +8,8 @@
 % zAUC - corresponding z-statistic for the AUC
 % p - Significance value of zAUC
 
+% 2016/06/01: removed small bug that made AUC go in opposite direction when
+%    order of labels was wrong
 % rewritten (now more precise, because endpoints included): 2013/16/09
 % adjusted and debugged: 2010 Martin Hebart
 
@@ -21,6 +23,9 @@ end
 if numel(labels)~=2
     error('Number of labels for calculation of AUC must be 2.')
 end
+
+% sort labels
+labels = sort(labels);
 
 % sort values
 [decision_values,ind] = sort(decision_values);
@@ -47,7 +52,7 @@ specificity = [0 ; specificity ; 1];
 
 % compute the area under the "curve"
 % AUC = trapz(specificity, sensitivity);
-AUC = (1/2)*sum((specificity(2:end) - specificity(1:end-1)).*(sensitivity(2:end) + sensitivity(1:end-1)));
+AUC = 1 - ((1/2)*sum((specificity(2:end) - specificity(1:end-1)).*(sensitivity(2:end) + sensitivity(1:end-1))));
 
 % given you want to see the ROC
 if plot_on

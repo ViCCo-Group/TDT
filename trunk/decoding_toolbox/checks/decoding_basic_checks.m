@@ -278,11 +278,11 @@ if strcmpi(cfg.scale.method,'none') && ~strcmpi(cfg.scale.estimation,'none')
 end
 
 % Check if user flipped input to decoding_scale_data
-if any(strcmpi({'z','min0max1','cov'},cfg.scale.method))
-   error('cfg.scale.method = ''%s'', but this value is a valid input only to cfg.scale.estimation. Please check if you flipped the input.',cfg.scale.method) 
-end
-if any(strcmpi({'all','across','separate'},cfg.scale.estimation))
+if any(strcmpi({'z','min0max1','cov'},cfg.scale.estimation))
    error('cfg.scale.estimation = ''%s'', but this value is a valid input only to cfg.scale.method. Please check if you flipped the input.',cfg.scale.estimation) 
+end
+if any(strcmpi({'all','across','separate'},cfg.scale.method))
+   error('cfg.scale.method = ''%s'', but this value is a valid input only to cfg.scale.estimation. Please check if you flipped the input.',cfg.scale.method) 
 end
 
 % check if masks exist, and maybe correct it. Otherwise set it to "auto"

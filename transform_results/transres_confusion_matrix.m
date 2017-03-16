@@ -8,8 +8,8 @@
 % name.
 %
 % The output will be an NxN matrix where n is the number of unique labels.
-% The columns will represent the true labels, whereas the rows will
-% represent the predicted labels. The output is sorted by label number,
+% The columns will represent the predicted labels, whereas the rows will
+% represent the true labels. The output is sorted by label number,
 % from low to high.
 %
 % To use this transformation, use 
@@ -17,6 +17,9 @@
 %   cfg.results.output = {'confusion_matrix'}
 %
 % Martin, 2014-04-23
+
+% Update MH 2017-03-15:
+% Error in description: flipped columns and rows, now corrected
 
 function output = transres_confusion_matrix(decoding_out, chancelevel, varargin)
 

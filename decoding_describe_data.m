@@ -71,6 +71,10 @@
 %
 % SEE ALSO DESIGN_FROM_SPM
 
+% Update Kai 17/03/16
+%   Made it possible to describe simulation data again; failed because
+%   function read entries of regressor_names to check if volumes are 4d,
+%   but in simulations no files exist.
 % Update Martin 16/07/05
 %   Made compatible with AFNI
 %   Renamed beta_dir to beta_loc
@@ -145,17 +149,25 @@ if ~iscell(beta_names)
 end
 
 %% For each entry in beta_names, check if it is a 4D image and if so expand beta names accordingly
+
 beta_names_orig = beta_names;
 
 beta_names = {}; % re-init
-
 for i_beta = 1:length(beta_names_orig)
-    hdr = read_header(cfg2.software,beta_names_orig{i_beta});
-    n_subvol = numel(hdr); % this is testing the SPM standard (multiple headers)
-    if n_subvol == 1 && length(hdr.dim) > 3 % this is testing the AFNI standard (one header)
+    try
+        hdr = read_header(cfg2.software,beta_names_orig{i_beta});
+        n_subvol = numel(hdr); % this is testing the SPM standard (multiple headers)
+        if n_subvol == 1 && length(hdr.dim) > 3 % this is testing the AFNI standard (one header)
         n_subvol = hdr.dim(4);
+            % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
+        end
+    catch e
+        % something failed while reading the header, maybe the file does
+        % not exist or its not a file but some simulations. We assume it
+        % has length 1 and continue.
+        n_subvol = 1;
     end
-    % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
+        
     if n_subvol == 1
         beta_names(end+1,1) = beta_names_orig(i_beta);
     else

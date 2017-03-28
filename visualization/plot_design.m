@@ -231,7 +231,7 @@ fnames_shown = 1:stepsize:n_fnames; % indices for all names that are shown
 
 % add set as last row and make sure it's shown
 if stepsize>1
-    fnames_cstr(end+1) = {sprintf('Showing each 1/%i names; Set', stepsize)};
+    fnames_cstr(end+1) = {sprintf('Showing 1 of %i names; Set', stepsize)};
 else
     fnames_cstr(end+1) = {'Set'};
 end

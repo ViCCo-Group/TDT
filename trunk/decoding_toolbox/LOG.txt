@@ -1,7 +1,11 @@
+* NOTES for NEXT RELEASE
+- sort_design.m fixed, will now really sort the design to improve speed
+- todo: check what else, probably prevalence demo improved esp. for ROIs
+
 * 3.97 - 2017/02/12
 - Fixed bug where AUCstats would report inverted values when the order of 
-  labels was different than in template (introduced in V3.94 and acci-
-  dentally not fixed in 3.95)
+  labels was different than in template (introduced in V3.94 and accidentally 
+  not fixed in 3.95)
 - Added AUCstats_matrix and AUCstats_pairwise for AUC with more than two 
   classes (all pairwise comparisons reported in a matrix or averaged) 
 - Replaces strsplit with regexp to reintroduce backward compatibility to 

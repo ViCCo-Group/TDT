@@ -34,8 +34,10 @@
 % loglikelihood: measure of bias to one label: -1/2*(zHIT_rate^2 - zFA_rate^2)
 % AUC: Area under the ROC (Receiver Operator Characteristics) Curve times 
 %   100 (i.e. values from 0 to 100), built from classifier decision values, 
-%   not from sensitivity/specificity
+%   not from sensitivity/specificity (for more than 2 classes, average of
+%   all pairwise comparisons is calculated)
 % AUC_minus_chance: like AUC, but minus chance level(useful for SPM 2nd level)
+% AUC_matrix: for more than 2 classes all pairwise comparisons in a matrix
 % corr: Correlation (useful e.g. for regression approaches, e.g. SVR)
 % zcorr: Fisher-z-transformed correlation (necessary for averaging
 %   correlations, e.g. across subjects)
@@ -162,21 +164,41 @@ elseif strcmpi(method, 'loglikelihood')
     
     [dprime,output] = dprimestats(true_labels,predicted_labels); %#ok<ASGLU>
     
-elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
+elseif strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance') ...
+    || strcmpi(method, 'AUC_pairwise') || strcmpi(method, 'AUC_pairwise_minus_chance')
+    
     decision_values = vertcat(decoding_out.decision_values);
     true_labels = vertcat(decoding_out.true_labels);
     labels = uniqueq(true_labels);
     
-    if length(labels) > 2 && isfield(cfg, 'AUC') && cfg.AUC.experimental == 1 % otherwise it will fail
-        decoding_out = equalize_set_labels(decoding_out, cfg);
-        % redo ordering
-        decision_values = vertcat(decoding_out.decision_values);
-        true_labels = vertcat(decoding_out.true_labels);
-        labels = uniqueq(true_labels);
+    if length(labels) == 2
+        output = 100*AUCstats(decision_values,true_labels,labels,0); % express in percent
+    elseif length(labels) > 2
+        if strcmpi(method, 'AUC') || strcmpi(method, 'AUC_minus_chance')
+            warningv('DECODING_TRANSFORM_RESULTS:ReportAUCpairwise','More than 2 labels for AUC. Running all pairwise comparisons and averaging (using AUCstats_pairwise.m).')
+        end
+        output = 100*mean(AUCstats_matrix(decision_values,true_labels,labels));
+    end
+        
+    if strcmpi(method, 'AUC_minus_chance') || strcmpi(method, 'AUC_pairwise_minus_chance')
+        output = output - chancelevel; % center around 0
     end
     
-    output = 100*AUCstats(decision_values,true_labels,labels,0); % express in percent
-    if strcmpi(method, 'AUC_minus_chance')
+elseif strcmpi(method, 'AUC_matrix') || strcmpi(method, 'AUC_matrix_minus_chance')
+
+    decision_values = vertcat(decoding_out.decision_values);
+    true_labels = vertcat(decoding_out.true_labels);
+    labels = uniqueq(true_labels);
+    n_label = length(labels);
+    
+    temp = 100*AUCstats_matrix(decision_values,true_labels,labels);
+    
+    % transform vector to matrix
+    output = zeros(n_label,n_label);
+    output(logical(tril(ones(n_label,n_label),-1))) = temp;
+    output = output + output' + diag(nan(1,n_label));
+    
+    if strcmpi(method,'AUC_matrix_minus_chance')
         output = output - chancelevel; % center around 0
     end
     

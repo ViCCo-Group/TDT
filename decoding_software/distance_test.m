@@ -1,4 +1,4 @@
-function decoding_out = similarity_test(labels_test,data_test,cfg,model)
+function decoding_out = distance_test(labels_test,data_test,cfg,model)
 
 if isstruct(data_test), error('This method requires training vectors in data_test directly. Probably a kernel was passed method is use. This method does not support kernel methods'), end
 
@@ -6,12 +6,20 @@ switch lower(cfg.decoding.method)
     
     case 'classification'
         if isfield(cfg.design,'train_eq_test') && cfg.design.train_eq_test == 1
-        % we are just ignoring the test data (since train_eq_test) and
-        % assume the training data to also represent the test data 
-        % -> faster
+            % we are just ignoring the test data (since train_eq_test) and
+            % assume the training data to also represent the test data
+            % -> faster
             dist =  pattern_similarity_fast(model.vectors_train,cfg.decoding.train.classification.model_parameters);
         else
-            dist =  pattern_similarity(model.vectors_train,data_test,cfg.decoding.train.classification.model_parameters);
+            u_labels = uniqueq(labels_test); % sorts labels!
+            n_labels = size(u_labels,1);
+            
+            for i_label = n_labels:-1:1
+                label_ind = labels_test==u_labels(i_label);
+                m_test(:,i_label) = (1/sum(label_ind)) * sum(data_test(label_ind,:),1);
+            end
+            
+            dist =  pattern_similarity(model.vectors_train,m_test,cfg.decoding.train.classification.model_parameters);
         end
     case 'classification_kernel'
         error('cfg.decoding.method = ''classification_kernel''. Similarity calculations currently don''t work with passed kernels. Although it would make sense as it represents the G-matrix for the linear kernel (Diedrichsen et al., 2011), most people would not understand this.')

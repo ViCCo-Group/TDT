@@ -24,22 +24,28 @@
 % Input variables:
 %    cfg                 : struct containing configuration information
 %    cfg.scale.method    : 'z', 'min0max1', 'cov', 'none'. Defines type of scaling.
-%    cfg.scale.estimation: 'all', 'across', 'separate', or 'none'. When all
-%                          is selected, the scaling parameter are estimated
-%                          and applied to all data. When across is
-%                          selected, the scaling parameters are estimated
-%                          in each step on the training data only, and are
-%                          then applied to both training and test data
-%                          separately (slower). When separate is estimated,
-%                          then scaling is done for each chunk (e.g. run)
-%                          separately. Remark: Because no class information
-%                          is used to estimate the scaling parameters, we
-%                          currently believe that this does not lead to any
-%                          "double dipping" if the goal is to measure
-%                          information content of the current data set, not
-%                          to build a general classifier. However, it is
-%                          the responsibility of the user to ensure
-%                          independence of training and test data.
+%    cfg.scale.estimation: 'all', 'all_iter', 'across', 'separate', or 'none'.
+%                          When 'all' is selected, the scaling parameter 
+%                          are estimated and applied to all data. When
+%                          'all_iter' is selected, the parameters are
+%                          estimated in each analysis step separately, but
+%                          for all data. 'Across' and 'separate' are 
+%                          estimated in each step separately, as well. 
+%                          When 'across' is selected, the scaling 
+%                          parameters are estimated in each step on the 
+%                          training data only, and are then applied to 
+%                          both training and test data separately (slower). 
+%                          When 'separate' is estimated, then scaling is 
+%                          done for each chunk (e.g. run) separately. 
+%                          Remark: Because no class information is used to 
+%                          estimate the scaling parameters, we believe 
+%                          that this does not lead to any "double dipping" 
+%                          if the goal is to measure information content 
+%                          of the current data set, not to build a
+%                          predictive classifier for real-world
+%                          applications. However, it is the responsibility
+%                          of the user to ensure independence of training 
+%                          and test data.
 %   cfg.scale.shrinkage:   field required for cfg.scale.method = 'cov'
 %                          which will do shrinkage based on residuals.
 %                          Options include 'none', 'pinv', 'lw'
@@ -47,7 +53,7 @@
 %                          retain variances), 'oas' (Oracle approximating
 %                          shrinkage, Chen et al., spherizes) (if you want
 %                          to use your own shrinkage, see explanation in
-%                          ldatrain), requires 
+%                          ldatrain) 
 %    [cfg.scale.cutoff]  : optional input for outlier reduction, 1x2 vector
 %                         ([lower bound upper bound])
 %    data                : contains samples to be scaled

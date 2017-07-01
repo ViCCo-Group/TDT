@@ -1,7 +1,7 @@
 % function design = make_design_rsa_cv(cfg)
 %
 % Function to generate design matrix for representational similarity
-% analysis, pattern simlarity analysis, or pattern component modeling. In
+% analysis, pattern similarity analysis, or pattern component modeling. In
 % contrast to the general version where all data is used for training and
 % testing, here independence of data is required, i.e. cross-validation is
 % performed. If cfg.files.components.index and cfg.files.components.matrix

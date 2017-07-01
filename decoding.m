@@ -243,7 +243,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2017/02/12 3.97'; % also change header of this file and in LOG.txt
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2017/07/01 3.98'; % also change header of this file and in LOG.txt
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)
@@ -305,7 +305,11 @@ cfg = tdt_check_transform_only(cfg,passed_data,mask_index);
 % Scale all data in advance if requested
 if strcmpi(cfg.scale.estimation,'all')
     dispv(1,'Scaling all data, using scaling method %s',cfg.scale.method)
-    data = decoding_scale_data(cfg,data);
+    if ~isfield(misc,'residuals')
+        data = decoding_scale_data(cfg,data);
+    else
+        data = decoding_scale_data(cfg,data,[],misc.residuals);
+    end
 end
 
 % Get number of decodings for searchlight and number of ROIs for ROI (and 1 for wholebrain)
@@ -343,6 +347,7 @@ feature_transformation_all_on = strcmpi(cfg.feature_transformation.estimation,'a
 feature_transformation_across_on = strcmpi(cfg.feature_transformation.estimation,'across');
 parameter_selection_on = ~strcmpi(cfg.parameter_selection.method,'none');
 feature_selection_on = ~strcmpi(cfg.feature_selection.method,'none');
+scaling_iter_on = strcmpi(cfg.scale.estimation,'all_iter');
 scaling_across_on = strcmpi(cfg.scale.estimation,'across');
 scaling_separate_on = strcmpi(cfg.scale.estimation,'separate');
 
@@ -365,7 +370,7 @@ elseif cfg.verbose == 2
     'If you want to weight all decoding steps equally, please use cfg.results.setwise=1 and cfg.design.set = 1:length(cfg.design.set) and average over the resulting output images']))
 end
 
-if scaling_separate_on
+if scaling_separate_on || scaling_iter_on
     dispv(1,'Using scaling estimation type: %s',cfg.scale.estimation)
 end
 
@@ -390,6 +395,11 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
     % Scale current data if it is done separately
     if scaling_separate_on
         current_data = tdt_scale_separate(cfg,current_data,misc,indexindex);
+    end
+    
+    % Scale current data if it should be done together but iteratively
+    if scaling_iter_on
+        current_data = tdt_scale_iter(cfg,current_data,misc,indexindex);
     end
     
     % Plot selected voxels online if requested
@@ -686,6 +696,17 @@ for i_chunk = 1:length(uchunk)
         data(dataind,:) = decoding_scale_data(cfg,data(dataind,:));
     end
 end
+
+function data = tdt_scale_iter(cfg,data,misc,miscindex)
+
+
+if isfield(misc,'residuals')
+    data = decoding_scale_data(cfg,data,[],misc.residuals(:,miscindex));
+else
+    data = decoding_scale_data(cfg,data);
+end
+
+
 
 %%
 function cfg = tdt_plot_selected_voxels(cfg, i_decoding, n_decodings, mask_index, indexindex, sz, currdata)

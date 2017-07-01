@@ -1,5 +1,5 @@
 Decoding Nr 1
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...11.img
   File Train 1: ...19.img
@@ -20,7 +20,7 @@ Decoding Nr 1
   File Test -1: ...04.img
 
 Decoding Nr 2
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...19.img
@@ -41,7 +41,7 @@ Decoding Nr 2
   File Test -1: ...12.img
 
 Decoding Nr 3
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...11.img
@@ -62,7 +62,7 @@ Decoding Nr 3
   File Test -1: ...20.img
 
 Decoding Nr 4
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...11.img
@@ -83,7 +83,7 @@ Decoding Nr 4
   File Test -1: ...28.img
 
 Decoding Nr 5
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...11.img
@@ -104,7 +104,7 @@ Decoding Nr 5
   File Test -1: ...36.img
 
 Decoding Nr 6
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...11.img
@@ -125,7 +125,7 @@ Decoding Nr 6
   File Test -1: ...44.img
 
 Decoding Nr 7
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...11.img
@@ -146,7 +146,7 @@ Decoding Nr 7
   File Test -1: ...52.img
 
 Decoding Nr 8
-  File Start: /Users/hebartmn/decoding_toolbox/benchmark/SPM_files/full/beta_00...
+  File Start: /Users/hebartmn/benchmark/SPM_files/full/beta_00...
 
   File Train 1: ...03.img
   File Train 1: ...11.img

@@ -25,8 +25,10 @@ clear defaults
 
 fdir = mfilename('fullpath');
 fdir = fileparts(fdir);
+fdir2 = fileparts(fdir);
 
-addpath(genpath(fileparts(fdir)))
+% add decoding toolbox to path
+addpath(genpath(fullfile(fdir2,'decoding_toolbox')))
 
 beta_dir = fullfile(fdir,'SPM_files','full');
 labelname1 = 'up';

@@ -1,6 +1,6 @@
 function model = lda_train(labels_train,data_train,cfg)
 
-if isstruct(data_train), error('This method requires training vectors in data_train directly. Probably a kernel was passed method is use. This method does not support kernel methods'), end
+if isstruct(data_train), error('This method requires training vectors in data_train directly. Probably a kernel was passed method is use. This method does not support kernel methods. Check if cfg.decoding.method = ''classification'' '), end
 
 switch lower(cfg.decoding.method)
 

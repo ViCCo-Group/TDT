@@ -161,9 +161,27 @@ if cfg.results.write == 1 && strcmpi(cfg.analysis,'searchlight') && ~isperm
         outputname = cfg.results.output{i_output};
         
         if ~isnumeric(results.(outputname).output)
-            warning('DECODING_WRITE_RESULTS:no_writing_possible',...
-                'Result %s cannot be written to an image, because the format is not numeric and thus assumes there are several entries per voxel. Writing only as .mat file.',outputname)
-            continue
+            % try to see if there is zero or one cell array per searchlight
+            if all(cellfun(@numel,results.(outputname).output) <= 1)
+                % convert
+                n_maskvox = size(results.(outputname).output,1);
+                c = cfg.results.backgroundvalue * ones(n_maskvox,1);
+                n_searchlight = n_maskvox;
+                try
+                    decoding_subindex = results.decoding_subindex;
+                catch
+                    decoding_subindex = 1:n_searchlight;
+                end
+                
+                c(decoding_subindex) = [results.(outputname).output{:}];
+                % reassign
+                results.(outputname).output = c;
+                
+            else
+                warning('DECODING_WRITE_RESULTS:no_writing_possible',...
+                    'Result %s cannot be written to an image, because the format is not numeric and thus assumes there are several entries per voxel. Writing only as .mat file.',outputname)
+                continue
+            end
         end
         
         % Save overall results and save to returning variable

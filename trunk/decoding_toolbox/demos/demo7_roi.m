@@ -160,7 +160,7 @@ p0 = p0 .* [0.5 1 1.5 1];
 fh = figure('Position',p0);
 
 a1 = subplot(1,2,1);
-volrange = 0.7*[nanmin(diff_vol(:)) nanmax(diff_vol(:))];
+volrange = 0.7*[min(diff_vol(~isnan(diff_vol))) max(diff_vol(~isnan(diff_vol)))];
 ph1 = imagesc(transform_vol(diff_vol),volrange);
 
 pa1 = get(a1,'Position');

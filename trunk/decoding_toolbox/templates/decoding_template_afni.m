@@ -8,6 +8,9 @@
 % Set defaults
 cfg = decoding_defaults;
 
+% Make sure to add afni_matlab to your path and set software to AFNI!
+cfg.software = 'AFNI';
+
 % Set the analysis that should be performed (default is 'searchlight')
 cfg.analysis = 'searchlight';
 cfg.searchlight.radius = 3; % use searchlight of radius 3 (by default in voxels), see more details below
@@ -25,7 +28,7 @@ beta_loc =
 % You can also use a mask file with multiple masks inside that are
 % separated by different integer values (a "multi-mask")
 %
-% If you don't have a brain mask, use 3dAutomask or run
+% If you don't have a brain mask, use 3dAutomask or run the following (this may fail if you have scaled your input data!)
 % cfg.files.mask = decoding_create_maskfile(cfg,beta_loc);
 cfg.files.mask = 
 
@@ -54,6 +57,8 @@ labelname2 =
 
 %% Decide whether you want to see the searchlight/ROI/... during decoding
 cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
+
+%% If your input data has been scaled
 
 %% Add additional output measures if you like
 % See help decoding_transform_results for possible measures

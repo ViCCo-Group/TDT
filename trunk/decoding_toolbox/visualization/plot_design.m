@@ -28,6 +28,10 @@ if ~exist('visible_on','var')
     visible_on = 1;
 end
 
+if ~isfield(cfg.files,'name')
+    cfg.files.name = repmat({' '},size(cfg.files.label));
+end
+
 if ischar(cfg.files.name)
     cfg.files.name = num2cell(cfg.files.name,2);
     warningv('BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')

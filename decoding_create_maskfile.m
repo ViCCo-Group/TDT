@@ -1,22 +1,32 @@
-function mask_name = decoding_create_maskfile(cfg,data_location)
-
+% function mask_name = decoding_create_maskfile(cfg,data_location)
+% 
 % This function will create a mask file to be used for the data provided,
 % named mask.nii, mask.img, mask+orig.BRIK, mask+tlrc.BRIK (depending on
 % the software used), in the location of data_location or - when it is not
 % a directory - in the path of the first file passed. It will return the
-% location of the file written. 
+% location of the file written. The mask file is written using a heuristic
+% of including all voxels larger than 0.6 times the mean of all voxels.
 %
-% NB: If you want to use functional data for writing a mask, you can
-% certainly pass it using cfg.mask.fileselect. You can pass it in wildcard
-% format (e.g. 'rf*.nii') or as a regular expression with 'REGEXP:...'
-% (e.g. 'REGEXP:func[0-9]+orig.BRIK').
-% NB2: If a mask file already exists at that location and
-% cfg.mask.overwrite = 0, the function will throw a warning. 
-
+% Input:
+%   cfg: structure with the following fields:
+%       .software: 'SPM12' or 'AFNI' (older spm versions work, too)
+%       .mask.fileselect (optional): if you pass a directory as
+%           data_location, all files would be selected. To automatically
+%           select all files with certain criteria, you can use wildcards
+%           (e.g. 'rf*.nii') or regular expressions starting with REGEXP:
+%           (e.g. 'REGEXP:func[0-9]+orig.BRIK').
+%       .mask.overwrite (optional): if a mask file exists, a warning will
+%           be thrown. To prevent the warning, set to 1.
+%
+%   data_location: either a path to files (string or cell), or a list of
+%   file names (string or cell).
+%
 % Martin Hebart 06/30/2016
 
 % TODO: the automatic approach may be using too much data for creating a
 % mask (at least with AFNI)
+
+function mask_name = decoding_create_maskfile(cfg,data_location)
 
 dispv(1,'Creating mask file...')
 
@@ -41,7 +51,7 @@ elseif strfind(lower(cfg.software),'afni')
         
 else
         
-    error('decoding_create_maskfile is currently only supporting SPM and AFNI as software.')
+    error('decoding_create_maskfile is currently only supporting SPM and AFNI as software. If you are using either of them, set cfg.software = ''SPMauto'' (or ''AFNI'') and add SPM (or afni_matlab) to your Matlab path')
         
 end
     
@@ -247,8 +257,8 @@ try
         error('jumping to catch');
     end
 catch
-    [fpath,fn] = fileparts(mask_hdr.RootName); %#ok<ASGLU>
-    suffix = regexp(fn,'+(orig|tlrc)','match');
+    [fpath,fn,fext] = fileparts(mask_hdr.RootName); %#ok<ASGLU>
+    suffix = regexp([fn fext],'+(orig|tlrc)','match');
 end
 
 if ~any(cellfun(@isempty,strfind({'+orig','+tlrc'},suffix{1}))) % if none of them ends with +orig or +tlrc

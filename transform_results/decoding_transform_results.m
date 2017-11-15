@@ -36,6 +36,7 @@
 %   100 (i.e. values from 0 to 100), built from classifier decision values, 
 %   not from sensitivity/specificity (for more than 2 classes, average of
 %   all pairwise comparisons is calculated)
+% AUC_pairwise: Same result as AUC but for more than 2 classes
 % AUC_minus_chance: like AUC, but minus chance level(useful for SPM 2nd level)
 % AUC_matrix: for more than 2 classes all pairwise comparisons in a matrix
 % corr: Correlation (useful e.g. for regression approaches, e.g. SVR)

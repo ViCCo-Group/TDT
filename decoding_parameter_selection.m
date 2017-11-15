@@ -260,6 +260,7 @@ end
 
 results.n_cond = cfg.design.n_cond; % init
 results.n_cond_per_step = cfg.design.n_cond_per_step;
+cfg.parameter_selection.design.n_sets = length(unique(cfg.parameter_selection.design.set));
 
 % transform decoding_out to result format that is requested
 for iteration = 1:size(all_combinations,2)

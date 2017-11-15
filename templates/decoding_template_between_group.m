@@ -1,7 +1,17 @@
-% This script is a template that can be used for a decoding analysis on 
-% brain image data. It is for people who don't have betas available to do
-% their classification and who need to enter their image names, labels and
-% decoding chunks (e.g. run numbers) separately.
+% This script is a template for people who are interested in carrying out
+% between-group decoding of brain imaging data. This is the case where each
+% of your subjects carries only one condition. If you have one group and
+% have multiple conditions per subject you want to compare between subject,
+% see decoding_template_between_subject.
+% If you have multiple groups where each subject has multiple conditions,
+% our suggestion is to carry out the analysis within group and then compare
+% the results (e.g. compare accuracies) between groups. 
+% Since you cannot make use of the automatic extraction of image names,
+% labels and decoding chunks, you need to enter the image names, labels and
+% chunks (i.e. what data belong together) separately.
+% Important: make sure that all subjects are in the same space (e.g.
+% spatially-normalized data), else the voxels are not comparable across
+% participants.
 
 % Set defaults
 cfg = decoding_defaults;
@@ -26,7 +36,9 @@ cfg.files.name =
 % and the other two fields if you use a make_design function (e.g. make_design_cv)
 %
 % (1) a nx1 vector to indicate what data you want to keep together for 
-% cross-validation (typically runs, so enter run numbers)
+% cross-validation (typically only matched controls in between-group,
+% because subjects are else independent). If you don't have an obvious way
+% to create chunks, set all participants to 1 (e.g. cfg.files.chunk = ones(n,1) )
 cfg.files.chunk =
 %
 % (2) any numbers as class labels, normally we use 1 and -1. Each file gets a
@@ -54,14 +66,17 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 % Add additional output measures if you like
 % cfg.results.output = {'accuracy_minus_chance', 'AUC_minus_chance'}
 
-% If you have a balanced design with multiple chunks, use this function
-cfg.design = make_design_cv(cfg);
-% This creates the leave-one-pair-out cross validation design with 100 steps (assuming there is only one chunk):
-% cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
-% If there are several unbalanced chunks, use this function:
-% cfg.design = make_design_boot_cv(cfg,100,1); % the 1 keeps test data balanced, too
-% If you used a bootstrap design, then you might speed up processing using this function:
-% cfg.design = sort_design(cfg.design);
+% Assuming there are no matched controls between groups, the way in which
+% data are split up is arbitrary. For that reason, you can repeatedly
+% subsample from both groups, in this case 100 times. This creates the
+% leave-one-pair-out cross validation design with 100 decoding steps:
+cfg.design = make_design_boot(cfg,100,1); % the 1 keeps test data balanced, too
+% If you have a balanced design with multiple chunks (e.g. matched samples), use this function:
+% cfg.design = make_design_cv(cfg);
+
+% If you used a bootstrap design, then you might speed up processing using
+% this function:
+cfg.design = sort_design(cfg.design);
 
 % Run decoding
 results = decoding(cfg);

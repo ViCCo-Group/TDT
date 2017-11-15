@@ -1,13 +1,11 @@
-Potential todos for next release:
-
+Potential todos for next release (for Kai):
 - Demo how to train and test on different data (make sure than an error occurs if data is not in same format or has different transformation matrices, but I guess that should through an error already now)
 - Add there demo for sort_design
-
 - Cleanup prevalence
 
-- Anything else? 
-
-- change make_design_xclass so that training and test set are passed as extra arguments. Show deprication warning if done implicitely as at the moment.
+* 3.99 2017/11/15
+- more and easier to use templates 
+- minor bugfixes
 
 * 3.98 2017/07/01
 - more intutive crossnobis distance estimation (including template)

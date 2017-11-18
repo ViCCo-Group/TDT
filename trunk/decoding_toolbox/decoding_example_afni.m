@@ -82,6 +82,10 @@ else
     end
 end
 
+if isempty(beta_loc) % convert to cell
+    beta_loc = {''};
+end
+
 if ischar(beta_loc) % Convert to cell
     beta_loc = num2cell(beta_loc,2);
     if isempty(beta_loc), beta_loc{1} = ''; end
@@ -260,7 +264,8 @@ switch lower(q)
     case 'locate existing'
         cwd = pwd;
         cd(fpath) % search in fpath
-        maskfname = uigetfile('*.BRIK', 'Select your mask file');
+        [fn,fp] = uigetfile('*.BRIK', 'Select your mask file');
+        maskfname = fullfile(fp,fn);
         cd(cwd) % go back
     otherwise
         disp('Quitting decoding_example_afni.m ...'), return

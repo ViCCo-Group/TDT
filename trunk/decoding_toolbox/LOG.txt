@@ -5,6 +5,7 @@ Potential todos for next release (for Kai):
 
 * 3.99 2017/11/15
 - more and easier to use templates 
+- more general use of get_filenames possible
 - added more RSA output measures (Pearson correlation, Spearman's rho, Kendall's tau)
 - minor bugfixes
 

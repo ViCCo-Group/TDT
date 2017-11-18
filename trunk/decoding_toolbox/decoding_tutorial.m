@@ -67,6 +67,9 @@ cfg.results.dir = FILLTHISOUT;
 % AFNI USERS: Specify all BRIK files corresponding to your estimated models
 %    in a cell array, e.g. 
 %    {'/misc/data/mystudy/results1+orig.BRIK','/misc/data/mystudy/results2+orig.BRIK',...}
+%    If all your BRIK files are in the same folder, you can use the
+%    following function to call them all together in one line:
+%    beta_loc = get_filenames_afni('/misc/data/mystudy/results*+orig.BRIK');
 beta_loc = FILLTHISOUT;
 % Specify the label names that you gave your regressors of interest in the 
 % SPM or AFNI analysis (e.g. 'button left' and 'button right'). If you

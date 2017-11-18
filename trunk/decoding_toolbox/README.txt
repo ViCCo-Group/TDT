@@ -106,7 +106,8 @@ second step the statistical significance can be tested easily using your
 brain image analysis toolbox (e.g. second-level analysis in SPM) or simple 
 statistics (e.g. a one-sample t-test in Matlab). For simplicity, we set 
 chance to 0 as a default and set all other values around 0 (i.e. for 2 
-classes and chance level of 50%, values range from -50 to 50).
+classes and chance level of 50%, values range from -50 to 50). You can 
+of course also use the statistics utilities provided by the toolbox.
 
 Important remark: For calculating the mean output value across cross-
 validation steps (e.g. runs), we chose to average across all individual
@@ -124,10 +125,10 @@ own routine (see HOWTOEXTEND.txt)
 5. INSTALLING THE TOOLBOX
 =========================
 
-1. ADD IMAGE PROCESSING SOFTWARE (Default: SPM8)
-By default, download & "install" SPM8 (i.e. extract it and add it to your 
-matlab path). By default, SPM8 is used to read & write brain images.
-Alternatively, you can also use SPM2, SPM5, SPM12, or another toolbox, in 
+1. ADD IMAGE PROCESSING SOFTWARE
+Download & "install" SPM12 or AFNI (i.e. extract it and add it to your 
+matlab path). This software is used to read & write brain images.
+Alternatively, you can also use SPM2, SPM5, SPM8, or another toolbox, in 
 case it is implemented. See HOWTOEXTEND.txt on how to do this.
 
 2. THE TOOLBOX

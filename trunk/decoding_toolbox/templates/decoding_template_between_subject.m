@@ -10,6 +10,11 @@
 % spatially-normalized data), else the voxels are not comparable across
 % participants.
 
+% Make sure the decoding toolbox and your favorite software (SPM or AFNI)
+% are on the Matlab path (e.g. addpath('/home/decoding_toolbox') )
+addpath('$ADD FULL PATH TO TOOLBOX AS STRING OR MAKE THIS LINE A COMMENT IF IT IS ALREADY$')
+addpath('$ADD FULL PATH TO TOOLBOX AS STRING OR MAKE THIS LINE A COMMENT IF IT IS ALREADY$')
+
 % Set defaults
 cfg = decoding_defaults;
 

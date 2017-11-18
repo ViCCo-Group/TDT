@@ -33,12 +33,16 @@ if ~exist('save_on','var'), save_on = 1; end
 
 % convert to cell if char
 if ischar(brik_files)
-    brik_files = {brik_files};
+    brik_files = num2cell(brik_files,2);
+end
+
+if ~iscell(brik_files)
+   error('input to design_from_afni must be a string array (e.g. ''/home/afniresults'') or a cell array of strings (e.g. {''/home/afniresults/res1+orig.BRIK'',''/home/afniresults/res2+orig.BRIK''} ). Please check!')
 end
 
 % check if brik_files is a path, if so, get all brik_files in that path
 if isdir(brik_files{1})
-    brik_files = get_filenames(cfg.software,brik_files{1},'.*\.BRIK');
+    brik_files = get_filenames('afni',brik_files{1},'.*\.BRIK');
     brik_files = num2cell(brik_files,2); % convert string to cell
     brik_files = cellfun(@strtrim,brik_files,'uniformoutput',false); % remove training spaces in each cell
 end

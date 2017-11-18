@@ -104,6 +104,11 @@ cfg.files.descr = {}; % contains the regressor names from SPM (more or less)
 
 labels_provided = ~(isempty(labelnames) && isempty(labels));
 
+% first check if beta_loc is multiple filenames as a string and if so convert to cell
+if ischar(beta_loc) && size(beta_loc,1) > 1
+    beta_loc = num2cell(beta_loc,2);
+end
+
 % check if beta_loc is a directory or a cellstr (in this case, assume it's the name of the input files directly)
 if iscellstr(beta_loc)
     dispv(1, 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')

@@ -44,6 +44,10 @@ if ~exist('compress', 'var')
     compress = 0;
 end
 
+if ~ischar(beta_loc) || ~iscell(beta_loc)
+    error('Input beta_loc not correctly specified. For SPM, it must be a path to where the SPM.mat is, and for AFNI a path or cell array of paths to where the BRIK files from the deconvolutions are.')
+end
+
 
 decoding_defaults; % use only to add path
 
@@ -53,8 +57,17 @@ catch
     try
     regressor_names = design_from_afni(beta_loc,0);
     catch
-        fprintf('Both SPM and AFNI failed to find beta images in folder ''%s''\n',beta_loc)
-        error(lasterr) %#ok<LERR>
+        % first check if images exist in that location
+        if ischar(beta_loc), file_exists = exist(beta_loc,'file');
+        else, file_exists = exist(beta_loc{1},'file'); end
+        
+        if file_exists
+            fprintf('SPM or afni_matlab are likely not on your Matlab path. Please add the relevant software and try again!')
+            error(lasterr) %#ok<LERR>
+        else
+            fprintf('Both SPM and AFNI failed to find beta images in location ''%s''\n',beta_loc)
+            error(lasterr) %#ok<LERR>
+        end
     end
 end
 

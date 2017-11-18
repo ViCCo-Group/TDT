@@ -3,6 +3,11 @@
 % their classification and who need to enter their image names, labels and
 % decoding chunks (e.g. run numbers) separately.
 
+% Make sure the decoding toolbox and your favorite software (SPM or AFNI)
+% are on the Matlab path (e.g. addpath('/home/decoding_toolbox') )
+addpath('$ADD FULL PATH TO TOOLBOX AS STRING OR MAKE THIS LINE A COMMENT IF IT IS ALREADY$')
+addpath('$ADD FULL PATH TO TOOLBOX AS STRING OR MAKE THIS LINE A COMMENT IF IT IS ALREADY$')
+
 % Set defaults
 cfg = decoding_defaults;
 

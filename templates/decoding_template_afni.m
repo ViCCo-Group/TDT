@@ -5,10 +5,15 @@
 % (e.g. run numbers). If you don't have this available, then use
 % decoding_template_nobetas.m
 
+% Make sure the decoding toolbox and afni_matlab are on the Matlab path
+% (e.g. addpath('/home/decoding_toolbox') )
+addpath('$ADD FULL PATH TO TOOLBOX AS STRING OR MAKE THIS LINE A COMMENT IF IT IS ALREADY$')
+addpath('$ADD FULL PATH TO AFNI_MATLAB AS STRING OR MAKE THIS LINE A COMMENT IF IT IS ALREADY$')
+
 % Set defaults
 cfg = decoding_defaults;
 
-% Make sure to add afni_matlab to your path and set software to AFNI!
+% Make sure to set software to AFNI
 cfg.software = 'AFNI';
 
 % Set the analysis that should be performed (default is 'searchlight')
@@ -20,6 +25,9 @@ cfg.results.dir =
 
 % Set the full path to the files where your coefficients for each run are stored e.g. 
 % {'/misc/data/mystudy/results1+orig.BRIK','/misc/data/mystudy/results2+orig.BRIK',...}
+%    If all your BRIK files are in the same folder, you can use the
+%    following function to call them all together in one line:
+%    beta_loc = get_filenames_afni('/misc/data/mystudy/results*+orig.BRIK');
 beta_loc = 
 
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
@@ -28,7 +36,7 @@ beta_loc =
 % You can also use a mask file with multiple masks inside that are
 % separated by different integer values (a "multi-mask")
 %
-% If you don't have a brain mask, use 3dAutomask or run the following (this may fail if you have scaled your input data!)
+% If you don't have a brain mask, use 3dAutomask or run the following (both may fail if you have scaled your input data in AFNI!)
 % cfg.files.mask = decoding_create_maskfile(cfg,beta_loc);
 cfg.files.mask = 
 

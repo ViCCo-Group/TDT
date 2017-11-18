@@ -1,10 +1,37 @@
+% function varargout = get_filenames_afni(varargin)
+% 
+% Function to get file names using afni_matlab. Supports both wildcard and
+% regular expressions for file names (not for paths).
+%
+% INPUT:
+%       file_path (1 x n string)
+%       optional: filenames with wildcards (e.g. *.BRIK or rf*.BRIK), or 
+%                 filenames with regular expressions starting with 
+%                 REGEXP: (e.g. 'REGEXP:^rf.*\.BRIK$')
+%
+% OUTPUT: filenames as n x m char array (n = number of files) with space padding at end
+%
+% Example calls:
+%       fnames = get_filenames_afni('/home/resultsdir','*.BRIK') 
+%           will select all nifti files in the provided folder
+%
+%       fnames = get_filenames_afni('/home/resultsdir/*.BRIK')
+%           same result as above
+%
+%       fnames = get_filenames_afni('/home/resultsdir','REGEXP:^results.*\.BRIK$')
+%           will select all nifti files in the provided folder starting
+%           with results and ending with .BRIK
+
 function varargout = get_filenames_afni(varargin)
 
-%   get_filenames:
-%       inputs: file path (1 x n string), possible filenames with wildcards (e.g. *.BRIK or mystudy*.BRIK)
-%       output: filenames as n x m char array (n = number of files)
 
-if nargin >= 2
+if nargin == 1
+    [fpath,fname,fext] = fileparts(varargin{1});
+    varargin{1} = fpath;
+    varargin{2} = [fname fext];
+end
+
+if length(varargin) >= 2
     if strfind(varargin{2},'REGEXP:') == 1
         fname_regexp = varargin{2}(8:end);
     else

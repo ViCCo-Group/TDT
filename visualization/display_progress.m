@@ -13,7 +13,7 @@ global warningv_active % was a warning shown in between? (otherwise message will
 persistent prev_time   % how much time has elapsed since last call?
 
 if cnt == 1
-    fprintf('\nStarting time: %s',datestr(start_time));
+    fprintf('\nStarting time: %s\n',datestr(start_time));
 end
 
 if n_decodings > 50

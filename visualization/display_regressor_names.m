@@ -44,7 +44,7 @@ if ~exist('compress', 'var')
     compress = 0;
 end
 
-if ~ischar(beta_loc) || ~iscell(beta_loc)
+if ~ischar(beta_loc) && ~iscell(beta_loc)
     error('Input beta_loc not correctly specified. For SPM, it must be a path to where the SPM.mat is, and for AFNI a path or cell array of paths to where the BRIK files from the deconvolutions are.')
 end
 

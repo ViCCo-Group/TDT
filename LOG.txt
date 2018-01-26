@@ -3,6 +3,10 @@ Potential todos for next release (for Kai):
 - Add there demo for sort_design
 - Cleanup prevalence
 
+* 3.991 2018/01/22
+- bugfix in reading and writing +tlrc with AFNI which was is some cases not functional before
+- minor bugfix in display_regressor_names for AFNI
+
 * 3.99 2017/11/15
 - more and easier to use templates 
 - more general use of get_filenames possible

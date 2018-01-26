@@ -78,7 +78,7 @@ afniopt.AdjustHeader = 'no';
 
 fname = varargin{1}.fname;
 
-if isempty(regexp(fname,'(+orig$|+orig.HEAD$|+orig.BRIK$|+orig.BRIK.gz$|+tlrc$|+tlrc.HEAD$|+tlrc.BRIK$|+tlrc.BRIK.gz$)','once'))
+if isempty(regexp(fname,'(+orig$|+orig.HEAD$|+orig.BRIK$|+orig.BRIK.gz$|+tlrc$|+tlrc.HEAD$|+tlrc.BRIK$|+tlrc.BRIK.gz$|+acpc$|+acpc.HEAD$|+acpc.BRIK$|+acpc.BRIK.gz$)','once'))
     if isfield(varargin{1},'suffix')
         [fp,fn,fext] = fileparts(fname);
         fname = fullfile(fp,[fn varargin{1}.suffix fext]);
@@ -88,11 +88,14 @@ end
 if ~isempty(regexp(fname, '(+orig$|+orig.HEAD$|+orig.BRIK$|+orig.BRIK.gz$)', 'once'))
     hdr.SCENE_DATA(1) = 0;
     afniopt.View = '+orig';
+elseif ~isempty(regexp(fname, '(+acpc$|+acpc.HEAD$|+acpc.BRIK$|+acpc.BRIK.gz$)', 'once'))
+    hdr.SCENE_DATA(1) = 1;
+    afniopt.View = '+acpc';    
 elseif ~isempty(regexp(fname, '(+tlrc$|+tlrc.HEAD$|+tlrc.BRIK$|+tlrc.BRIK.gz$)', 'once'))
     hdr.SCENE_DATA(1) = 2;
     afniopt.View = '+tlrc';
 else
-    error('File name or format to be written is not +orig or +tlrc (filename: , . Required for writing AFNI files. Unsupported scene data (this is a field in the BRIK header) for %s', varargin{1}.fname);
+    error('File name or format to be written is neither +orig nor +acpc nor +tlrc (filename: , . Required for writing AFNI files. Unsupported scene data (this is a field in the BRIK header) for %s', varargin{1}.fname);
 end
 
 % Finally (or at last?), write it out

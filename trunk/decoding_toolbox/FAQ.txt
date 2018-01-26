@@ -51,7 +51,7 @@ Q4. My searchlight analysis takes several hours, compared to your example which 
     not using parameter selection or feature selection and the such, which I know make processing 
     a lot slower. What am I doing wrong?
 
-A4. The duration of a searchlight analysis depends on a number of issues, but mostly on the number
+A4. The duration of a searchlight analysis depends on a number of factors, but mostly on the number
     of searchlights, the radius of the searchlight and the number of cross-validation steps.
     Smaller searchlights are usually trained faster, unless the number of voxels in the searchlight
     are equal or smaller than the number of samples that are entered into the analysis; it that case

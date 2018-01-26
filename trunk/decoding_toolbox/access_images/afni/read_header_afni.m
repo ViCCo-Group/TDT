@@ -26,6 +26,8 @@ hdr.dim(4) = hdr.DATASET_RANK(2); % number of subbricks
 if hdr.SCENE_DATA(1) == 0
     hdr.suffix = '+orig';
 elseif hdr.SCENE_DATA(1) == 1
+    hdr.suffix = '+acpc';
+elseif hdr.SCENE_DATA(1) == 2
     hdr.suffix = '+tlrc';
 else
     error('Unsupported format for reading files in hdr.SCENE_DATA(1) = %i',hdr.SCENE_DATA(1))

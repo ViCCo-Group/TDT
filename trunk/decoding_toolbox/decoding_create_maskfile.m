@@ -1,11 +1,12 @@
 % function mask_name = decoding_create_maskfile(cfg,data_location)
 % 
 % This function will create a mask file to be used for the data provided,
-% named mask.nii, mask.img, mask+orig.BRIK, mask+tlrc.BRIK (depending on
-% the software used), in the location of data_location or - when it is not
-% a directory - in the path of the first file passed. It will return the
-% location of the file written. The mask file is written using a heuristic
-% of including all voxels larger than 0.6 times the mean of all voxels.
+% named mask.nii, mask.img, mask+orig.BRIK, mask+acpc.BRIK, mask+tlrc.BRIK
+% (depending on the software used), in the location of data_location or -
+% when it is not a directory - in the path of the first file passed. It
+% will return the location of the file written. The mask file is written
+% using a heuristic of including all voxels larger than 0.6 times the mean
+% of all voxels.
 %
 % Input:
 %   cfg: structure with the following fields:
@@ -195,7 +196,7 @@ end
 
 % check if BRIK mask already exists at that location
 fpath = fileparts(fnames{1});
-mask_candidates = {'mask+orig.BRIK','mask+tlrc.BRIK'};
+mask_candidates = {'mask+orig.BRIK','mask+acpc.BRIK','mask+tlrc.BRIK'};
 for ii = 1:length(mask_candidates)
     if exist(fullfile(fpath,mask_candidates{ii}),'file')
         if isfield(cfg,'mask') && isfield(cfg.mask,'overwrite') && cfg.mask.overwrite
@@ -252,23 +253,25 @@ try
     if mask_hdr.SCENE_DATA == 0
         suffix = {'+orig'};
     elseif mask_hdr.SCENE_DATA == 1
+        suffix = {'+acpc'};        
+    elseif mask_hdr.SCENE_DATA == 2
         suffix = {'+tlrc'};
     else
         error('jumping to catch');
     end
 catch
     [fpath,fn,fext] = fileparts(mask_hdr.RootName); %#ok<ASGLU>
-    suffix = regexp([fn fext],'+(orig|tlrc)','match');
+    suffix = regexp([fn fext],'+(orig|acpc|tlrc)','match');
 end
 
-if ~any(cellfun(@isempty,strfind({'+orig','+tlrc'},suffix{1}))) % if none of them ends with +orig or +tlrc
-    error('Suffix for file to be written is %s. Only +orig or +tlrc currently allowed...',suffix{1})
+if ~any(cellfun(@isempty,strfind({'+orig','+acpc','+tlrc'},suffix{1}))) % if none of them ends with +orig or +acpc or +tlrc
+    error('Suffix for file to be written is %s. Only +orig, +acpc or +tlrc currently allowed...',suffix{1})
 end
 
 [fpath,fn,fext] = fileparts(mask_hdr.fname); %#ok<ASGLU>
 newfname = ['mask' suffix{1}];
 mask_hdr.RootName = fullfile(fpath,newfname);
-mask_hdr.fname = fullfile(fpath,[newfname '.BRIK']); % it will automatically be renamed to mask+orig.BRIK or mask+tlrc.BRIK depending on the suffix provided in the header
+mask_hdr.fname = fullfile(fpath,[newfname '.BRIK']); % it will automatically be renamed to mask+orig.BRIK or mask+acpc.BRIK or mask+tlrc.BRIK depending on the suffix provided in the header
 
 write_image(cfg.software,mask_hdr,mask_vol);
 

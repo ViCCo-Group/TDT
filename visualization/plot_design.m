@@ -1,4 +1,4 @@
-% function figure_handle = plot_design(cfg,visible_on)
+% function figure_handle = plot_design(cfg,visible_on,max_n_fnames)
 %
 % If the figure handle should be reused, use as
 %   cfg.fighandles.plot_design = plot_design(cfg)
@@ -10,16 +10,18 @@
 % If you like and/or know how to design nice figures in Matlab, feel free
 % to improve the design.
 %
-% Some possible input:
-%   cfg.fighandles.plot_design (optional): Figure handle to which design
-%       will be plotted to
+% Some optional input:   
+%   visible_on: 1: show figure, 0: do not show figure (default: 1)
+%   max_n_fnames: number of maximal displayed file names (default: 16)
+%   cfg.fighandles.plot_design: Figure handle to which design
+%       will be plotted to (default: new figure)
 %
 % See also: display_design.m
 
 % Kai, 13-01-24
 
 
-function figure_handle = plot_design(cfg,visible_on)
+function figure_handle = plot_design(cfg,visible_on,max_n_fnames)
 drawnow; % fixes a display problem with plot_selected_voxels
 % switch alternative on for a different color scheme
 alternative = 0;
@@ -219,11 +221,13 @@ clear fnames_char; % to avoid anyone uses it below
 
 % Do not show all file names if too many
 n_fnames = size(fnames_cstr,1);
-max_n_fnames = 16;
+if ~exist('max_n_fnames', 'var')
+    max_n_fnames = 16;
+end
 
 % if n_fnames > max_n_fnames
 % In that case, showing them evenly spaced
-% Find smallest integer stepsize so that maximally 16 names are shown
+% Find smallest integer stepsize so that maximally (default: 16) names are shown
 stepsize = ceil(n_fnames/max_n_fnames);
 fnames_shown = 1:stepsize:n_fnames; % indices for all names that are shown
 

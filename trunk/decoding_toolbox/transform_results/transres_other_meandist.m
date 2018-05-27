@@ -1,12 +1,13 @@
-% output = transres_other_average(decoding_out, varargin)
+% output = transres_other_meandist(decoding_out, varargin)
 % 
 % This function averages other output that was generated across decoding
 % steps (in the field decoding_out.opt), but works only if this other
-% output is numerical
+% output is numerical. This is useful if you have a similarity matrix per
+% cross-validation step and want to average across those
 %
 % To use it, use
 %
-%   cfg.results.output = {'other_average'}
+%   cfg.results.output = {'other_meandist'}
 %
 % Martin, 2017-06-30
 

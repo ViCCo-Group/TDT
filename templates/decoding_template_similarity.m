@@ -39,10 +39,10 @@ labels(1:2:length(labelnames)) = -1;
 labels(2:2:length(labelnames)) =  1;
 
 
-% set everything to similarity analysis
+% set everything to similarity analysis (for available options as model parameters, check decoding_software/pattern_similarity/pattern_similarity.m)
 cfg.decoding.software = 'similarity';
 cfg.decoding.method = 'classification';
-cfg.decoding.train.classification.model_parameters = 'euclidean';
+cfg.decoding.train.classification.model_parameters = 'pearson'; % this is pearson correlation
 
 % Beware: This option just passes the similarity matrices. This can produce
 % a lot of data. (one matrix per voxel for searchlight analyses). In that

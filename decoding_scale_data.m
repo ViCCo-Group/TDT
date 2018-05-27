@@ -23,7 +23,7 @@
 %
 % Input variables:
 %    cfg                 : struct containing configuration information
-%    cfg.scale.method    : 'z', 'min0max1', 'cov', 'none'. Defines type of scaling.
+%    cfg.scale.method    : 'min0max1', 'mean', 'z', 'cov', 'none'. Defines type of scaling.
 %    cfg.scale.estimation: 'all', 'all_iter', 'across', 'separate', or 'none'.
 %                          When 'all' is selected, the scaling parameter 
 %                          are estimated and applied to all data. When
@@ -72,7 +72,8 @@
 % DECODING_PARAMETER_SELECTION, DECODING_FEATURE_TRANSFORMATION
 
 % History:
-% Martin H.: Introduced method 'separate' and possibility to do cov-scaling
+% MH: 2018/5/27: Introduced mean scaling only
+% Martin H. 2015: Introduced method 'separate' and possibility to do cov-scaling
 % Kai: removed bug that min0max1 did not work when min==max
 % restructured Martin H. 2010/07/25
 
@@ -98,6 +99,8 @@ if ~exist('scaleparams','var') || isempty(scaleparams)
             scaleparams.samples_max = max(data,[],1);
             min_eq_max = scaleparams.samples_min==scaleparams.samples_max; % check if in any dimension min == max
             scaleparams.samples_max(min_eq_max) = scaleparams.samples_min(min_eq_max) + 1; % prevents divide by 0, if min == max
+        case 'mean'
+            scaleparams.samples_mean = mean(data);            
         case 'z'
             scaleparams.samples_mean = mean(data);
             scaleparams.samples_std = std(data);
@@ -141,6 +144,8 @@ if exist('bsxfun','builtin') % New method for Matlab 7.4+ (fast)
         case 'min0max1'
             data = bsxfun(@minus, data, scaleparams.samples_min);
             data = bsxfun(@rdivide, data, scaleparams.samples_max - scaleparams.samples_min);
+        case 'mean'
+            data = bsxfun(@minus, data, scaleparams.samples_mean);
         case 'z'
             data = bsxfun(@minus, data, scaleparams.samples_mean);
             data = bsxfun(@rdivide, data, scaleparams.samples_std);
@@ -160,6 +165,9 @@ else % Old method for < Matlab 7.4 (slow)
             minmat = repmat(scaleparams.samples_min,size(data,1),1);
             maxmat = repmat(scaleparams.samples_max,size(data,1),1);
             data = (data - minmat)./(maxmat - minmat);
+        case 'mean'
+            meanmat = repmat(scaleparams.samples_mean,size(data,1),1);
+            data = (data - meanmat);
         case 'z'
             meanmat = repmat(scaleparams.samples_mean,size(data,1),1);
             stdmat = repmat(scaleparams.samples_std,size(data,1),1);

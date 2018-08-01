@@ -3,6 +3,11 @@ Potential todos for next release (for Kai):
 - Add there demo for sort_design
 - Cleanup prevalence
 
+* 3.992 2018/07/31
+- added prepare_tdt_compiler.m to allow compilation of TDT for server
+- added new transres_MSS_diff.m (for support vector regression)
+- minor bugfixes
+
 * 3.991 2018/01/22
 - bugfix in reading and writing +tlrc with AFNI which was is some cases not functional before
 - minor bugfix in display_regressor_names for AFNI

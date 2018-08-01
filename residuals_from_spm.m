@@ -31,10 +31,12 @@
 
 function [res,run_number] = residuals_from_spm(SPM,masks,Y)
 
-disp('Making residuals...')
 
 %% load SPM.mat
 SPMpath = fileparts(SPM);
+
+disp('Making residuals...')
+
 if ~isstruct(SPM)
     fprintf('     Loading SPM.mat from %s\n',SPM)
     load(SPM)

@@ -71,7 +71,7 @@ if size(keepind,1) ~= n_label % if this is the first iteration or there was any 
     
     % For speeding everything up, we will use a matrix that we define here that
     % extracts accuracies from the multiclass classification decision values
-    M = zeros(n_label,(n_label*n_label-1)/2); % init with nchoosek(n_label,2)
+    M = zeros(n_label,(n_label*(n_label-1))/2); % init with nchoosek(n_label,2)
     
     % we just need the position of 1, 2, etc. in the lower diagonal matrix,
     % with one row where each of them appears
@@ -131,4 +131,4 @@ for i_step = 1:n_step
 end
 
 accuracy = acc/n_step; % get mean accuracy by dividing sum by number of occurrences and arrange in right format
-output = 100*(accuracy + accuracy') + diag(nan(1,n_label)); % add transpose (accuracies are symmetrical) and convert to percent
+output = {100*(accuracy + accuracy') + diag(nan(1,n_label))}; % add transpose (accuracies are symmetrical) and convert to percent

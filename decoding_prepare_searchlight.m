@@ -4,7 +4,11 @@ function [cfg,sl_template] = decoding_prepare_searchlight(cfg)
 % This function computes a reference sphere of coordinates around zero to 
 % use in the definition of searchlights. When shifted to the current
 % searchlight center, it can be used to get the coordinates of all voxels
-% in that searchlight.
+% in that searchlight. A voxel is included in the searchlight when its
+% distance is *smaller* than the radius provided, i.e. the edge voxels are
+% excluded (e.g. if the radius is 3 voxels, there will be 27 voxels
+% included).
+%
 % Output sl_template is a struct containing x,y,z displacement for each
 % sl_template.index voxel relative to the center of the searchlight (may be
 % necessary in get_ind.m)

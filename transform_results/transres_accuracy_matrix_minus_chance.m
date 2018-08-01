@@ -31,4 +31,4 @@ function output = transres_accuracy_matrix_minus_chance(decoding_out, chanceleve
 
 output = transres_accuracy_matrix(decoding_out,chancelevel,varargin{:});
 
-output = output - chancelevel;
+output = {output{1} - chancelevel};

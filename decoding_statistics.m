@@ -118,10 +118,6 @@ function [p,results] = decoding_statistics(cfg,results,reference)
 
 decoding_defaults;
 
-warningv('decoding_statistics:beta',...
-    ['This function is a recent addition to the toolbox. Running in beta mode...',...
-     'Please report any errors that you do not understand immediately or any bugs to the developers.'])
-
 results_out = load_results(cfg,results);
 cfg = basic_checks(cfg,results_out);
 

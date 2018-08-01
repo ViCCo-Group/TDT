@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version: 3.991, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.992, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -137,6 +137,7 @@
 %       (0 = minimum, 1 = normal, 2 = all) [default = 1]
 %   cfg.testmode: Test mode, only the first decoding step (e.g. the first
 %       searchlight) will be calculated
+%   cfg.check_software: Useful to switch check off e.g. for compiling TDT [default = 1] 
 %
 % Explanation of important variables:
 %   n_decodings: Number of decoding analyses that are performed, e.g.
@@ -243,7 +244,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2018/01/26 3.991'; % also change header of this file and in LOG.txt
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2018/07/31 3.992'; % also change header of this file and in LOG.txt
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

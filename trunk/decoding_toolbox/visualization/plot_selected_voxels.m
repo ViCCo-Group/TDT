@@ -98,6 +98,10 @@ if exist('brain_data', 'var')
     end
 end
 
+if nargin<2
+    error('Missing input ''sz'' for size of what is plotted')
+end
+
 if ~exist('cfg', 'var')
     cfg = [];
 end
@@ -115,6 +119,8 @@ end
 if ~isfield(cfg, 'handle_focus')
     cfg.handle_focus = 1; % care about the focus
 end
+
+
 
 persistent do_labeling_and_view % only care about layout once
 

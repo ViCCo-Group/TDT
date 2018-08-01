@@ -46,8 +46,6 @@
 
 function [results, cfg] = decoding_example_afni(decoding_type,labelname1,labelname2,beta_loc,output_dir,radius,cfg)
 
-warningv('DECODING_EXAMPLE_AFNI:BETA_MODE','decoding_example_afni is still in beta mode, use with care...')
-
 if ~exist('cfg', 'var')
     cfg = [];
 else

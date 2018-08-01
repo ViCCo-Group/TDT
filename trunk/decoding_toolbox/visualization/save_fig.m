@@ -20,6 +20,13 @@
 
 function save_fig(filename, cfg, fighdl)
 
+    % replace '.' in filename by '_' to avoid problems with file ending
+    if any(filename == '.')
+      disp(['Replacing''.'' in filename ''' filename ''' by ''_'' to avoid problems with file ending'])
+      filename(filename == '.') = '_';
+      disp(['New Filename: ' filename])
+    end
+
     if ~exist('cfg', 'var')
         cfg = [];
     end
@@ -47,12 +54,7 @@ function save_fig(filename, cfg, fighdl)
         formats = {'-dpng', '-depsc2'}; % list all formats that you want to save the figure as
     end
 
-    % replace '.' in filename by '_' to avoid problems with file ending
-    if any(filename == '.')
-      display(['Replacing''.'' in filename ''' filename ''' by ''_'' to avoid problems with file ending'])
-      filename(filename == '.') = '_';
-      display(['New Filename: ' filename])
-    end
+
     
     % Save as FIG
     try

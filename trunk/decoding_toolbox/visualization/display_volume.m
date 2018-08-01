@@ -26,6 +26,10 @@
 function fig_handle = display_volume(vol,  mode, title_str, fig_handle,cfg)
 
 %% Check input
+if isstruct(vol)
+    error('First input should either be a character array or a 3D volume. Check help file!')
+end
+
 if ischar(vol)
     fname = vol;
     clear vol;
@@ -42,6 +46,7 @@ if ischar(vol)
     % [p, fn, ext] = fileparts(fname);
     % title_str = [fn, ext sprintf('\n')];
 end
+
 
 %% Get dimension of data
 sz = size(vol);

@@ -59,7 +59,7 @@ if strcmpi(defaults.software,'SPMauto')
         defaults.software = 'none';
     end
 end
-
+defaults.check_software = 1; % check software (can be switched off e.g. for compiling)
 
 % display options
 defaults.verbose = 1; % Verbosity (0 to 2)

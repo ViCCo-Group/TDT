@@ -7,7 +7,7 @@ CONTENTS
 3. ADVANTAGES OF THE TOOLBOX
 4. FUNCTIONALITY OF THE TOOLBOX AND BASICS
 5. INSTALLING THE TOOLBOX
-6. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
+6. COMPILING LIBSVM (GETTING LIBSVM TO WORK IF IT DOESN'T WORK ALREADY)
 
 
 ==========
@@ -15,18 +15,21 @@ CONTENTS
 ==========
 
 The Decoding Toolbox has been created for classification of structural and 
-functional brain images. It is currently optimized for SPM2, SPM5, and 
-SPM8, but can also be extended to other brain image analysis tools.
+functional brain images. It is currently optimized for SPM or AFNI, but 
+can also be extended to other brain image analysis tools.
 
-To get started quick, type
+To get started quickly, as SPM user type
 > help decoding_example
+and as AFNI user 
+> help decoding_example_afni
 in your Matlab command window.
 
 If you want a tutorial or create your own decoding script, 
 edit the decoding_tutorial.m
+or decoding_tutorial_afni.m
 
 If you want a more extended tutorial with many examples, please read our 
-publication (see "2. HOW TO CITE").
+paper (see "2. HOW TO CITE").
 
 For more details on all currently available options, type
 > help decoding
@@ -39,19 +42,20 @@ For a more detailed description of the toolbox, see our publication:
 http://journal.frontiersin.org/Journal/10.3389/fninf.2014.00088
 
 Please report any bugs to
-martin.hebart@bccn-berlin.de or
+martin.hebart@nih.gov or
 kai.goergen@bccn-berlin.de
 
 ==============
 2. HOW TO CITE
 ==============
 
-If you used the toolbox, the best favor you can do us is to cite it. Please use
+If you used the toolbox or any parts of it, the best favor you can do us 
+is to cite it. Please use
 the following reference:
 Martin N Hebart*, Kai Goergen* and John-Dylan Haynes (2015). The Decoding Toolbox 
 (TDT): A versatile software package for multivariate analyses of functional 
 imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
-* Martin N Hebart and Kai Goergen contributed equally to this work.
+* equal contribution.
 
 ============================
 3. ADVANTAGES OF THE TOOLBOX
@@ -59,17 +63,19 @@ imaging data. Front. Neuroinform. 8:88. doi: 10.3389/fninf.2014.00088.
 
 The advantages of it are:
 
-1. SIMPLICITY: It is very easy to use. Just try out the decoding_example 
-on your SPM.mat using leave-one-run out crossvalidation. 
+1. SIMPLICITY: It should be very easy to use. Just try out the 
+decoding_example on your SPM.mat using leave-one-run out crossvalidation. 
 It is one line of code. If you want more detail, work your way through the
 decoding_tutorial.m (one page).
 
 2. GENERALITY: It is quite general purpose (you can do searchlight 
 decoding, whole brain decoding or ROI decoding with it). In the current 
-beta version we implemented SVM classification with libsvm, SV regression 
-with libsvm and pattern similarity analysis using voxel pattern 
-correlations. It is general purpose in the classifiers that can be used 
-and includes feature selection.
+version we implemented decoding and representational similarity analysis.
+For example, there is SVM classification with libsvm, SV regression 
+with libsvm, pattern correlation analysis, cross-validated Mahalanobis 
+distance, linear discriminant analysis, ... It is general purpose in 
+the classifiers that can be used (you can add your own!) and includes 
+feature selection, parameter selection, feature transformation.
 
 3. FLEXIBILITY: It has a well-defined modular structure and can easily be 
 set up for all sorts of classification designs. In addition, it can easily 
@@ -95,9 +101,7 @@ provided by Matlab).
 Typically, in brain image analyses you would like to know whether some 
 regional brain activity pattern is significantly activated. In brain 
 image classification you are searching for significant information about 
-the classified samples. For that reason we optimized the toolbox for users 
-who have a group of subjects and would later want to test whether 
-significant information is conveyed in the patterns of brain activity. 
+the classified samples.
 As input, you typically have a number of brain images belonging to several 
 categories which you would like to classify. As output you get for each 
 subject one or several classification volumes (for searchlight analyses) 
@@ -108,18 +112,6 @@ statistics (e.g. a one-sample t-test in Matlab). For simplicity, we set
 chance to 0 as a default and set all other values around 0 (i.e. for 2 
 classes and chance level of 50%, values range from -50 to 50). You can 
 of course also use the statistics utilities provided by the toolbox.
-
-Important remark: For calculating the mean output value across cross-
-validation steps (e.g. runs), we chose to average across all individual
-samples across cross-validation steps, rather than first averaging across 
-all samples within a cross-validation step and then again averaging across 
-all steps. If you would like to weight all decoding steps equally, set 
-   cfg.results.setwise= 1;
-   and
-   cfg.design.set = 1:length(cfg.design.set);
-which provides you with a separate output for each cross-validation step.
-Then, average over the resulting output images. Alternatively, write your
-own routine (see HOWTOEXTEND.txt) 
 
 =========================
 5. INSTALLING THE TOOLBOX
@@ -137,9 +129,9 @@ Simply extract the toolbox add it to your matlab path.
 3. RUN & ENJOY :)
 
 
-============================================
-6. COMPILING LIBSVM (GETTING LIBSVM TO WORK)
-============================================
+=======================================================================
+6. COMPILING LIBSVM (GETTING LIBSVM TO WORK IF IT DOESN'T WORK ALREADY)
+=======================================================================
 
 Some people experience problems with the mex-files of libsvm that we 
 provided. Libsvm uses code that was created in the C programming language 

@@ -3,7 +3,7 @@ Potential todos for next release (for Kai):
 - Add there demo for sort_design
 - Cleanup prevalence
 
-* 3.992 2018/07/31
+* 3.993 2018/07/31
 - added prepare_tdt_compiler.m to allow compilation of TDT for server
 - added new transres_MSS_diff.m (for support vector regression)
 - minor bugfixes

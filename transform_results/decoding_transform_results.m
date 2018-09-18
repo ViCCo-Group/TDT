@@ -91,16 +91,10 @@ if strcmpi(method, 'accuracy') || strcmpi(method, 'accuracy_minus_chance')
     end
 
 elseif strcmpi(method, 'decision_values')
-    output.decision_values = cell(size(decoding_out));
-    for step_ind = 1:length(decoding_out)
-        output.decision_values{step_ind} = decoding_out(step_ind).decision_values;
-    end
+    output = {vertcat(decoding_out.decision_values)};
     
 elseif strcmpi(method, 'predicted_labels')
-    output.predicted_labels = cell(size(decoding_out));
-    for step_ind = 1:length(decoding_out)
-        output.predicted_labels{step_ind} = decoding_out(step_ind).predicted_labels;
-    end  
+    output = {vertcat(decoding_out.predicted_labels)};
     
 elseif strcmpi(method, 'sensitivity') || strcmpi(method, 'sensitivity_minus_chance') % where the first label is correct
     predicted_labels =  vertcat(decoding_out.predicted_labels);

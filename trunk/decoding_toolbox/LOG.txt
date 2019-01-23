@@ -3,6 +3,9 @@ Potential todos for next release (for Kai):
 - Add there demo for sort_design
 - Cleanup prevalence
 
+* 3.995 2019/01/23
+- fixed bug in sort_design.m that prevented it from working
+
 * 3.994 2018/09/17
 - change in how decision_values and predicted_labels are passed back when requested (was
   per run in separate cells, is now concatenated in one vector for simpler handling)

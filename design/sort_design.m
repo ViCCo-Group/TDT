@@ -17,6 +17,8 @@
 
 % by Martin Hebart
 
+% Martin 2018/01/23 Fixed bug that prevented this function from working
+%
 % Kai, 2017/03/28 Using sortrows() instead of sort(), no idea what it did
 %   before. Also added new sorting using the first occurence of a column.
 % 
@@ -30,7 +32,7 @@ tr = design.train;
 if ~exist('sortind','var')
 
     % Option 1: Sort by first occurence
-    [sortind, sortind_inv] = sort_columns_by_first_occurence(m);
+    [sortind, sortind_inv] = sort_columns_by_first_occurence(tr);
 
     % Option 2: use standard sortrows
 %     [dummy, sortind] = sortrows(tr'); % sort the columns of the training matrix (which equals the rows of the transposed matrix)

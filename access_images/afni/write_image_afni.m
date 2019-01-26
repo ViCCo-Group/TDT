@@ -4,6 +4,9 @@ function varargout = write_image_afni(varargin)
 %       inputs: header, volume (X x Y x Z)
 %       output: written header (normally not needed)
 
+% History:
+% 2019/24/01: Fixed potential issue when blank appears at end of filename
+
 % This code includes parts from the CoSMoMVPA package from the function
 % cosmo_map2fmri.m which is licensed under the Expat license:
 %
@@ -77,6 +80,7 @@ afniopt.Scale = 0;
 afniopt.AdjustHeader = 'no';
 
 fname = varargin{1}.fname;
+fname = strtrim(fname); % to make sure there are no trailing spaces
 
 if isempty(regexp(fname,'(+orig$|+orig.HEAD$|+orig.BRIK$|+orig.BRIK.gz$|+tlrc$|+tlrc.HEAD$|+tlrc.BRIK$|+tlrc.BRIK.gz$|+acpc$|+acpc.HEAD$|+acpc.BRIK$|+acpc.BRIK.gz$)','once'))
     if isfield(varargin{1},'suffix')

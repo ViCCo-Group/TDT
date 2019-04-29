@@ -3,6 +3,10 @@ Potential todos for next release (for Kai):
 - Add there demo for sort_design
 - Cleanup prevalence
 
+* 3.997 2019/04/29
+- reporting searchlight size (e.g. in number of voxels) in results file
+- fixed minor bugs
+
 * 3.995 2019/01/23
 - fixed bug in sort_design.m that prevented it from working
 

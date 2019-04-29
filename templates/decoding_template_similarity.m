@@ -48,6 +48,9 @@ cfg.decoding.train.classification.model_parameters = 'pearson'; % this is pearso
 % a lot of data. (one matrix per voxel for searchlight analyses). In that
 % case, consider using another output measure (such as a similarity matrix
 % to compare the results to)
+% There are two outputs that may make sense: Use 'other' if you want one
+% similarity estimate per condition per run, and use 'other_average' if you
+% want to average betas across runs before calculating the similarity.
 cfg.results.output = 'other';
 
 % Set additional parameters manually if you want (see decoding.m or

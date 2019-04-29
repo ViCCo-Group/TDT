@@ -97,10 +97,8 @@ if strcmpi(cfg.analysis,'roi')
         for i_mask = 1:length(cfg.files.mask)
             % use file names of masks
             [dummy1,roi_names{i_mask},dummy2] = fileparts(cfg.files.mask{i_mask}); %#ok<ASGLU,*AGROW>
-            try %#ok<TRYNC> % try, in case roi_names are shorter than 5 letters
-                if any(strcmp(roi_names{i_mask}(end-4:end),{'+tlrc','+orig','+acpc'}))
-                    roi_names{i_mask}(end-4:end) = [];
-                end
+            if length(roi_names{i_mask})>=5 && any(strcmp(roi_names{i_mask}(end-4:end),{'+tlrc','+orig','+acpc'}))
+                roi_names{i_mask}(end-4:end) = [];
             end
         end
     else

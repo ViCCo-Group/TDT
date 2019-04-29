@@ -125,3 +125,5 @@ sl_template.dz = vertcat(displacement_temp(:).z);
 sl_template.dz = sl_template.dz(unique_indices);
 
 sl_template.M = M;
+
+cfg.searchlight.size = length(sl_template.index);

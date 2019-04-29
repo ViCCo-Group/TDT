@@ -85,7 +85,7 @@ if strcmpi(cfg.decoding.method, 'classification')
             % simple case for binary classification
             weights = m.SVs' * m.sv_coef;
             % if the labelorder is the wrong way around, invert sign of weights
-            if label(1) == 1 &&  label(2) == -1
+            if m.Label(1) == 1 &&  m.Label(2) == -1
                 % for some reason that we dont know, libsvm does sort 1 and
                 % -1 independent of the order the labels are given to it,
                 % but behaves as if the first label were smaller than the

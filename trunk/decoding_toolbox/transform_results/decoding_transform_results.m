@@ -23,6 +23,8 @@
 %   by the method
 % predicted_labels: predicted labels for  all input patterns as returned 
 %   by the method
+% true_labels: true labels for  all input patterns as returned 
+%   by the method
 % sensitivity: accuracy of first label
 % sensitivity_minus_chance: sensitivity minus chance level
 % specificity: accuracy of second label
@@ -57,6 +59,13 @@
 % IN
 %   method: desired method name as string (see above)
 %   decoding_out: struct with result from last decoding step
+%           Typically, decoding_out contains the fields
+%           decoding_out.predicted_labels
+%           decoding_out.true_labels
+%       which are both 1 x n_step double vectors containing the predicted
+%       and the true labels, so that these can be compared. However, in
+%       principle output contains whatever the decoding method puts out
+%       (e.g. if you write your own method).
 %   cfg: the standard decoding cfg struct that was used for the last
 %        decoding
 %
@@ -95,6 +104,12 @@ elseif strcmpi(method, 'decision_values')
     
 elseif strcmpi(method, 'predicted_labels')
     output = {vertcat(decoding_out.predicted_labels)};
+    
+elseif strcmpi(method, 'true_labels')
+    output.true_labels = cell(size(decoding_out));
+    for step_ind = 1:length(decoding_out)
+        output.true_labels{step_ind} = decoding_out(step_ind).true_labels;
+    end  
     
 elseif strcmpi(method, 'sensitivity') || strcmpi(method, 'sensitivity_minus_chance') % where the first label is correct
     predicted_labels =  vertcat(decoding_out.predicted_labels);

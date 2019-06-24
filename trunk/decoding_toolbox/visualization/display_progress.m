@@ -41,7 +41,7 @@ if any(display_values == cnt) || is1000
     el_time_str = datestr(el_time, 'dd HH:MM:SS');
     if str2double(el_time_str(1:2)) == 0, el_time_str = el_time_str(4:end); end
     if ~is1000 || cnt == 1000 % if less than 1000 iterations, base estimation on all previous
-        est_time =  n_decodings/cnt * el_time;
+        est_time =  n_decodings/max(cnt-1, 1) * el_time;
     else % otherwise base on most recent 1000 only
         est_time =  el_time + (n_decodings-cnt)/1000 * (t0 - prev_time); 
     end

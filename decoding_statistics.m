@@ -51,6 +51,10 @@
 %                               If the value is not used or doesn't make
 %                               sense for your method, set it to 0
 %
+%               [maxmem_gb]:    As many GB RAM as you allow
+%                               decoding_statistics to use (default if not
+%                               set: 12 GB)
+%
 %               results:
 %                   write:     If 2, then results are written as .mat, if
 %                              1, then also as .img/.nii. The path and
@@ -73,7 +77,7 @@
 %
 %
 %       [reference]: Input required for permutation testing providing the
-%           reference results to test against.
+%           reference results to test against (e.g. the permutations).
 %
 %
 %   OUTPUT:
@@ -82,7 +86,7 @@
 %   results_out: adjusted results struct containing p-value and other
 %      statistical results
 %
-% EXAMPLE:
+% EXAMPLE 1 (binomial test):
 %   After having finished a decoding analysis:
 %       load res_cfg.mat
 %       load res_accuracy_minus_chance.mat
@@ -91,10 +95,42 @@
 %       cfg.stats.output = 'accuracy_minus_chance';
 %       p = decoding_statistics(cfg,results,chancelevel);
 %
+% EXAMPLE 2 (permutation test, all permutations in one design):
+%   After having finished a decoding analysis:
+%       load res_cfg.mat
+%       load('original/res_accuracy_minus_chance.mat')
+%       results_orig = results;
+%       load('permutations/res_accuracy_minus_chance.mat')
+%       reference = results;
+%       cfg.stats.test = 'permutation';
+%       cfg.stats.tail = 'right';
+%       cfg.stats.output = 'accuracy_minus_chance';
+%       cfg.stats.results.write = 2; % write only .mat
+%       cfg.stats.results.fpath = 'permutation_stats';
+%       p = decoding_statistics(cfg,results,reference);
+%
+% EXAMPLE 3 (permutation test, all permutations in separate designs):
+%       load res_cfg.mat
+%       resname = 'res_accuracy_minus_chance.mat';
+%       load(fullfile('original/',resname)) % if results are in path 'original'
+%       n_perm = 1000;
+%       reference = cell(n_perm,1);
+%       for i_perm = 1:n_perm
+%           reference{i_perm,1} = fullfile(sprintf('perm%04i',i_perm),resname);
+%       end
+%       cfg.stats.test = 'permutation';
+%       cfg.stats.tail = 'right';
+%       cfg.stats.output = 'accuracy_minus_chance';
+%       cfg.stats.results.write = 1; % write as .nii and as .mat
+%       cfg.stats.results.fpath = 'permutation_stats';
+%       p = decoding_statistics(cfg,results,reference);
+%
 % See also decoding_statistics2
 
 % 14/10/26 Martin Hebart
 %
+% 19/10/13 MH: Added better examples and a memory check to see if all
+%   results can be loaded
 
 % TODO: allow writing ROIs as .img/.nii
 % TODO: use decoding_subindex when available (if only some searchlights are run)
@@ -117,6 +153,11 @@
 function [p,results] = decoding_statistics(cfg,results,reference)
 
 decoding_defaults;
+% check if field exists
+try cfg.stats.maxmem_gb
+catch
+    cfg.stats.maxmem_gb = 12; % assuming maximum of 12GB RAM
+end
 
 results_out = load_results(cfg,results);
 cfg = basic_checks(cfg,results_out);
@@ -126,6 +167,29 @@ tail = cfg.stats.tail;
 output = results_out.(fname).output;
 
 if exist('reference','var')
+    
+    % if data wasn't passed but is loaded here, check if entire reference
+    % data set can be loaded at all
+    if iscell(reference)
+        ref1 = reference{1};
+    elseif ischar(reference)
+        ref1 = reference(1,:);
+    end
+    if exist('ref1','var')
+       ref1 = load_results(cfg,ref1);
+       tmp = ref1.(fname).output; %#ok<NASGU>
+       tmp_whos = whos('tmp');
+       tmp_bytes = tmp_whos.bytes;
+       allmem = tmp_bytes * length(reference) / (1024^3);
+       if allmem > cfg.stats.maxmem_gb
+           error(['Maximum memory size of %2.1fGB exceeded. Increase your ',...
+               'allowed memory size to at least %2.1fGB and if not available, ',...
+               'then run the analysis on a computer with more memory, ',...
+               'or run fewer analysis in parallel (e.g. by running ',...
+               'subsets of the searchlights in the analyses).'],cfg.stats.maxmem_gb,allmem);
+       end
+    end
+    
     reference = load_results(cfg,reference);
     tmp = vertcat(reference.(fname));
     output_ref = horzcat(tmp.output);
@@ -259,6 +323,16 @@ if cfg.stats.results.write
         for i = 1:length(outnames)
             resultsvol_hdr = read_header(cfg.software,niftiname);
             [trash trash2 ext] = fileparts(niftiname);
+            rmind = strfind(ext,',');
+            if ~isempty(rmind)
+                ext(rmind(1):end) = [];
+            end
+            % check valid file extensions
+            valid_ext = {'.img', '.nii', '.BRIK'};
+            if ~any(strcmp(valid_ext,ext)) % just in case another check
+                error(['Files with extension %s cannot be written. This error should not happen. ',...
+                    'Please report it to the authors of TDT to resolve it.'])
+            end
             resultsvol_hdr.fname = fullfile(fp,[fn(1:end-1) '_' outnames{i} '_' cfg.stats.tail ext]);
             resultsvol = cfg.results.backgroundvalue * ones(resultsvol_hdr.dim(1:3));
             resultsvol(results_out.mask_index) = results_out.(fname).(outnames{i});

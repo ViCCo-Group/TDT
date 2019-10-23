@@ -114,7 +114,7 @@ cfg.design = make_design_cv(cfg);
 % Implementation:
 % cfg.design.unbalanced_data = 'ok';
 % cfg.decoding.software = 'ensemble_balance';
-% cfgd = decoding_defaults; % to use default values
+cfgd = decoding_defaults; % to use default values
 % cfg.decoding.train.classification_kernel.model_parameters.software = 'libsvm';
 % cfg.decoding.train.classification_kernel.model_parameters.n_iter = 100;
 % cfg.decoding.train.classification_kernel.model_parameters.model_parameters = cfgd.decoding.train.classification_kernel.model_parameters;

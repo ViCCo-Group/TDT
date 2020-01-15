@@ -1,25 +1,36 @@
-% This demo shows how to apply prevalence inference as statistics. It 
+% This demo shows how to apply iPIPI inference as statistics. It 
 % takes SPM images (.nii or .img) or TDT .mat result as input (works for 
 % searchlight, ROI or wholebrain analysis). Further explanations about the 
 % analysis in the paper below.
 %
-% For data in a different format, see 
-%    demo_prevalenceInference_provide_own_data.m
-% For the data analysis from the paper, see 
-%    demo_prevalenceInference_Cichy2011.m
+% To use this demo, first processes the TDT demo data according to
+%   demo8_demodata_decoding_tutorial_motion_direction.m 
+% that can be found in the demo directory of the tdt toolbox.
 %
-% Please CITE as: 
-%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
-%       Valid population inference for information-based imaging: From the 
-%       second-level t-test to prevalence inference. NeuroImage. 
-%       http://doi.org/10.1016/j.neuroimage.2016.07.040
+% Note: This is really just a demo. It is statistically invalid (because we 
+% have only two demo data sets). It demonstrates however how to use it.
 %
-% A longer, more didactic, previous version of the manuscript exists here:   
-%   Allefeld, C., Goergen, K., & Haynes, J.-D. (2015). http://arxiv.org/abs/1512.00810
+% Please CITE iPIPI as: 
+%   Hirose, S. (2019). Valid and powerful statistical test for decoding 
+%     accuracy—Proposal of Permutation-based Information Prevalence 
+%     Inference using the i-th order statistic. BioRxiv, 578930. 
+%  https://doi.org/10.1101/578930
 %
-% Author: Demos and adaption to TDT by Kai, original prevalence code by 
-%   Carsten Allefeld. 2016/08/03
-
+% For more explanation on iPIPI, see reference above.
+%
+% Author: Demos and adaption to TDT by Kai, original ipipi.m code by 
+%   Satoshi Hirose
+%
+% The iPIPI implementation in TDT is in an experimental  state. It has not 
+% been extensively tested by the authors of TDT. Use at own risk.
+%
+% Author of this demo: Kai
+%
+% HIST:
+%   2020/01/15: Version 1 for TDT based demo_pervalence_TDT.m
+%
+% DISCLAIMER: This function is in beta stage. It seem to work as it should,
+%   but has not been extensively tested by the public, thus use with care.
 
 %% Check that SPM and TDT are available on the path
 
@@ -29,7 +40,7 @@ decoding_defaults; % add all important directories to the path
 
 %% Settings
 
-P2 = 20000; % number of 2nd level permutations, should be put to something like 1e6 or 1e7 for a real analysis
+
 
 %% Inputdata
 
@@ -113,8 +124,7 @@ warning(['In this demo, we REUSE THE PERMUTATION DATA FROM 1 SUBJECT TO SIMULATE
     'This means that in the permutations for all "subjects" will be identical.' char(10) ...
     'This is done becase we dont have multiple subjects in the TDT example dataset, but want to demonstrate how multiple subjects work.' char(10) ...
     'IN A REAL ANALYSIS YOU WILL OF COURSE NEED DIFFERENT PERMUTATION DATA FOR DIFFERENT SUBJECTS!!! ' char(10) ...
-    'We also use a unrealistic low number of second level permutations (P2=' int2str(P2) '). ' char(10) ...
-    'For more, see prevalenceCore.m and the paper.'])
+    'For information on iPIPI, see Hirose (2019) https://doi.org/10.1101/578930'])
 str = input('If you have understood the above warning, type ''yes'': ','s');
 if strcmpi(str,'yes') || strcmpi(str,'y')
     % do nothing
@@ -124,9 +134,9 @@ else
 end
 
 %% Define where to save the results
-resultdir = fullfile(orig_inputdir{1}, 'prevalenceDemo');
+resultdir = fullfile(orig_inputdir{1}, 'iPIPI_demo');
 mkdir(resultdir);
-resultfilenames = fullfile(resultdir, 'prevalence');
+resultfilenames = fullfile(resultdir, 'iPIPI_demo');
 disp(['Writing result to ' resultfilenames '*.*']);
 
 %% Do the analysis
@@ -135,7 +145,7 @@ disp(['Writing result to ' resultfilenames '*.*']);
 % this moment in time will be saved as image and/or returned.
 
 % run prevalence analysis
-prevalenceTDT(inputimages, P2, resultfilenames);
+ipipiTDT(inputimages, resultfilenames);
 
 % The function returns images with the resuilts. See prevalenceCore.m for
 % information about the output files.
@@ -147,5 +157,5 @@ prevalenceTDT(inputimages, P2, resultfilenames);
 %
 % Enjoy!
 
-disp('Prevalence analysis finished.')
+disp('iPIPI TDT demo analysis finished.')
 disp(['Results in: ' resultfilenames])

@@ -6,8 +6,8 @@ statistic', or 'prevalence inference' for short.
 The implementation wraps the prevalenceCore.m function that can be found on https://github.com/allefeld/prevalence-permutation/releases.
 
 Demonstrations how to use it can be found in
-
    demo_prevalenceInference_TDTdata.m
+     (see demo8_demodata_decoding_tutorial_motion_direction.m how to create the input data) 
    demo_prevalenceInference_provide_own_data.m
 
 The file

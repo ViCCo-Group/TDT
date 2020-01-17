@@ -24,8 +24,7 @@
 %   
 % Martin, 2014-01-15
 
-% Update Kai: 2020-01-17: Forbid regression, would need code change &
-%   testing
+% Update Kai: 2020-01-17: Forbid regression, requires code change & testing
 % Update MH: 2016-12-10: Fixed bug that would only allow running one model
 % Update MH 2016-08-22: Introduced compatibility with more than two classes
 % and with kernel methods

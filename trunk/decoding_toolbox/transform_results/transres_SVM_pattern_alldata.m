@@ -19,13 +19,23 @@
 % further assumes that all input models are related to their decoding step
 % (i.e. model{1} is from iteration 1, etc.)
 %
+% Note: The functions currently does NOT work for
+%   cfg.decoding.method = 'regression'
+%
 % OUTPUT
 %   1x1 cell array of cell arrays for each output(step), with the pattern
 %   as a 1xn_features numeric output.
 %
 % Martin, 2016-08-31
 
+% Update Kai: 2020-01-17: Forbid regression, requires code change & testing
+
 function output = transres_SVM_pattern_alldata(decoding_out, chancelevel, cfg, data)
+
+if strcmp(cfg.decoding.method, 'regression')
+    % if you change the code so regression works, please adapt the header, too
+    error('transres_SVM_pattern:not_implemented_for_regression', 'transres_SVM_pattern:Pattern reconstruction is currently not implemented for cfg.decoding.method=''regression''. The implementation is probably very similar to the current one, but we have not used it so far and libsvm does not return the labels of the data for regression as is done for classification, so the code needs modification and testing. Feel free to modify the code, test it, and then be so kind to send us the result :)');
+end
 
 %% check that input data has not been changed without the user knowing it
 check_datatrans(mfilename, cfg);

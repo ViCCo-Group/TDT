@@ -80,6 +80,24 @@ The source code has been downloaded from
    https://github.com/allefeld/prevalence-permutation/
 on 2016/08/02 and adapted to TDT.
 
+
+----------------------------
+ipipi (as online 2020/01/15)
+----------------------------
+
+Author: Satoshi Hirose 
+
+Please cite as
+  Hirose, S. (2019). Valid and powerful statistical test for decoding 
+     accuracy—Proposal of Permutation-based Information Prevalence 
+     Inference using the i-th order statistic. BioRxiv, 578930. 
+     https://doi.org/10.1101/578930
+
+The source has been downloaded from
+   http://www2.nict.go.jp/bnc/hirose/iPinPin/index.html
+on 2020/01/15 and adapted to TDT.
+
+
 -----------
 libsvm 3.17
 -----------

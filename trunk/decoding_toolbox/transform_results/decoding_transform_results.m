@@ -218,6 +218,18 @@ elseif strcmpi(method, 'corr')
     output_sep = zeros(1,n_steps);
     for i_step = 1:n_steps
        output_sep(i_step) = correl(decoding_out(i_step).predicted_labels,decoding_out(i_step).true_labels);
+       % check for potential error sources if any output is nan
+       if any(isnan(output_sep(i_step)))
+          if all(decoding_out(i_step).true_labels == decoding_out(i_step).true_labels(1)) % corr cannot work with 1 data point
+             error('decoding_transform_results:corr_with_only_one_datapoint', 'decoding_transform_results.m tried to calculate the output measure cfg.results.output=''corr'' in a cv step in which has one test datapoint. Calculating a correlation requires at least two datapoints. Suggested solution: Make sure to have at least at least two samples in the test set of each cv step.'); 
+          elseif all(decoding_out(i_step).true_labels == decoding_out(i_step).true_labels(1))
+             error('decoding_transform_results:corr_with_all_true_labels_equal', 'decoding_transform_results.m tried to calculate the output measure cfg.results.output=''corr'' in a cv step in which all true values (labels) are equal. Calculating a correlation requires at least two different x-values (values of the independent variables). Suggested solution: Make sure to have at least at least two test samples with different true values/labels in each cv step.'); 
+          elseif any(isnan(decoding_out(i_step).true_labels))
+             error('decoding_transform_results:corr_with_true_label_nan', 'decoding_transform_results.m tried to calculate the output measure cfg.results.output=''corr'' but has at least one label that is nan. This does not work. Make sure the labels of your data are not none.');
+          else
+             warningv('decoding_transform_results:corr_returns_nan', 'decoding_transform_results.m tried to calculate the output measure cfg.results.output=''corr'' and returned nan. This might be because one part of your data (e.g. a voxel value) is nan. Other potential reasons were checked and are not the reason: more than 1 data point, different true labels (values of the independent variable), and no true label is nan. If nans occur in your data, you can ignore this warning');
+          end
+       end
     end
     output = tanh(mean(atanh(output_sep))); % z-transform and back to average correlation
     
@@ -227,6 +239,16 @@ elseif strcmpi(method, 'zcorr')
     output_sep = zeros(1,n_steps);
     for i_step = 1:n_steps
        output_sep(i_step) = correl(decoding_out(i_step).predicted_labels,decoding_out(i_step).true_labels);
+       % check for potential error sources if any output is nan
+       if any(isnan(output_sep(i_step)))
+          if all(decoding_out(i_step).true_labels == decoding_out(i_step).true_labels(1)) % corr cannot work with 1 data point
+             error('decoding_transform_results:zcorr_with_only_one_datapoint', 'decoding_transform_results.m tried to calculate the output measure zcfg.results.output=''corr'' in a cv step in which has one test datapoint. Calculating a correlation requires at least two datapoints. Suggested solution: Make sure to have at least at least two samples in the test set of each cv step.'); 
+          elseif all(decoding_out(i_step).true_labels == decoding_out(i_step).true_labels(1))
+             error('decoding_transform_results:zcorr_with_all_true_labels_equal', 'decoding_transform_results.m tried to calculate the output measure zcfg.results.output=''corr'' in a cv step in which all true values (labels) are equal. Calculating a correlation requires at least two different x-values (values of the independent variables). Suggested solution: Make sure to have at least at least two test samples with different true values/labels in each cv step.');           
+          else
+             warningv('decoding_transform_results:zcorr_returns_nan', 'decoding_transform_results.m tried to calculate the output measure cfg.results.output=''zcorr'' and returned nan. This might be because one part of your data (e.g. a voxel value) is nan. Other potential reasons were checked and are not the reason: more than 1 data point, different true labels (values of the independent variable), and no true label is nan. If nans occur in your data, you can ignore this warning');
+          end
+       end
     end
     output = mean(atanh(output_sep)); % z-transform
     

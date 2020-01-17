@@ -1,7 +1,18 @@
 Potential todos for next release (for Kai):
-- Demo how to train and test on different data (make sure than an error occurs if data is not in same format or has different transformation matrices, but I guess that should through an error already now)
-- Add there demo for sort_design
-- Cleanup prevalence
+- Demo how to train and test on different data (make sure that an error occurs if data is not in same format or has different transformation matrices, but I guess that should throw an error already now)
+- Add demo for sort_design
+
+
+* 3.998beta 2020/01/17 BETA / NOT FOR PUBlIC RELEASE YET
+
+    Reason:
+!!! preliminary implementation of iPIPI. Satoshi told me that it will be renamed and copyright will be added !!
+
+Further changes
+- typical errors detected when nans occur for corr and zcorr outputs
+- improved explanation & implementation of prevalence
+- weights for regression
+- slighlty improved documentation
 
 * 3.997 2019/04/29
 - reporting searchlight size (e.g. in number of voxels) in results file

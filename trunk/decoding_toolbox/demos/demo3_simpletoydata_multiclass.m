@@ -71,7 +71,14 @@ passed_data.dim = [length(set1.mean), 1, 1]; % add dimension information of the 
 % Set the analysis that should be performed (here we only want to do 1
 % decoding)
 cfg.analysis = 'wholebrain';
-cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see the model
+cfg.results.output = {'accuracy', 'model_parameters'}; % 'model_parameters' returns the full models (warning, might be huge, one model for each step)
+                                                       % To get the filterweights or the pattern, use or 'SVM_weights', 'SVM_weights_plus_bias', 
+                                                       % 'SVM_pattern' or 'SVM_pattern_alldata'
+                                                       % Important:
+                                                       % See Haufe et al, 2014, Neuroimage for the the important distinction 
+                                                       % between Filters (aka "Weightmaps") and Patterns
+                                                       
+% cfg.results.output = {'accuracy', 'model_parameters', 'SVM_weights', 'SVM_weights_plusbias'}; % example for more possible outputs
 
 %% Nothing needs to be changed below for a standard leave-one-run out cross validation analysis.
 % Create a leave-one-run-out cross validation design:

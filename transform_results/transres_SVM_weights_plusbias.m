@@ -1,4 +1,4 @@
-% output = transres_SVM_weights_plusbias(decoding_out, chancelevel, cfg, varargin)
+% output = transres_SVM_weights_plusbias(decoding_out, chancelevel, cfg, data)
 % 
 % Calculates the weights in source space (primal problem), if a linear SVM 
 % was used (otherwise no weights can be calculated for the primal problem).
@@ -10,7 +10,7 @@
 %
 % To use it, use
 %
-%   cfg.results.output = {'primal_SVM_weights'}
+%   cfg.results.output = {'SVM_weights_plusbias'}
 %
 % OUTPUT
 %   1x1 cell array of cell arrays for each output(step), containing a
@@ -49,12 +49,22 @@
 % Kai, 2012-03-12
 
 % History
+% Kai 2020-01-17: 
+%   Added weights for regression, merged with transres_SVM_weights (which 
+%   now simply forwards call), [added additional extra check for 1 -1
+%   labels in classification (behaves as if 1 was smaller than -1), added
+%   comment on newton svm]
 % 2014-01-15
 %   Adjusted to simpler output (rather than struct>cell>struct now only
 %   cell>struct)
 % 2012-11-30
 %   Added more efficient method to calculate primal weights.
 %   This method can be extended to multiclass. Link to howto below. 
+
+% TODO: re-implement Newton SVM:
+%   weights.w = m.w;
+%   weights.b = -m.gamma;
+
 
 function output = transres_SVM_weights_plusbias(decoding_out, chancelevel, cfg, data)
 
@@ -182,7 +192,6 @@ if strcmpi(cfg.decoding.method, 'classification')
         
     end
     
-    
 elseif strcmpi(cfg.decoding.method, 'classification_kernel')
     
     for i_model = 1:n_models
@@ -201,7 +210,19 @@ elseif strcmpi(cfg.decoding.method, 'classification_kernel')
             % simple case for binary classification
             weights = data_train(m.sv_indices,:)' * m.sv_coef;
             % if the labelorder is the wrong way around, invert sign of weights
-            if labelorder(1) < labelorder(2)
+            if m.Label(1) == 1 && m.Label(2) == -1
+                % This is an exception from the exception. While in general
+                % libsvm flips the sign when the first passed label is
+                % smaller than the second, for some reason that we dont 
+                % know it does sort 1 and -1 in a different way and
+                % independent of the order the labels are given to it,
+                % but behaves as if the first label were smaller than the
+                % second (i.e. nothing to flip).
+                % No idea if anyone knows why that is the case...
+                warningv('transres_SVM_weights_plusbias:check_sign_libsvm_labels_1_-1', 'Please verify that the sign of the returned weights. libsvm returned labels 1 and -1. This is an exception from an exception. While in general libsvm flips the sign of the weights (for an unkown reason) when the first passed label is smaller than the second, for some reason that we dont know it does sort the labels 1 and -1 in a different way and independent of the order the labels are given to it, but it does not flip the weight, i.e. as if the first label were smaller than the second (which it is not, 1 is not smaller than -1). No idea if anyone knows why that is the case. The last version we checked that exhibited that strange behaviour is libsvm3.17. If you use a different verion, check the sign of the output')
+                output{1}{i_model}.w = weights;
+                output{1}{i_model}.b = -m.rho;
+            elseif labelorder(1) < labelorder(2)
                 output{1}{i_model}.w = weights;
                 output{1}{i_model}.b = -m.rho;
             else
@@ -275,7 +296,46 @@ elseif strcmpi(cfg.decoding.method, 'classification_kernel')
         end
         
     end
+
+elseif strcmpi(cfg.decoding.method, 'regression')
     
+    for i_model = 1:n_models
+        m = model(i_model);
+        
+        % get training data for this model
+        data_train = data(cfg.design.train(:, i_model) > 0, :);
+        
+        % do computation
+        weights = data_train(m.sv_indices,:)' * m.sv_coef;
+        
+        % if libsvm is used, it also provides the support vectors as part 
+        % of the model (would be quite space intensive to store)
+        % in this case, we can verify the above computation by testing that
+        % the support vectors from the libsvm model are equal to the
+        % selected datasamples from the training set
+        if isfield(m, 'SV')
+            if ~all(full(m.SVs) == data_train(m.sv_indices,:))
+                error('Unexected discrepancy while calculating SVM weights: The supportvectors from libsvm in m.SVs are provided, but do not agree with the selected data samples. This might be due to wrong ordering, tiny numerical discrepancies. Please check in any case')
+            end
+        end
+        
+        output{1}{i_model}.w = weights;
+        output{1}{i_model}.b = -m.rho;
+        
+        warningv('transres_SVM_weight_plus_bias:implementation_not_extensively_tested', 'This implementation has not been test extensively. Especially, we have not tested if the order of labels effects the sign of the result. Please check if weights are correct, e.g. using the commented code below this warning. ')
+        % % If X2, Y2 is your training data, and X1, Y1 is your test data:
+        % % train
+        % svm = svmtrain(X2(:,i), Y2, '-s 3 -t 0 -q');
+        % [X1r(:,i), acc_SVR, dv_SVR] = svmpredict(X1(:,i), Y1, svm, '-q');
+        % 
+        % % Code to check if coefficients and bias correct for training
+        % data Y with labels X
+        % and labels 
+        % w = svm.sv_coef' * svm.SVs
+        % b = -svm.rho
+        % X = Y*w' + b
+        
+    end    
     
 else
     error('Method %s not implemented for cfg.decoding.method = %s.',mfilename,cfg.decoding.method)
@@ -308,7 +368,7 @@ end
 %     % calculate w and b
 %     %  using
 %     % Y = w' X + b --> Y = [wb]' [X1] --> Y / [X1] = [wb]'
-%     % mit X = eye(size(...))
+%     % with X = eye(size(...))
 % 
 %     wb = decision_values' / [X, ones(size(decision_values))]';
 % 

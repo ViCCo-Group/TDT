@@ -12,7 +12,7 @@
 % The bias term is not needed for this.
 % To use it, use
 %
-%   cfg.results.output = {'SVM_pattern'}
+%   cfg.results.output = {'SVM_pattern_alldata'}
 %
 % Caution: This function uses cfg.design, so it needs a design and assumes
 % you are in the main analysis (and not in e.g. feature_selection). It

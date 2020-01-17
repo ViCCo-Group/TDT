@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version: 3.997, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version: 3.998beta, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -25,6 +25,11 @@
 %           files.name: Full path to each input file
 %           files.descr: (optional) description of each file (e.g. the SPM
 %               regressor name)
+%           files.mask (strongly suggested): cellstring with 1 entry for
+%               wholebrain and searchlight, e.g.={'mask.nii'} or n entries
+%               for n ROIS, e.g.={'ROI1.nii', 'ROI2.nii'}. If field is not
+%               provided, will be set to automode {'all voxels'}. See:
+%               decoding_example,decoding_tutorial,decoding_create_maskfile
 %
 %           design: Design matrix with entries label, train, test, and set
 %               (see folder 'design' for example functions on how to
@@ -244,7 +249,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2019/04/29 3.997'; % also change header of this file and in LOG.txt
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), v2020/01/17 3.998beta'; % also change header of this file and in LOG.txt
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

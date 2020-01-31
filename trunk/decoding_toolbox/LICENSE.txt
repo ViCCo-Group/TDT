@@ -81,21 +81,28 @@ The source code has been downloaded from
 on 2016/08/02 and adapted to TDT.
 
 
-----------------------------
-ipipi (as online 2020/01/15)
-----------------------------
+-----------------------------
+i-test (as online 2020/01/31)
+-----------------------------
 
-Author: Satoshi Hirose 
+Copyright (c) 2020 by Satoshi Hirose 
 
 Please cite as
-  Hirose, S. (2019). Valid and powerful statistical test for decoding 
-     accuracy—Proposal of Permutation-based Information Prevalence 
-     Inference using the i-th order statistic. BioRxiv, 578930. 
-     https://doi.org/10.1101/578930
+  Hirose, S. (2020). Valid and powerful group statistics for decoding 
+    accuracy: Information Prevalence Inference using the i-th order 
+    statistic (i-test). BioRxiv, 578930. https://doi.org/10.1101/578930
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version. This program is distributed in the hope that
+it will be useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose. See the
+GNU General Public License <http://www.gnu.org/licenses/> for more details.
 
 The source has been downloaded from
-   http://www2.nict.go.jp/bnc/hirose/iPinPin/index.html
-on 2020/01/15 and adapted to TDT.
+   https://github.com/satoshi-hirose/i-test/
+on 2020/01/31 and adapted to TDT.
 
 
 -----------

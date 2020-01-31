@@ -1,0 +1,4 @@
+The code added here comes from
+  https://github.com/satoshi-hirose/i-test/
+To get more information, such as the demo, download the itest.zip file from
+there.

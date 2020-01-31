@@ -55,12 +55,14 @@ end
 [fd, fn, ext] = fileparts(fnames_in{1});
 if  strcmp(ext, '.mat')
     inputformat = 'mat';
+    disp = ['Loading data from ' ext ' files'];
 elseif strcmp(ext, '.img') || strcmp(ext, '.nii') || strcmp(ext, '.hdr') || strcmp(ext, '.gz')
     inputformat = 'SPM';
+    disp = ['Loading data from ' ext ' files using SPM'];
 else
     error('prevalence_loaddata:unkown_dataformat', 'Unkown extension "%s", please implement detection and loading', ext);
 end
-fprintf('Datatype has been determined as %s\n', inputformat);
+fprintf('Datatype has been determined as: %s\n', inputformat);
 
 %% Load all data
 [N, P1] = size(fnames_in);
@@ -134,7 +136,6 @@ for k = 1 : N
             if ~strcmp(first_analysis, currmat.results.analysis)
                 error('The first TDT analysis was of type %s, but the current analysis is of type %s. All analyses must have the same analysis. Aborting', first_analysis, currmat.results.analysis);
             end
-            
             
             a{k, i} = currmat.results.(decoding_measure).output;
             % check output format & size

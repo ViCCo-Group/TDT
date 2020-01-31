@@ -1,19 +1,22 @@
-% all_results = ipipiTDT(inputfilenames, outputfilename, decoding_measure, g_0, ipipi_i, alpha, homogeneity)
+% all_results = itestTDT(inputfilenames, outputfilename, decoding_measure, g_0, itest_i, alpha, identical)
 %
-% This function is adapted from the original ipipi.m function from 
-%   http://www2.nict.go.jp/bnc/hirose/iPinPin/index.html
-% to perform permutation-based iPIPI with TDT.
+% This function maps to the original itest.m function from 
+%   https://github.com/satoshi-hirose/i-test/
+% to perform permutation-based i-test with TDT.
 %
-% See the demo_iPIPI*.m files for more information on how to use.
-% The iPIPI paper explains the meaning of the outputfiles:
+% See demo_itest_TDTdata.m for more information on how to use and further
+% explanations.
 %
-% AUTHOR: Satoshi Hirose
+% Please CITE i-test as: 
+% Hirose, S. (2020). Valid and powerful group statistics for decoding 
+%   accuracy: Information Prevalence Inference using the i-th order 
+%   statistic (i-test). BioRxiv, 578930. https://doi.org/10.1101/578930
 %
-% REFERENCE to iPIPI:
-% Hirose, S. (2019). Valid and powerful statistical test for decoding 
-% accuracy—Proposal of Permutation-based Information Prevalence Inference 
-% using the i-th order statistic. BioRxiv, 578930. 
-% https://doi.org/10.1101/578930
+% and prevalence inference analyis as:
+% Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). 
+%   Valid population inference for information-based imaging: From the 
+%   second-level t-test to prevalence inference. NeuroImage. 
+%   http://doi.org/10.1016/j.neuroimage.2016.07.040
 %
 % IN
 %   inputfilenames: EITHER
@@ -40,25 +43,21 @@
 % OPTIONAL
 %   outputfilename:   output image filename start. Set to 'DONTWRITE' if 
 %                     results should not be written. By default, results
-%                     will be written to ipipi* in the current
+%                     will be written to itest* in the current
 %                     directory.
 %   decoding_measure: decoding measure that should be used to calculate the
-%                     ipipi statistic (e.g. 'accuracy_minus_chance'),
+%                     i-test statistic (e.g. 'accuracy_minus_chance'),
 %                     for .mat files only. Only necessary if the mat file
 %                     contains multiple decoding measures.
-% and parameters of ipipi.m
-%   ipipi_i:     i of ipipi.m, index of order statistics (Postive Integer, 
-%                default: 1)
-%   alpha:       statistical threshold (Real number between 0 and 1 
-%                default:0.05)
-%   homogeneity: 1 if you assume the homogeneity of DA distribution 
-%                among participants (boolean, default: 0)
+% and parameters of itest.m:
+%   g_0, itest_i (variable i in itest.m), alpha, identical
+%   for meaning, see "help itest"
 %
 % OUT
 %   Results will be written to files (see outputfilename above). For your 
 %   convenience, the script checks if files can be written when starting, 
 %   to avoid tears on your side). Outputfiles are:
-%   One file for each result of ipipi.m, i.e.
+%   One file for each result of itest.m, i.e.
 %     H: 1 if Prob < alpha, 0 otherwise
 %     Prob: Probability 
 %     stat: (structure)
@@ -76,39 +75,40 @@
 %     all_results.vol = vol; % contains infos about the data, e.g.
 %                            % transformation matrices, dimensions, roi 
 %                            % names, etc.
-%     all_results.ipipi_cfg: a struct that contains all parameters to
+%     all_results.itest_cfg: a struct that contains all parameters to
 %                            redo the analysis.
 %
-% Please CITE iPIPI as: 
-% Hirose, S. (2019). Valid and powerful statistical test for decoding 
-% accuracy—Proposal of Permutation-based Information Prevalence Inference 
-% using the i-th order statistic. BioRxiv, 578930. 
-% https://doi.org/10.1101/578930
+% AUTHORS:
+% i-test inference and itest.m: Satoshi Hirose
+% adaptation to TDT: Kai
 %
-% Link to TDT: Kai
-%
-% The iPIPI implementation in TDT is in an experimental  state. It has not 
+% REMARK:
+% The i-test implementation in TDT is in an experimental state. It has not 
 % been extensively tested by the authors of TDT. Use at own risk.
-%
-% HIST:
-%   2020/01/15: Version 1 for TDT based pervalenceTDT.m
 %
 % DISCLAIMER: This function is in beta stage. It seem to work as it should,
 %   but has not been extensively tested by the public, thus use with care.
 
+% HIST:
+%   2020/01/31: itest version 0.1 for TDT based on demo_pervalence_TDT.m
 
-function all_results = ipipiTDT(inputfilenames, outputfilename, decoding_measure, g_0, ipipi_i, alpha, homogeneity)
+function all_results = itestTDT(inputfilenames, outputfilename, decoding_measure, g_0, itest_i, alpha, identical)
 
-ipipi_version = 'iPIPI TDT v0.1, 2020/01/15';
+itest_version = 'itest TDT v0.1, 2020/01/31'
 citation = [char(10) 'Please cite as:' char(10) ...
-'Hirose, S. (2019). Valid and powerful statistical test for decoding' char(10) ... 
-'  accuracy—Proposal of Permutation-based Information Prevalence Inference' char(10) ... 
-'  using the i-th order statistic. BioRxiv, 578930. ' char(10) ...
-'  https://doi.org/10.1101/578930'];
+' Hirose, S. (2020). Valid and powerful group statistics for decoding' char(10) ...
+'   accuracy: Information Prevalence Inference using the i-th order' char(10) ...
+'   statistic (i-test). BioRxiv, 578930. https://doi.org/10.1101/578930' char(10) ...
+' ' char(10) ...
+' and prevalence inference analyis as:' char(10) ...
+' Allefeld, C., Goergen, K., & Haynes, J.-D. (2016). ' char(10) ...
+'   Valid population inference for information-based imaging: From the ' char(10) ...
+'   second-level t-test to prevalence inference. NeuroImage. ' char(10) ...
+'   http://doi.org/10.1016/j.neuroimage.2016.07.040' char(10)]; %#ok<*CHARTEN>
 date_started = datestr(now);
 
-fprintf('\n*** iPIPI ***\n\n')
-disp(ipipi_version);
+fprintf('\n*** itest (previously also known as "iPIPI") ***\n\n')
+disp(itest_version);
 disp(['Started: ' date_started])
 disp(citation);
 
@@ -117,35 +117,28 @@ disp(citation);
 
 % defaults for file names and config
 if ~exist('outputfilename', 'var') || isempty(outputfilename)
-    outputfilename = 'ipipi';
+    outputfilename = 'itest';
 end
 if ~exist('decoding_measure', 'var')
     decoding_measure = '';
 end
-if ~exist('ipipi_cfg', 'var')
-    ipipi_cfg = [];
+if ~exist('itest_cfg', 'var')
+    itest_cfg = [];
 end
 
-% defaults for ipipi(SD,PD,g_0,i,alpha,homogeneity)
-
-% g_0:  Prevalence threshold, gamma0 (Real number between 0 and 1 default:0.5)
-if ~exist('g_0', 'var') || isempty(g_0)
-    g_0 = 0.5;
+% set i-test parameters as empty if not provided, will take default
+% parameters of i-test then. See defaults in itest.m
+if ~exist('g_0', 'var')
+    g_0 = '';
 end
-
-% i:    Index of order statistics (Postive Integer, default: 1)
-if ~exist('ipipi_i', 'var') || isempty(ipipi_i)
-    ipipi_i = 1;
+if ~exist('itest_i', 'var')
+    itest_i = '';
 end
-
-% homogeneity: 1 if you assume the homogeneity of DA distribution among participants 
-if ~exist('homogeneity', 'var') || isempty(homogeneity)
-    homogeneity = 0; % default in iPIPI: no homogeneity
+if ~exist('identical', 'var')
+    identical = '';
 end
-
-% alpha: statistical threshold (Real number between 0 and 1 default:0.05)
-if ~exist('alpha', 'var') || isempty(alpha)
-    alpha = 0.05;
+if ~exist('alpha', 'var')
+    alpha = '';
 end
 
 
@@ -167,7 +160,8 @@ end
 
 %% load and prepare accuracies
 if iscellstr(inputfilenames)
-    [a, mask, vol] = prevalence_loaddata(inputfilenames, decoding_measure); % reusing loaddata function from prevalence demo
+    % remark: we reuse the function from prevalence analysis to store data (no bug)
+    [a, mask, vol] = prevalence_loaddata(inputfilenames, decoding_measure);
 elseif isstruct(inputfilenames)
     disp('Data seem loaded already, using fields from provided struct without checking anything');
     a = inputfilenames.a; % a is datamatrix with dimensions V x N x P1(=Np+1), V: n voxels, N: n sbjs, P1: n permutations/sbj(=Np+1)
@@ -183,7 +177,6 @@ end
 
 % Data matrix a has dimensions V x N x P1(=Np+1), V: n voxels, N: n sbjs, P1: n permutations/sbj(=Np+1)
 [V, N, P1] = size(a);
-
 
 % init output
 % H: 1 if Prob < alpha, 0 otherwise
@@ -202,10 +195,20 @@ clear SD PD
 
 % current implementation: one test per voxel (most likely faster when doing 
 % all at once, but needs to be implemented)
+
+start_time = now; % to display progress
+msg_length = 0; % to display progress
 for v_ind = 1:V
-    if mod(v_ind, 100) == 0 || any(v_ind == [1, 2, 5, 10])
-        fprintf('ipipi voxel: %i\n', v_ind);
+    % display progress
+    if mod(v_ind, 1000) == 0 || (mod(v_ind, 100) == 0 && v_ind < 1000) || any(v_ind == [1, 2, 5, 10])
+        disp_cfg.analysis = 'itest';
+        try % no reason to abort
+            [msg_length] = display_progress(disp_cfg,v_ind,V,start_time,msg_length);
+        catch % do it the oldfashioned way
+            fprintf('itest voxel: %i\n', v_ind);
+        end
     end
+    
     % Splitting data into original and permutation part
     SD(1:N, 1) = a(v_ind, :, 1)'; % Sample Decoding Accuracies from experiment (N x 1 matrix), first row in datamatrix
     PD = squeeze(a(v_ind, :, 2:end)); % Permutation Decoding Accuracies (N x Np matrix), remaining Np(=P1-1) rows in data matrix
@@ -214,14 +217,16 @@ for v_ind = 1:V
     
     
     % ---------------------------------
-    % DO iPIPI
-    [results.H(v_ind), results.prob(v_ind)] = ipipi(SD, PD, g_0, ipipi_i, alpha, homogeneity);
+    % DO itest 
+    % original call: [H, prob, stat] = itest(SD,PD,g_0,i,alpha,identical)
+    [results.H(v_ind), results.prob(v_ind)] = itest(SD,PD,g_0,itest_i,alpha,identical);
+    
     % ---------------------------------
     
-    % if you like to also save the "stat" returned from ipipi, e.g. to get 
+    % if you like to also save the "stat" returned from itest, e.g. to get 
     % P_0  for each step, use this instead of the line above and think 
     % about how to store it for your needs
-    %     [results.H(v_ind), results.prob(v_ind), stats{v_ind}] = ipipi(SD, PD, g_0, ipipi_i, alpha, homogeneity);
+    %     [results.H(v_ind), results.prob(v_ind), stats{v_ind}] = itest(SD, PD, g_0, itest_i, alpha, identical);
 end
 
 %% gather and save parameters
@@ -230,47 +235,47 @@ end
 try
     params = []; % to also store later
     params.g_0 = g_0;
-    params.ipipi_i = ipipi_i;
+    params.itest_i = itest_i;
     params.alpha = alpha;
-    params.homogeneity = homogeneity;
+    params.identical = identical;
     params.N = N;
     params.Np = P1-1; 
-    ipipi_cfg.params = params;
+    itest_cfg.params = params;
     if iscellstr(inputfilenames)
-        ipipi_cfg.inputfilenames = inputfilenames;
+        itest_cfg.inputfilenames = inputfilenames;
     else
-        ipipi_cfg.inputfilenames = sprintf('No filenames have been provided, but a data matrix directly (size data matrix a [V x N x P1]: [%s], size mask: [%s]. See ipipi_cfg.dbstack(2) which function provided the data.', num2str(size(a)), num2str(size(mask)));
+        itest_cfg.inputfilenames = sprintf('No filenames have been provided, but a data matrix directly (size data matrix a [V x N x P1]: [%s], size mask: [%s]. See itest_cfg.dbstack(2) which function provided the data.', num2str(size(a)), num2str(size(mask)));
     end
-    ipipi_cfg.dbstack = dbstack; % caller functions
-    ipipi_cfg.datestr_started = datestr(date_started);
-    ipipi_cfg.datestr_finished = datestr(now);
-    ipipi_cfg.outputfilename = outputfilename;
-    if exist('decoding_measure', 'var'), ipipi_cfg.decoding_measure = decoding_measure; end
+    itest_cfg.dbstack = dbstack; % caller functions
+    itest_cfg.datestr_started = datestr(date_started);
+    itest_cfg.datestr_finished = datestr(now);
+    itest_cfg.outputfilename = outputfilename;
+    if exist('decoding_measure', 'var'), itest_cfg.decoding_measure = decoding_measure; end
     
     % write to file
     if ~strcmp(outputfilename, 'DONTWRITE')
-        ipipi_cfg_file = [outputfilename '_cfg.mat'];
-        disp(['Saving ipipiTDT parameters to: ' ipipi_cfg_file]);
-        save(ipipi_cfg_file, 'ipipi_cfg');
+        itest_cfg_file = [outputfilename '_cfg.mat'];
+        disp(['Saving itestTDT parameters to: ' itest_cfg_file]);
+        save(itest_cfg_file, 'itest_cfg');
     end
 catch e
     try e.getReport, end %#ok<TRYNC>
     keyboard
-    warning('ipipi:writing_config_failed', 'Could not write config file for ipipi, please check why.')
+    warning('itest:writing_config_failed', 'Could not write config file for itest, please check why.')
 end
 
 %% save results to disk
 if strcmp(outputfilename, 'DONTWRITE')
     disp('Skip writing outputfiles because outputfilename = ''DONTWRITE''')
 else
-    source_and_ref = ' from iPIPI, Hirose (2019) BioRxiv doi.org/10.1101/578930';
+    source_and_ref = ' from itest, Hirose (2020) BioRxiv doi.org/10.1101/578930';
     % set a default transformation matrix in case we have non
     if ~exist('vol', 'var') || ~isfield(vol, 'mat') || isempty(vol.mat)
         % check if the tranformation matrix has been provided as trans_mat
         if exist('trans_mat', 'var')
             vol.mat = trans_mat;
         else
-            warning('The transformation matrix has not been stored in the file. The transformation matrix is set to the identity, which is most likely wrong.')
+            warning('The transformation matrix has not been stored in the file. The transformation matrix is set to the identical, which is most likely wrong.')
             vol.mat = eye(4); % default
             if strcmp(inputformat, 'mat')
                 vol.mat(eye(4)==1) = [currmat.results.datainfo.voxelsize, 1]; % we are nice and at least have the right voxels size
@@ -289,13 +294,13 @@ else
             else
                 curr_outputfilename = [outputfilename '_mask' int2str(m_ind)]; % add mask number to image
             end
+            % remark: we reuse the function from prevalence analysis to store data (no bug)
             prevalence_savedata_to_images(curr_outputfilename, mask{1}, vol, results, m_ind, source_and_ref); % save value of current ROI to all voxels of the current ROI
-                                                                                                              % reuse prevalence_savedata_to_images
         end
     else
         
-        % normal anlysis, write all fields to one image
-        % reuse prevalence_savedata_to_images
+        % normal analysis, write all fields to one image
+        % remark: we reuse the function from prevalence analysis to store data (no bug)
         prevalence_savedata_to_images(outputfilename, mask, vol, results, [], source_and_ref);
     end
 end
@@ -313,16 +318,16 @@ end
 %% Return data 
 if nargout >= 1
     all_results = results;
-    all_results.ipipi_cfg = ipipi_cfg; % contains params    
+    all_results.itest_cfg = itest_cfg; % contains params    
     all_results.vol = vol; % will contain e.g. transformation mat and other things
-    all_results.info = {'iPIPI result, see ';
+    all_results.info = {'itest result, see ';
                         citation;
-                        ipipi_version;
+                        itest_version;
                         datestr(now);
                         'mask:     original volume, use to reconstruct data, e.g. as data = nan(size(all_results.mask)); data(all_results.mask) = all_results.typical;';
                         };
 end
 %% Done
-disp(ipipi_version);
+disp(itest_version);
+disp('itest done')
 disp(citation);
-disp('Prevalence done')

@@ -47,7 +47,7 @@ for c_ind = 1:length(check_subdirs)
         break
     end
 end
-if isempty(beta_loc)
+if ~exist('beta_loc', 'var') || isempty(beta_loc)
     beta_loc = uigetdir('', 'Select the sub01_GLM* directory from the demo data (inside sub01_firstlevel*)');
 end
 

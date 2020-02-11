@@ -45,6 +45,6 @@ if display_string % if verbose was not defined, display everything
         fprintf(str,varargin{:});
         fprintf('\n');
     else
-        display(str);
+        disp(str);
     end
 end

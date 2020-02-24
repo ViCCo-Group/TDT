@@ -129,7 +129,7 @@ for sbj = 1:n_sbjs
     if length(orig_image) ~= 1
         error('There should be exactly 1 unpermuted input file for %s, but we found %i, please check', orig_image, length(orig_image)) %#ok<PFCEL>
     elseif isempty(orig_image{1})
-        error('No file found for %s %s, please check', orig_inputdir{sbj}, orig_filemask{sbj}, length(orig_image))
+        error('No file found for %s %s, please check', orig_inputdir{sbj}, orig_filemask{sbj})
     end
     inputimages(sbj, 1) = orig_image;
     
@@ -161,7 +161,7 @@ end
 resultdir = fullfile(orig_inputdir{1}, 'itest_demo');
 mkdir(resultdir);
 resultfilenames = fullfile(resultdir, 'itest_demo');
-disp(['Writing result to ' resultfilenames '*.*']);
+disp(['Writing result to ' fullfile(resultdir, '*.*')]);
 
 %% Do the analysis
 % The call will start the processing. As the function says, calculation can
@@ -181,4 +181,4 @@ itestTDT(inputimages, resultfilenames);
 % Enjoy!
 
 disp('itest TDT demo analysis finished.')
-disp(['Results in: ' resultfilenames])
+disp(['Results in: ' resultdir])

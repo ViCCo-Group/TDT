@@ -9,7 +9,7 @@
 %   what we do here)
 %
 % Data that fits to this script can be computed with
-% demo8_demodata_decoding_tutorial_motion_direction.m.m
+% demo8_demodata_decoding_tutorial_motion_direction.m
 %
 % Kai, 2016/07/25
  
@@ -41,10 +41,16 @@ if strcmp(cfg.analysis, 'searchlight')
     cfg.plot_selected_voxels = 1000; % show SL every 1000' steps
 end
 
-n_perms = 10;  % 10 chosen for demo only, normally you should pick large 
-               % number here, e.g. 1000 or more
-               % the function might return less designs if less
-               % permutations are possible
+n_perms = 10;  % 10 chosen for demo only. Typically a you should pick large 
+               % number here, e.g. 1000 or more. The function might return 
+               % less designs if less permutations are possible
+               
+% Note: If you aim to perform PREVALENCE ANALYSES on the group level (see 
+%   Allefeld, Goergen, Haynes, 2016; Hirose, 2020), few permutations might
+%   suffice. However, if more unique permutations exist, we strongly
+%   recommend to also calculate more in these cases. If you wonder about
+%   power, we currently suggest to perform simulations (see papers above).
+
 combine = 0;   % see make_design_permutations how you can run all analysis in one go, might be faster but takes more memory
 designs = make_design_permutation(cfg,n_perms,combine);
 

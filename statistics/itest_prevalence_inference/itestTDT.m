@@ -200,7 +200,7 @@ start_time = now; % to display progress
 msg_length = 0; % to display progress
 for v_ind = 1:V
     % display progress
-    if mod(v_ind, 1000) == 0 || (mod(v_ind, 100) == 0 && v_ind < 1000) || any(v_ind == [1, 2, 5, 10])
+    if mod(v_ind, 1000) == 0 || (mod(v_ind, 100) == 0 && v_ind < 1000) || any(v_ind == [1, 2, 5, 10, V])
         disp_cfg.analysis = 'itest';
         try % no reason to abort
             [msg_length] = display_progress(disp_cfg,v_ind,V,start_time,msg_length);
@@ -208,7 +208,7 @@ for v_ind = 1:V
             fprintf('itest voxel: %i\n', v_ind);
         end
     end
-    
+
     % Splitting data into original and permutation part
     SD(1:N, 1) = a(v_ind, :, 1)'; % Sample Decoding Accuracies from experiment (N x 1 matrix), first row in datamatrix
     PD = squeeze(a(v_ind, :, 2:end)); % Permutation Decoding Accuracies (N x Np matrix), remaining Np(=P1-1) rows in data matrix

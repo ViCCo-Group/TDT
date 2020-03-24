@@ -1,21 +1,36 @@
 % function regressor_names = design_from_spm(spm_folder,save_on)
-% 
+%
 % This function will extract the relevant information for the current
 % decoding from an SPM design matrix and will save it as
 % regressor_names.mat to the folder of the design matrix.
 %
+% Default usecase: As default, simply specify the directory where the
+% SPM.mat file is stored (or a cached version of it, see INPUT below).
+% 
+% Alternative usecase: you can pass a cellstr with regressornames that you 
+% got from an SPM.mat using
+%   load(spm_file)
+%   regressors = SPM.xX.name;
+% For that, call the function as 
+%   regressor_names = design_from_spm(regressors,'regressors')
+%
 % INPUT:
-% spm_folder: The folder where the design matrix is stored as SPM.mat.
-%   Alternatively, the matrix can also be stored in a *_SPM.mat file (e.g.
-%   if you want to reduce the filesize when data is passed on to someone else).
-% save_on (optional, default = 1): Should regressor names be saved or not.
+% spm_folder: 
+%  Default usecase: The folder where the design matrix is stored
+%   as SPM.mat. Alternatively, the matrix can also be stored in a *_SPM.mat 
+%   file (e.g.if you want to reduce the filesize when data is passed on to 
+%   someone else).
+%  Alternative usecase: cellstr with content of SPM.xX.name
+% save_on (optional, default = 1): 
+%  Default usecase: Should regressor names be saved or not.
+%  Alternative usecase: 'regressors' to mark alternative usecase.
 %
 % OUTPUT:
 % regressor_names: a 3-by-n cell matrix.
 % regressor_names(1, :) -  shortened names of the regressors
-%   If more than one basis function exists in the design matrix (e.g. as is 
-%   the case for FIR designs), each regressor name will be extended by a 
-%   string ' bin 1' to ' bin m' where m refers to the number of basis 
+%   If more than one basis function exists in the design matrix (e.g. as is
+%   the case for FIR designs), each regressor name will be extended by a
+%   string ' bin 1' to ' bin m' where m refers to the number of basis
 %   functions.
 % regressor_names(2, :) - experimental run/session of each regressors
 % regressor_names(3, :) - full name of the SPM regressor
@@ -25,6 +40,7 @@
 % See also DESIGN_FROM_AFNI DECODING_DESCRIBE_DATA
 
 % History:
+% 2020/03/04 Kai: introduced direct passing of regressors from SPM
 % 2013/08/14 Martin
 %   - Introduced possibility to switch off saving regressor names
 %   - Controlled for the (unlikely, but possible) case a user names his
@@ -38,58 +54,63 @@
 
 function regressor_names = design_from_spm(spm_folder,save_on)
 
-if ~exist('save_on','var'), save_on = 1; end
-
-% we allow passing one or multiple file names as cell arrays, too, so let's try to make it one folder
-if iscell(spm_folder)
-    spm_folder = spm_folder{1};
-end
-if exist(spm_folder,'file') == 2
-    spm_folder = fileparts(spm_folder);
-end
-
-spm_file = fullfile(spm_folder,'SPM.mat');
-regressor_file = fullfile(spm_folder,'regressor_names.mat');
-
-if ~exist(spm_file,'file')
-    % check if *_SPM.mat exists, if so, take this
-    otherSPM = dir(fullfile(spm_folder, '*_SPM.mat'));
-    if length(otherSPM) == 1
-        dispv(1, 'design_from_spm: Getting regressor names from %s in %s', otherSPM.name, spm_folder);
-        spm_file = fullfile(spm_folder, otherSPM.name);
-    elseif length(otherSPM) > 1
-        error('Could not find an SPM.mat in %s, but multiple other *_SPM.mat files. Please make sure that only one such file exists.',spm_folder);
-    else    
-        error('No SPM.mat or *_SPM.mat could be found in %s',spm_folder);
+if exist('save_on', 'var') && strcmp(save_on, 'regressors')
+    regressors = spm_folder;
+    save_on = 0;
+else
+    if ~exist('save_on','var'), save_on = 1; end
+    
+    % we allow passing one or multiple file names as cell arrays, too, so let's try to make it one folder
+    if iscell(spm_folder)
+        spm_folder = spm_folder{1};
     end
-end
-
-% Check for existence of regressor_names
-if exist(regressor_file,'file')
-    % Check also if date of regressor names is younger than that of SPM.mat
-    d = dir(spm_file);
-    spm_date = d.datenum;
-    d = dir(regressor_file);
-    regressor_date = d.datenum;
-    if regressor_date>spm_date
-        load(regressor_file)
-        return; % no need to recompute regressor names
+    if exist(spm_folder,'file') == 2
+        spm_folder = fileparts(spm_folder);
     end
+    
+    spm_file = fullfile(spm_folder,'SPM.mat');
+    regressor_file = fullfile(spm_folder,'regressor_names.mat');
+    
+    if ~exist(spm_file,'file')
+        % check if *_SPM.mat exists, if so, take this
+        otherSPM = dir(fullfile(spm_folder, '*_SPM.mat'));
+        if length(otherSPM) == 1
+            dispv(1, 'design_from_spm: Getting regressor names from %s in %s', otherSPM.name, spm_folder);
+            spm_file = fullfile(spm_folder, otherSPM.name);
+        elseif length(otherSPM) > 1
+            error('Could not find an SPM.mat in %s, but multiple other *_SPM.mat files. Please make sure that only one such file exists.',spm_folder);
+        else
+            error('No SPM.mat or *_SPM.mat could be found in %s',spm_folder);
+        end
+    end
+    
+    % Check for existence of regressor_names
+    if exist(regressor_file,'file')
+        % Check also if date of regressor names is younger than that of SPM.mat
+        d = dir(spm_file);
+        spm_date = d.datenum;
+        d = dir(regressor_file);
+        regressor_date = d.datenum;
+        if regressor_date>spm_date
+            load(regressor_file)
+            return; % no need to recompute regressor names
+        end
+    end
+    
+    
+    load(spm_file)
+    
+    regressors = SPM.xX.name;
 end
-
-
-load(spm_file)
-
-regressors = SPM.xX.name;
 
 % Alternatively, it is possible to extract names from SPM.Sess.U and
-% SPM.Sess.C. However, this might become difficult (e.g. for FIR bf) and 
+% SPM.Sess.C. However, this might become difficult (e.g. for FIR bf) and
 % may be more error prone than the solution below.
 
 % Row 1: regressor names, row 2: run numbers, row 3: actual name of regressor in SPM format
 regressor_names = cell(3,length(regressors));
 % Number of basis function (e.g. for HRF all are 1, for FIR from 1 to n)
-bf_numbers = zeros(1,length(regressors)); 
+bf_numbers = zeros(1,length(regressors));
 
 for i = 1:length(regressors)
     
@@ -106,7 +127,7 @@ for i = 1:length(regressors)
     str2 = regexptranslate('escape',str2);
     ind1 = regexp(regressors{i},[str1 exp str2],'tokenExtents');
     ind1 = unique(cell2mat(ind1));
-      
+    
     val = regressors{i}(ind1);
     regressor_names{2,i} = str2double(val); % run number
     
@@ -128,7 +149,7 @@ for i = 1:length(regressors)
         % EEGLab's str2double in the path this would generate an error message.
         bf_numbers(i) = NaN;
     else
-        bf_numbers(i) = str2double(val); 
+        bf_numbers(i) = str2double(val);
     end
     
     %== Get regressor name from regressors with indices ==

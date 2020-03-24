@@ -27,7 +27,6 @@
 %       start the labelname with 'regexp:'. Example:
 %           labelnames{1} = 'regexp:^cond1 bin[(1)(2)]$'
 %               will find all regressors matching '^cond1 bin[(1)(2)]$'
-%
 %   labels: 1xn vector containing the label for each labelname, e.g. [-1;1]
 %   regressor_names: 2xn or 3xn cell array, containing information about
 %       input files.
@@ -52,6 +51,10 @@
 %       (if you want to classify X vs. Y, then they would be 1 1 -1 -1).
 %       The vector xclass is just used to keep the cross-classification
 %       samples separate.
+%   Option for speedup: if you have many files and create many designs, use 
+%       cfg.dont_read_headers_in_decoding_describe_data = 1 if you are sure 
+%       that you have no 4d data. This  avoids timeconsuming calls to 
+%       read_hdr to determine data dimensionality.
 %
 % OUTPUT:
 %   Full usable cfg, including all missing entries of cfg from cfg.defaults
@@ -71,6 +74,8 @@
 %
 % SEE ALSO DESIGN_FROM_SPM
 
+% Update Kai 20/03/24
+%   Introduced cfg.dont_read_headers_in_decoding_describe_data
 % Update Kai 17/03/16
 %   Made it possible to describe simulation data again; failed because
 %   function read entries of regressor_names to check if volumes are 4d,
@@ -111,7 +116,7 @@ end
 
 % check if beta_loc is a directory or a cellstr (in this case, assume it's the name of the input files directly)
 if iscellstr(beta_loc)
-    dispv(1, 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')
+    warningv('suppress_beta_loc_is_cellstr_output', 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')
     beta_names = beta_loc;
 % check if beta_loc is a file (in this case, assume it is a 4D volume containing all files)    
 elseif exist(beta_loc,'file') == 2
@@ -159,18 +164,25 @@ beta_names_orig = beta_names;
 
 beta_names = {}; % re-init
 for i_beta = 1:length(beta_names_orig)
-    try
-        hdr = read_header(cfg2.software,beta_names_orig{i_beta});
-        n_subvol = numel(hdr); % this is testing the SPM standard (multiple headers)
-        if n_subvol == 1 && length(hdr.dim) > 3 % this is testing the AFNI standard (one header)
-        n_subvol = hdr.dim(4);
-            % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
-        end
-    catch e
-        % something failed while reading the header, maybe the file does
-        % not exist or its not a file but some simulations. We assume it
-        % has length 1 and continue.
+    if isfield(cfg2, 'dont_read_headers_in_decoding_describe_data') && cfg2.dont_read_headers_in_decoding_describe_data
+        % reading many headers can take long time, especially if files to
+        % not exist - so use this option to suppress it if its not
+        % necessary
         n_subvol = 1;
+    else
+        try
+            hdr = read_header(cfg2.software,beta_names_orig{i_beta});
+            n_subvol = numel(hdr); % this is testing the SPM standard (multiple headers)
+            if n_subvol == 1 && length(hdr.dim) > 3 % this is testing the AFNI standard (one header)
+            n_subvol = hdr.dim(4);
+                % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
+            end
+        catch e
+            % something failed while reading the header, maybe the file does
+            % not exist or its not a file but some simulations. We assume it
+            % has length 1 and continue.
+            n_subvol = 1;
+        end
     end
         
     if n_subvol == 1
@@ -192,7 +204,7 @@ if length(labelnames) ~= length(labels)
         warningv('DECODING_DESCRIBE_DATA:CELL','Label names were passed as cells in a cell (e.g. {labelnames}), rather than just as a 1xn cell vector. Changing automatically!')
         labelnames = labelnames{1};
     else
-        error('Label names have to be of equal size than label numbers!')
+        error('Variables "labelnames" and "labels" have to be equal size!')
     end
 end
 

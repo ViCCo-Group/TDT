@@ -20,6 +20,8 @@
 
 % Kai, 13-01-24
 
+% Latest updates
+% Kai, 20-03-24: Display logical design.train/.test matrices
 
 function figure_handle = plot_design(cfg,visible_on,max_n_fnames)
 drawnow; % fixes a display problem with plot_selected_voxels
@@ -58,6 +60,16 @@ pos.text = [1:4];
 % to create a bit more space for text and legend, we add extra space by
 % using a 8x4 grid
 pos.legend = [29:31];
+
+%% make sure .train and .test are not logical
+if islogical(cfg.design.train)
+    warning('cfg.design.train is logical. Converting it to double for visualisation.');
+    cfg.design.train = double(cfg.design.train);
+end
+if islogical(cfg.design.test)
+    warning('cfg.design.test is logical. Converting it to double for visualisation.');
+    cfg.design.test = double(cfg.design.test);
+end   
 
 %% get min and max label for later scaling
 

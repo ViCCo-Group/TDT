@@ -384,9 +384,7 @@ lasttime = now; % for updating figures
 
 % Start
 for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex in most cases is 1:n_decodings)
-
-    curr_decoding = decoding_subindex(i_decoding); % if cfg.searchlight.subset wasn't called, then curr_decoding is identical to i_decoding
-
+    
     % Display status info (i.e. how far is the analysis?)
     if verbose, [msg_length] = display_progress(cfg,i_decoding,n_decodings,start_time,msg_length); end
     % update display every 500ms
@@ -394,6 +392,8 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
         drawnow; lasttime = now;
     end
     
+    curr_decoding = decoding_subindex(i_decoding); % if cfg.searchlight.subset wasn't called, then curr_decoding is identical to i_decoding
+
     % Get the current maskindices (e.g. of the current searchlight or of the current ROI)
     indexindex = get_ind(cfg,mask_index,curr_decoding,sz,sl_template,passed_data);
     current_data = data(:,indexindex);
@@ -429,6 +429,11 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
 
     % Loop over design columns (e.g. cross-validation runs)
     for i_step = 1:n_steps
+        
+        % Display status info (step in decoding 1, useful for large design)
+        if verbose && i_decoding == 1 && (any(i_step == [5 10 100 500]) || mod(i_step, 1000) == 0)
+            [msg_length] = display_progress(cfg,(i_decoding-1)+i_step/n_steps,n_decodings,start_time,msg_length,sprintf('(decoding %i/%i, step %i/%i)',i_decoding,n_decodings,i_step,n_steps)); 
+        end
         
         % Get indices for training
         i_train = find(cfg.design.train(:, i_step) > 0);
@@ -553,7 +558,7 @@ for i_decoding = 1:n_decodings % e.g. voxels for searchlight (decoding_subindex 
             % decoding_out(i_step) = libsvm_test(labels_test,data_test,cfg,model);
             decoding_out(i_step) = cfg.decoding.fhandle_test(labels_test,data_test,cfg,model); %#ok<AGROW>
         end
-            
+
     end % i_step
 
     %%%%%%%%%%%%%%%%%%%

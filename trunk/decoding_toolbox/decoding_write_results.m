@@ -28,6 +28,7 @@
 % by Martin Hebart and Kai Goergen
 %
 % HISTORY
+% KAI: 2020/03/24: Displaying name of warning file.
 % MARTIN: 2016/07/05: Added compatibility with AFNI
 % KAI: 2016/03/11: Added check that new datainfo.mat agress with
 %   results_hdr.mat when writing image.
@@ -58,7 +59,7 @@ if ~isempty(reports) % if any warnings were present
     fdir = cfg.results.dir;
     fname = fullfile(fdir,sprintf('%s_warnings.mat',cfg.results.filestart));
     save(fname,'reports');
-    dispv(1,'Saving warnings that occurred during execution.')
+    dispv(1,['Warnings occurred during execution. Saving warnings to ', fname],'display')
 end
 
 n_outputs = length(cfg.results.output);

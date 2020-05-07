@@ -619,7 +619,11 @@ catch
 end
 
 % show design as text
-try display_design(cfg); catch, warningv('DECODING:PrintDesignFailed', 'Failed to print design to screen'), end
+try 
+    display_design(cfg); 
+catch
+    warningv('DECODING:DisplayDesignFailed', 'Failed to display design to screen ( display_design(cfg) )')
+end
 
 %%
 function cfg = tdt_check_transform_only(cfg,passed_data,mask_index)

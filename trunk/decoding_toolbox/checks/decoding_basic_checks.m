@@ -293,7 +293,7 @@ if isfield(cfg.files, 'mask') && ~isempty(cfg.files.mask)
 else % mask not specified, check if all input files come from one directory and if this contains a mask.img/.nii/+orig.BRIK/+acpc.BRIK/+tlrc.BRIK, else use all voxels
     set_auto = 1; % by default, set mask to 'all voxels'
     try % if something doesn't work, we don't care and just use the auto version below
-        dispv(1, 'No mask specified in cfg.file.mask, checking if all images are from the same directory')
+        dispv(1, 'No mask specified in cfg.files.mask, checking if all images are from the same directory')
         [p1, fn, ext] = fileparts(cfg.files.name{1}); %#ok<*NASGU,*ASGLU> % directory of first file
         % check if all other files are in the same directory
         all_from_same_directory = 1; % init

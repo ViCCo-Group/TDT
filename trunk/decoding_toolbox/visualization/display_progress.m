@@ -53,6 +53,7 @@
 function [msg_length, message] = display_progress(cfg,cnt,n_decodings,start_time,msg_length,add_to_message)
 
 global warningv_active % was a warning shown in between? (otherwise message will be truncated)
+if isempty(warningv_active), warningv_active = 0; end % init if not been done
 persistent prev_time   % how much time has elapsed since last call?
 persistent prev_start_time % show starting time if this time is new
 

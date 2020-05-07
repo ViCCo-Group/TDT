@@ -30,7 +30,27 @@ if ~isfield(cfg, 'files')
     cfg.files.name(1:size(cfg.design.train, 1), 1) = {'.file not found'};
 end
 
-
+%% Check if the design is huuuugggeee - if so, just show summary
+huge_number = 10000;
+if numel(cfg.design.train) > huge_number && (~isfield(cfg, 'display_huge_design') || cfg.display_huge_design)
+    disp(' ')
+    disp(' ')
+    disp(['display_design: Avoiding displaying design as it seems huge (has more than ' num2str(huge_number) ' entries)'])
+    disp('Showing summary statistics instead. Set cfg.display_huge_design = true if you really want to display it')
+    disp(' ')
+    disp(['Design size (files x steps): ' num2str(size(cfg.design.train))])
+    disp(['                     n sets: ' num2str(sum(unique(cfg.design.set)))])
+    disp(['                   n labels: ' num2str(sum(unique(cfg.design.label)))])
+    n_train = sum(cfg.design.train(:) > 0);
+    n_test = sum(cfg.design.test(:) > 0);
+    disp(['              n total train: '  num2str(n_train)])
+    disp(['               n total test: '  num2str(n_test)])
+    disp(['           avg n train/step: '  num2str(n_train/size(cfg.design.train, 2))])
+    disp(['               n total test: '  num2str(n_test/size(cfg.design.train, 2))])
+    disp(' ')
+    disp(' ')
+    return
+end
 %% print the design in a readable form
 % nrows = length(cfg.files.name);
 % data

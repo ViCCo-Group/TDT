@@ -5,9 +5,15 @@
 % decoding toolbox and should not be called directly.
 
 function report_files(cfg,n_steps,inputfilenames_fid)
+global verbose
+local_verbose = 2; % verbosity of current file
 
 if ~cfg.results.write
-    inputfilenames_fid = ''; % this will prevent writing
+    if verbose < local_verbose
+        dispv(1, ['report_files:Skipping reporting files because cfg.results.write=1 and (global verbose) ' num2str(verbose) ' >= ' num2str(local_verbose) ' (local verbosity level)'])
+        return % nothing to do
+    end
+    inputfilenames_fid = ''; % this will prevent writing to file/only to screen
 end
 
 % Find common string in all files to print this only once
@@ -36,13 +42,13 @@ for i_step = 1:n_steps
     else
         text = sprintf('Decoding Nr %i', i_step);
     end
-    dispv(2, '%s', text)
+    dispv(local_verbose, '%s', text)
     fprintf(inputfilenames_fid, '%s\n', text);
 
     if n_match > 0
         cont = '...';
         text = sprintf('  File Start: %s%s\n', filestart, cont);
-        dispv(2, '%s', text)
+        dispv(local_verbose, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     else
         cont = '';
@@ -50,7 +56,7 @@ for i_step = 1:n_steps
 
     for curr_i_train = i_train'
         text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, filerest(curr_i_train,:));
-        dispv(2, '%s', text)
+        dispv(local_verbose, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
     fprintf(inputfilenames_fid, '\n');
@@ -58,7 +64,7 @@ for i_step = 1:n_steps
 
     for curr_i_test = i_test'
         text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, filerest(curr_i_test,:));
-        dispv(2, '%s', text)
+        dispv(local_verbose, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
     fprintf(inputfilenames_fid, '\n');

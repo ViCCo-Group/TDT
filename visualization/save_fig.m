@@ -12,8 +12,8 @@
 %       format to save the files as. E.g. {'-dpng', '-depsc2'} will save
 %       the figure as png and eps. See print.m for more formats.
 %       Other input types will be ignored (e.g. numbers), and the default
-%       file formats will be used.
-%   fighdl: Figure handle will be used if provided.
+%       file formats will be used. Add 'NOFIGFILE' to avoid writing the 
+%       design as .fig (sometimes these can get very large).
 %
 % OUTPUT
 %   Files that saved the current figure under filename.*
@@ -36,6 +36,7 @@ function save_fig(filename, cfg, fighdl)
     end
     
     if isfield(cfg,'results') && isfield(cfg.results,'write') && cfg.results.write == 0
+        dispv(1, 'Not writing any figures, because cfg.results.write == 0')
         return
     end
     
@@ -54,15 +55,19 @@ function save_fig(filename, cfg, fighdl)
         formats = {'-dpng', '-depsc2'}; % list all formats that you want to save the figure as
     end
 
-
+    
     
     % Save as FIG
     try
-        dispv(2, '%s', ['Saving figure as ' filename '.fig'])
-        saveas(fighdl, filename, 'fig')
+        if ~any(strcmp(formats, 'NOFIGFILE')) 
+            dispv(1, '%s', ['Saving figure as ' filename '.fig'])
+            saveas(fighdl, filename, 'fig')
+        else
+            dispv(1, 'Not writing figure as .fig file, switched off because cfg.plot_design_formats contains ''NOFIGFILE''')
+        end
     catch %#ok<CTCH>
         disp(lasterror) %#ok<LERR>
-        warningv('SAVE_FIG:SavingFigureFailed','Saving as .fig failed')
+        warningv('SAVE_FIG:SavingFigureFailed', 'Saving as .fig failed')
     end
 
     % prevent resizing the figure
@@ -76,8 +81,9 @@ function save_fig(filename, cfg, fighdl)
     
     for f_ind = 1:length(formats)
         curr_format = formats{f_ind};
+        if strcmp(curr_format, 'NOFIGFILE'), continue, end % skip for 'NOFIGFILE' entry, it's to avoid that the .fig file is saved above
         try
-            dispv(2, '%s', ['Saving figure as ' filename '.* as ' curr_format])
+            dispv(1, '%s', ['Saving figure as ' filename '.* as ' curr_format])
             print(fighdl, curr_format, filename)
         catch %#ok<CTCH>
             warningv('SAVE_FIG:SavingFigureFormattedFailed',['Saving as ' curr_format ' failed'])

@@ -63,17 +63,23 @@
 %         cfg.files.chunk: run/session number of each file; can be used to
 %           keep runs separate for later cross-validation in decoding
 %         cfg.files.label: label for each file
+%         cfg.files.labelname: string in labelsnames that triggered label 
+%           selection
 %         cfg.files.set: set number for each file
 %         cfg.files.xclass: cross-class information for each file (only
 %           necessary for cross-class decoding)
 %         cfg.files.descr: short text description of the file, normally the
 %           regressor names from SPM (more or less)
+%         cfg.log.decoding_describe_data: input to function (except cfg)
 %
 %
-% by Martin Hebart 11/06/12
+% by Martin Hebart 11/06/12, latest update Kai 20/05/19
 %
 % SEE ALSO DESIGN_FROM_SPM
 
+% Update Kai 20/05/19
+%   Labelname expression for each cfg.file; saving input to 
+%   cfg.log.decoding_describe_data
 % Update Kai 20/03/24
 %   Introduced cfg.dont_read_headers_in_decoding_describe_data
 % Update Kai 17/03/16
@@ -103,11 +109,18 @@ cfg2 = decoding_defaults(cfg); % adds path and gets some required settings (keep
 cfg.files.name = [];
 cfg.files.chunk = [];
 cfg.files.label = [];
+cfg.files.labelname = {}; % contains string in labelsnames that triggered label selection
 cfg.files.set = [];
 cfg.files.xclass = [];
 cfg.files.descr = {}; % contains the regressor names from SPM (more or less)
 
+% log input
+l.labelnames = labelnames; l.labels = labels; l.regressor_names = regressor_names; l.beta_loc = beta_loc;
+if exist('xclass', 'var'), l.xclass = {xclass}; end
+cfg.log.decoding_describe_data = l; clear l;
+
 labels_provided = ~(isempty(labelnames) && isempty(labels));
+labelnames_org = labelnames; % store original input to add as triggering condition in cfg.files.labelname later
 
 % first check if beta_loc is multiple filenames as a string and if so convert to cell
 if ischar(beta_loc) && size(beta_loc,1) > 1
@@ -124,7 +137,7 @@ elseif exist(beta_loc,'file') == 2
     beta_names = {beta_loc};
 % else is usual case    
 elseif exist(beta_loc,'dir') == 7
-    if strfind(lower(cfg2.software),'spm')
+    if strfind(lower(cfg2.software),'spm') %#ok<STRIFCND>
         if beta_loc(end) == filesep % prevents some stupid spm_select bug
             beta_loc = beta_loc(1:end-1);
             if beta_loc(end) == ':' % also because of spm_select bug
@@ -138,7 +151,7 @@ elseif exist(beta_loc,'dir') == 7
         
         if isempty(beta_names)
             if isempty(beta_names)
-                error('No img/nii-files starting with ''beta'' found in %s',beta_loc)
+                error('No img/nii-files starting with ''beta'' found in %s',beta_loc) %#ok<PFCEL>
             end
         end
     else
@@ -177,7 +190,7 @@ for i_beta = 1:length(beta_names_orig)
             n_subvol = hdr.dim(4);
                 % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
             end
-        catch e
+        catch e %#ok<NASGU>
             % something failed while reading the header, maybe the file does
             % not exist or its not a file but some simulations. We assume it
             % has length 1 and continue.
@@ -186,7 +199,7 @@ for i_beta = 1:length(beta_names_orig)
     end
         
     if n_subvol == 1
-        beta_names(end+1,1) = beta_names_orig(i_beta);
+        beta_names(end+1,1) = beta_names_orig(i_beta); %#ok<AGROW>
     else
         % the following line repeats beta_names_orig{i_beta} and adds 1:n_subvol to each repetition (e.g. ',1' for the first ',2' for the second etc.)
         curr_beta_names = arrayfun(@(i_subvol) [beta_names_orig{i_beta} ',' num2str(i_subvol)] ,1:n_subvol,'uniformoutput',false);
@@ -236,9 +249,11 @@ for i_input = 1:n_inputs
     cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
     cfg.files.chunk = [cfg.files.chunk cell2mat(regressor_names(2,label_index))];
     cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
+    cfg.files.labelname = [cfg.files.labelname repmat(labelnames_org(i_input),1,sum(label_index))];    
     if exist('xclass','var')
         cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
     end
+        
     % also add the regressor name of each of those
     if size(regressor_names, 1) == 3 % full name has been submitted, use this
         for curr_index = find(label_index)
@@ -255,6 +270,7 @@ end
 if ischar(cfg.files.name), cfg.files.name = num2cell(cfg.files.name,2); end
 cfg.files.chunk = cfg.files.chunk';
 cfg.files.label = cfg.files.label';
+cfg.files.labelname = cfg.files.labelname';
 cfg.files.set = cfg.files.set';
 cfg.files.xclass = cfg.files.xclass';
 

@@ -44,9 +44,9 @@ if numel(cfg.design.train) > huge_number && (~isfield(cfg, 'display_huge_design'
     n_train = sum(cfg.design.train(:) > 0);
     n_test = sum(cfg.design.test(:) > 0);
     disp(['              n total train: '  num2str(n_train)])
-    disp(['               n total test: '  num2str(n_test)])
+    disp(['              n total  test: '  num2str(n_test)])
     disp(['           avg n train/step: '  num2str(n_train/size(cfg.design.train, 2))])
-    disp(['               n total test: '  num2str(n_test/size(cfg.design.train, 2))])
+    disp(['           avg n  test/step: '  num2str(n_test/size(cfg.design.train, 2))])
     disp(' ')
     disp(' ')
     return

@@ -58,8 +58,9 @@ if exist('save_on', 'var') && strcmp(save_on, 'regressors')
     regressors = spm_folder;
     save_on = 0;
 else
-    if ~exist('save_on','var'), save_on = 1; end
-    
+    if ~exist('save_on','var')
+        save_on = 1;
+    end
     % we allow passing one or multiple file names as cell arrays, too, so let's try to make it one folder
     if iscell(spm_folder)
         spm_folder = spm_folder{1};
@@ -97,9 +98,14 @@ else
         end
     end
     
-    
-    load(spm_file)
-    
+    dispv(1, [' Loading ' spm_file]);
+    a = load(spm_file);
+    if isfield(a, 'SPM')
+        SPM = a.SPM;
+        clear a
+    else
+        error('SPM.mat does not seem to contain any data. Please check')
+    end
     regressors = SPM.xX.name;
 end
 

@@ -60,6 +60,7 @@ else % if string should be displayed
         eval([field_id '=' field_id '+1;'])
         eval(['if ' field_id ' == 2, fprintf(''Future displays at same level switched off. Number of displays stored in cfg.\n''), end'])
     catch %#ok if not possible, create field and plot warning message
+        % TODO: This eval creates and error when using parfor.
         eval([field_id '= 1;']);
         out = 1; % toggle state of out
     end

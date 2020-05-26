@@ -1,12 +1,17 @@
 Potential todos for next release (for Kai):
 - Demo how to train and test on different data (make sure that an error occurs if data is not in same format or has different transformation matrices, but I guess that should throw an error already now)
-- Add demo for sort_design
 
 
-* 3.998beta 2020/01/17 BETA / NOT FOR PUBlIC RELEASE YET
+* 3.999beta 2020/05/26 BETA
 
-    Reason:
-!!! preliminary implementation of iPIPI. Satoshi told me that it will be renamed and copyright will be added !!
+REMOVED ipipi/itest again. 
+Reason: The test is currently not sufficiently characterized in the current version of the manuscript. Important information is missing, especially about the behaviour of the test in typical situations (low SNR). We add the test when the test is sufficiently described.
+
+Different further improvements, incl. bugfixes that allow using decoding() in PARFOR.
+
+
+* 3.998beta 2020/01/17 BETA / NOT FOR PUBlIC RELEASE
+    Reason: preliminary implementation of iPIPI/itest
 
 Further changes
 - typical errors detected when nans occur for corr and zcorr outputs

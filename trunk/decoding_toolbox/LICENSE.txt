@@ -2,7 +2,7 @@
 The Decoding Toolbox (TDT) beta
 ===============================
 
-2009-2018 Martin N. Hebart and Kai Goergen
+2009-2020 Martin N. Hebart and Kai Goergen
 
 The Decoding Toolbox is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public Licence 

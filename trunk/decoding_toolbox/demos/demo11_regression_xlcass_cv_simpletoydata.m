@@ -87,6 +87,7 @@ cfg = decoding_defaults(cfg);
 % decoding)
 cfg.analysis = 'wholebrain';
 cfg.decoding.method = 'regression';
+cfg.acknowledge_transres_SVM_pattern_for_regression_is_experimental = 1; % necessary to get pattern for REGRESSION (ok for classification, but for regression the implementation is still experimental, see occuring warnings)
 cfg.results.output = {'corr', 'SVM_weights', 'SVM_pattern'}; % 'model_parameters' returns the full models (warning, might be huge, one model for each step)
                                % To get the filterweights or the pattern, use or 'SVM_weights', 'SVM_weights_plus_bias'. 
                                % 'SVM_pattern' or 'SVM_pattern_alldata'

@@ -1,16 +1,20 @@
 function out = check_verbosity(msg,rule)
-
+% function out = check_verbosity(msg,rule)
+%
 % This function checks if a message at the same function level has been
 % displayed before. The output can be used to conditionally switch on or
 % off the display of these messages.
 %
 % Input:
 %       msg: Message that is displayed in that function
-%       rule: Rule used for verbosity
+%       rule: Rule used for verbosity (shown if global verbose >= rule or 
+%           if verbose is not defined)
 %
 % Output:
 %       out: Logical statement. When 0, then the message has been shown
 %       before or verbosity does not permit the message to be shown again
+
+% Kai, 200502: patch to work with PARFOR
 
 global verbose
 global reports %#ok<NUSED>
@@ -32,7 +36,8 @@ if ~display_string
 else % if string should be displayed
     
     callers = dbstack; % get calling functions
-    callers_name = {callers(2:end).name}; % remove this function from list of names
+    callers_name = {callers(2:end).name}; % get names of callers without this function
+    callers_name = strrep(callers_name, '/', ''); % PARFOR patch (problem is that dbstack then contains / in name ( {'make_general_channel/channel...'} )
     
     field_id = 'reports.disp'; % define level at which message should be deactivated
     for i = length(callers_name):-1:1
@@ -55,13 +60,11 @@ else % if string should be displayed
     end
     
     % The use of eval is not very elegant, but it is fast.
-    
     try % try adding one to the field
-        eval([field_id '=' field_id '+1;'])
+        eval([field_id '=' field_id '+1;']);
         eval(['if ' field_id ' == 2, fprintf(''Future displays at same level switched off. Number of displays stored in cfg.\n''), end'])
     catch %#ok if not possible, create field and plot warning message
-        % TODO: This eval creates and error when using parfor.
-        eval([field_id '= 1;']);
+        eval([field_id '=1;']);
         out = 1; % toggle state of out
     end
     

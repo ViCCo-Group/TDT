@@ -33,7 +33,12 @@ function output = transres_SVM_pattern(decoding_out, chancelevel, cfg, data)
 
 if strcmp(cfg.decoding.method, 'regression')
     % if you change the code so regression works, please adapt the header, too
-    error('transres_SVM_pattern:not_implemented_for_regression', 'transres_SVM_pattern:Pattern reconstruction is currently not implemented for cfg.decoding.method=''regression''. The implementation is probably very similar to the current one, but we have not used it so far and libsvm does not return the labels of the data for regression as is done for classification, so the code needs modification and testing. Feel free to modify the code, test it, and then be so kind to send us the result :)');
+    if isfield(cfg, 'acknowledge_transres_SVM_pattern_for_regression_is_experimental') && ...
+            cfg.acknowledge_transres_SVM_pattern_for_regression_is_experimental
+        warning('transres_SVM_pattern:not_implemented_for_regression', 'transres_SVM_pattern:Pattern reconstruction has currently not been extensively tested for cfg.decoding.method=''regression''. The implementation is probably very similar to the current one, but we have not used it so far and libsvm does not return the labels of the data for regression as is done for classification, so the code needs modification and testing. Feel free to extensively test it and the code, test it, and then be so kind to send us the result :)');
+    else
+        error('transres_SVM_pattern:not_implemented_for_regression', 'transres_SVM_pattern:Pattern reconstruction has currently not been extensively tested for cfg.decoding.method=''regression''. The implementation is probably very similar to the current one, but we have not used it so far and libsvm does not return the labels of the data for regression as is done for classification, so the code needs modification and testing. Feel free to extensively test it and the code, test it, and then be so kind to send us the result :) You can set cfg.acknowledge_transres_SVM_pattern_for_regression_is_experimental=1 to agree to use it.');
+    end
 end
 
 %% check that input data has not been changed without the user knowing it

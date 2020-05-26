@@ -16,6 +16,8 @@
 %   reports.warning.DBSTACK; % to save flags for warning
 %   reports.warnstc.DBSTACK; % to save full dbstack
 
+% Kai, 200502: patch to work with PARFOR
+
 function warningv(msg_id,msg,varargin)
 
 global warningv_active % used as indicator if warning message appeared (to prevent that progress messages are cut)
@@ -38,6 +40,8 @@ end
 
 callers = dbstack;
 callers_name = {callers(2:end).name}; % remove warningv from list
+callers_name = strrep(callers_name, '/', ''); % PARFOR patch (problem is that dbstack then contains / in name ( {'make_general_channel/channel...'} )
+
 stop_ind = find(strcmp('decoding',callers_name)); % stop when top function 'decoding.m' has been reached
 if isempty(stop_ind)
     stop_ind = length(callers_name); % when decoding was not included in the call, include all levels

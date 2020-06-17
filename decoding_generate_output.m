@@ -13,6 +13,9 @@
 % instead.
 %
 % Kai, 2013/04/19
+%
+% Hist: Kai, 2020-06-17: added option to pass chance level using
+%   output.output & output.chancelevel. Warning if only .chancelevel.
 
 
 function results = decoding_generate_output(cfg,results,decoding_out,i_decoding,curr_decoding,data)
@@ -28,26 +31,27 @@ for i_output = 1:n_outputs
     curr_output = cfg.results.output{i_output};
     outname = char(curr_output); % char necessary for classes
 
-    % TODO: Find some way to get the chancelevel back for each measure
-    %   Question: Do we have everything here that we need for this?
-%     if ~isfield(results.(outname),'chancelevel')
-%         results.(outname).chancelevel = 0;
-%     end
+    % apply transformation and get result
+    output = decoding_transform_results(curr_output,decoding_out,chancelevel,cfg,data);
 
-%   TODO: possibly replace by list of outnames as cell and strcmpi(outname,outnames)
+    % add chancelevel, if we have it
     if strcmpi(outname, 'accuracy') || strcmpi(outname, 'accuracy_minus_chance') || ...
             strcmpi(outname, 'sensitivity') || strcmpi(outname, 'sensitivity_minus_chance') || ...
             strcmpi(outname, 'specificity') || strcmpi(outname, 'specificity_minus_chance') || ...
             strcmpi(outname, 'balanced_accuracy') || strcmpi(outname, 'balanced_accuracy_minus_chance') || ...
             strcmpi(outname, 'AUC') || strcmpi(outname, 'AUC_minus_chance') 
         results.(outname).chancelevel = chancelevel;
+    elseif isstruct(output) && isfield(output, 'chancelevel') 
+        if isfield(output, 'output') % extra field output that is then taken as output
+            results.(outname).chancelevel = output.chancelevel;
+            output = output.output;
+        else
+            warningv('decoding_generate_output:struct_with_chancelevel_but_without_output', ['decoding_generate_output:method ' outname ' returned a struct with .chancelevel, but without .output. If you want to store .chancelevel as normal field, return the remaining output as output.output']);
+        end
     else
-        % dont save it as chancelevel 
-        % TODO: Should we change TRANSRES_ functions so that they can also 
-%             return an (optional) chancelevels if asked?
+        % dont save chancelevel 
     end
-    
-    output = decoding_transform_results(curr_output,decoding_out,chancelevel,cfg,data);
+
 
     % This is a lazy initialization (Martin would call it workaround) for
     % the case in which the output has more than one element (e.g. weights

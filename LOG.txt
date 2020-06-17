@@ -2,8 +2,14 @@ Potential todos for next release (for Kai):
 - Demo how to train and test on different data (make sure that an error occurs if data is not in same format or has different transformation matrices, but I guess that should throw an error already now)
 
 
-* 3.999beta 2020/05/26 BETA
+* 3.999B_beta 2020/06/17 BETA
+- Fixed bug that transres_accuracy_matrix & transres_accuracy_pairwise 
+and both _minus_chance versions produced wrong results (only worse, not too 
+systematically to good) when label order was not increasing.
+- Introduced option to add chancelevel from transres functions (see 
+decoding_transform_results).
 
+* 3.999beta 2020/05/26 BETA
 REMOVED ipipi/itest again. 
 Reason: The test is currently not sufficiently characterized in the current version of the manuscript. Important information is missing, especially about the behaviour of the test in typical situations (low SNR). We add the test when the test is sufficiently described.
 

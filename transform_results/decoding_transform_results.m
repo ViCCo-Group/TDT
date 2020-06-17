@@ -1,7 +1,7 @@
 % function output = decoding_transform_results(method,decoding_out,chancelevel,cfg,data)
 %
 % This function calculates a lot of different result measures defined by
-% METHOD.
+% METHOD. It is called and applied by decoding_generate_output.m
 %
 % FURTHER METHODS: Type
 %   >> transres_  
@@ -54,7 +54,9 @@
 % E.g., if you want to write your own result transformation function
 % "yourmethod", the method should be named "transres_yourmethod", take
 % the above inputs as input (or better varargin), and provide your desired
-% output measure as output.
+% output measure as output. If the method also should return a chancelevel,
+% output should be a struct with output.chancelevel and output.output (see
+% e.g. transres_accuracy_matrix_minus_chance).
 %
 % IN
 %   method: desired method name as string (see above)

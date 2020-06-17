@@ -1,3 +1,6 @@
+The bugs below have been known and might already been solved. 
+If you find other bugs, please write us an email (see README.txt).
+
 OPEN BUGS
 
 B24: AFNI only works with BRIK files, not with nii.

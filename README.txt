@@ -41,7 +41,15 @@ and for feature_selection
 For a more detailed description of the toolbox, see our publication:
 http://journal.frontiersin.org/Journal/10.3389/fninf.2014.00088
 
-Please report any bugs to
+General questions?
+
+If you have questions, please check https://neurostars.org/. There are 
+already quite a number of questions and answers, so you might already find 
+answers there. If your question is not answered, pleased post it there and 
+tag it as TDT question. We or the community will then do our best to help
+you. Please do not write emails to ask questions on tdt. 
+
+However, if you find bugs, please let us know:
 martin.hebart@nih.gov or
 kai.goergen@bccn-berlin.de
 

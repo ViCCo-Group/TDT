@@ -17,6 +17,8 @@
 %   cfg.results.output = {'confusion_matrix'}
 %
 % Martin, 2014-04-23
+%
+% See also decoding_transform_results transres_accuracy_matrix transres_accuracy_pairwise
 
 % Update MH 2017-03-15:
 % Error in description: flipped columns and rows, now corrected

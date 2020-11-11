@@ -58,7 +58,7 @@ elseif alternative == 2
 
     % Old orange and black    
     % train: dark (old orange and new green)
-    max_color_train = [.7, .5, .2];
+    max_color_train = [.7, .5, .2]*1.1;
     min_color_train = [0, .3, .3];
     % test: light (same colors but lighter)
     max_color_test = (max_color_train + 1) / 2; % same color but lighter
@@ -453,7 +453,7 @@ end
 ul_stepsize = ceil(length(unique_labels)/10); 
 ul_xticks = [1:ul_stepsize:length(unique_labels), length(unique_labels)+1];
 ul_xtick_labels = [num2cell(unique_labels), {'unused'}];
-    
+
 set(gca, 'XTick', ul_xticks);
 set(gca, 'XTickLabel', ul_xtick_labels(ul_xticks))
 

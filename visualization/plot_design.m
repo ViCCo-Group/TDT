@@ -5,10 +5,18 @@
 %
 % This function plots your current design (analog to display_design.m).
 %
-% The output is informative, because you can see your decoding design at a glance.
+% The output is informative, because you can see your decoding design at a 
+% glance.
+%
+% For MULTITARGET classification (each sample has multiple labels,
+% cfg.design.label is a cellarray, where each cell contains a list with
+% 1 x n_target entries), n_target plots will be created.
 %
 % If you like and/or know how to design nice figures in Matlab, feel free
 % to improve the design.
+%
+% An alterantive colorscheme is available, change alternative = 0; at top
+% of function.
 %
 % Some optional input:   
 %   visible_on: 1: show figure, 0: do not show figure (default: 1)
@@ -16,20 +24,30 @@
 %   cfg.fighandles.plot_design: Figure handle to which design
 %       will be plotted to (default: new figure)
 %
+% OUT
+%   figure_handle: handle(s) to produced figures (more than one for
+%   MULTITARGET)
+%
 % See also: display_design.m
 
 % Kai, 13-01-24
 
 % Latest updates
+% Kai, 20-12-10: Multitarget support added
 % Kai, 20-03-24: Display logical design.train/.test matrices
 
 function figure_handle = plot_design(cfg,visible_on,max_n_fnames)
+%% start plotting
 drawnow; % fixes a display problem with plot_selected_voxels
 % switch alternative on for a different color scheme
 alternative = 0;
 
 if ~exist('visible_on','var')
     visible_on = 1;
+end
+
+if ~exist('max_n_fnames', 'var')
+    max_n_fnames = 16;
 end
 
 if ~isfield(cfg.files,'name')
@@ -39,6 +57,25 @@ end
 if ischar(cfg.files.name)
     cfg.files.name = num2cell(cfg.files.name,2);
     warningv('BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
+end
+
+%% multitarget: create multiple figures, one per label
+figure_handle = [];
+if isfield(cfg, 'design') && isfield(cfg.design, 'label') && iscell(cfg.design.label)
+    dispv(1, 'Multitarget labels detected (multiple labels per sample), generating one plot per target')
+    n_targets = unique(cellfun(@length, cfg.design.label));
+    if length(n_targets) ~= 1 % this REALLY needs to be length(n_targets), because we test if there is only 1 unique length
+        warningv('plot_design:multitarget_failed_different_number_of_elements', 'Cannot plot multitarget design: Some cells in cfg.design.label seem to have different numbers of elements. Please check')
+    else
+        for target_ind = 1:n_targets
+            curr_cfg = cfg;
+            curr_cfg.design.label = cellfun(@(x)x(target_ind), cfg.design.label);
+            % add info about multitarget and target number
+            curr_cfg.results.dir = [curr_cfg.results.dir sprintf(' [MULTITARGET Labels: %i/%i]', target_ind, n_targets)];
+            figure_handle(end+1) = plot_design(curr_cfg,visible_on,max_n_fnames); %#ok<AGROW>
+        end
+    end
+    return
 end
 
 %% define color range
@@ -233,9 +270,6 @@ clear fnames_char; % to avoid anyone uses it below
 
 % Do not show all file names if too many
 n_fnames = size(fnames_cstr,1);
-if ~exist('max_n_fnames', 'var')
-    max_n_fnames = 16;
-end
 
 % if n_fnames > max_n_fnames
 % In that case, showing them evenly spaced

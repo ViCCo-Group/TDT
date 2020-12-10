@@ -55,7 +55,11 @@ for i_step = 1:n_steps
     end
 
     for curr_i_train = i_train'
-        text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, filerest(curr_i_train,:));
+        if iscell(cfg.design.label(curr_i_train, i_step)) % for multitarget
+            text = sprintf('  File Train (%s): %s%s', num2str(cfg.design.label{curr_i_train, i_step}), cont, filerest(curr_i_train,:));    
+        else
+            text = sprintf('  File Train %i: %s%s', cfg.design.label(curr_i_train, i_step), cont, filerest(curr_i_train,:));
+        end
         dispv(local_verbose, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end
@@ -63,7 +67,11 @@ for i_step = 1:n_steps
 
 
     for curr_i_test = i_test'
-        text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, filerest(curr_i_test,:));
+        if iscell(cfg.design.label(curr_i_test, i_step)) % for multitarget
+            text = sprintf('  File Test (%s): %s%s', num2str(cfg.design.label{curr_i_test, i_step}), cont, filerest(curr_i_test,:));   
+        else
+            text = sprintf('  File Test %i: %s%s', cfg.design.label(curr_i_test, i_step), cont, filerest(curr_i_test,:));
+        end
         dispv(local_verbose, '%s', text)
         fprintf(inputfilenames_fid, '%s\n', text);
     end

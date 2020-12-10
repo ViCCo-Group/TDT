@@ -193,7 +193,7 @@ end
 % design.label = repmat(cfg.files.label, 1, n_steps);
 
 counter = 0;
-design.label = [];
+% design.label = []; % DO NOT initialise design to allow Cells (for multilabel use) (or init as type of first label)
 design.set = [];
 design.train(n_files,1) = 0; % sets size along x dimension
 design.test(n_files,1) = 0;

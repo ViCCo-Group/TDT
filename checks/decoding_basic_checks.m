@@ -216,50 +216,59 @@ if ~isequal(size(cfg.design.train), size(cfg.design.test))
     error('Size mismatch: ~isequal(size(cfg.design.train), size(cfg.design.test))')
 end
 
-% get number of conditions present in decoding
-cfg.design.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
+if isfield(cfg, 'multitarget') && cfg.multitarget
+    warningv('decoding_basic_checks:multitarget_no_check', 'Multitarget mode detected. Checks for labels currently not implemented, skipping this.')
+    warningv('decoding_basic_checks:multitarget_n_cond_nan', 'Multitarget mode detected. Setting cfg.design.n_cond = nan;.')
+    cfg.design.n_cond = nan;
+    warningv('decoding_basic_checks:multitarget_n_cond_per_step', 'Multitarget mode detected. Setting cfg.design.n_cond_per_step = nan;.')
+    cfg.design.n_cond_per_step = nan;
+else
+    % get number of conditions present in decoding
+    cfg.design.n_cond = length(unique(cfg.design.label(cfg.design.train | cfg.design.test))); % all used labels
 
-% get number of *used* conditions (i.e. labels) for each run separately
-n_unique_labels = zeros(1,n_steps);
-unique_labels = cell(1,n_steps);
-for i_step = 1:n_steps
-    curr_label = cfg.design.label(:,i_step);
-    unique_labels{i_step} = unique(curr_label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step)));
-    n_unique_labels(i_step) = length(unique_labels{i_step});
-end
-% at the same time make sure that the number is always the same (it is possible that
-% different labels are used as long as the number of labels remains the
-% same)
-if ~strcmpi(cfg.decoding.method,'regression')
-    if ~all(n_unique_labels == n_unique_labels(1))
-        error('Number of used labels varies across decoding steps which prevents comparing results across steps. If multiple sets are used, run them separately.')
-    else
-        diff_unique_labels = diff([unique_labels{:}],1,2);
-        if any(diff_unique_labels(:)) % if any run contains different labels
-            warningv('DECODING_BASIC_CHECKS:more_than_two_labels',...
-                'More than two labels are used, but not all labels are used in each run (e.g. in run 1 labels A and B and in run 2 labels A and C). Make sure this has been intended!')
+    % get number of *used* conditions (i.e. labels) for each run separately
+    n_unique_labels = zeros(1,n_steps);
+    unique_labels = cell(1,n_steps);
+    for i_step = 1:n_steps
+        curr_label = cfg.design.label(:,i_step);
+        unique_labels{i_step} = unique(curr_label(cfg.design.train(:,i_step) | cfg.design.test(:,i_step)));
+        n_unique_labels(i_step) = length(unique_labels{i_step});
+    end
+    % at the same time make sure that the number is always the same (it is possible that
+    % different labels are used as long as the number of labels remains the
+    % same)
+    if ~strcmpi(cfg.decoding.method,'regression')
+        if ~all(n_unique_labels == n_unique_labels(1))
+            error('Number of used labels varies across decoding steps which prevents comparing results across steps. If multiple sets are used, run them separately.')
+        else
+            diff_unique_labels = diff([unique_labels{:}],1,2);
+            if any(diff_unique_labels(:)) % if any run contains different labels
+                warningv('DECODING_BASIC_CHECKS:more_than_two_labels',...
+                    'More than two labels are used, but not all labels are used in each run (e.g. in run 1 labels A and B and in run 2 labels A and C). Make sure this has been intended!')
+            end
         end
     end
-end
-cfg.design.n_cond_per_step = n_unique_labels(1);
+    cfg.design.n_cond_per_step = n_unique_labels(1);
 
-problem = 0;
-for i_step = 1:n_steps
-    curr_train = cfg.design.train(:,i_step);
-    curr_test = cfg.design.test(:,i_step);
-    curr_label = cfg.design.label(:,i_step);
-    if length(unique(curr_label(logical(curr_train)))) == 1
-        error('Training data in decoding step %i contains only one label, but needs at least two.',i_step)
+
+    problem = 0;
+    for i_step = 1:n_steps
+        curr_train = cfg.design.train(:,i_step);
+        curr_test = cfg.design.test(:,i_step);
+        curr_label = cfg.design.label(:,i_step);
+        if length(unique(curr_label(logical(curr_train)))) == 1
+            error('Training data in decoding step %i contains only one label, but needs at least two.',i_step)
+        end
+        if length(unique(curr_label(logical(curr_test)))) == 1
+            problem = problem+1;
+        end
     end
-    if length(unique(curr_label(logical(curr_test)))) == 1
-        problem = problem+1;
+    if problem && n_steps == 1
+        warningv('DECODING_BASIC_CHECKS:TestDataOnlyOneLabel',...
+            ['Test data in %i steps contains only one label and there is only ',...
+             'one decoding step. This might be a problem when using correlation, ',...
+             'AUC, sensitivity, specificity and similar measures!'],problem)
     end
-end
-if problem && n_steps == 1
-    warningv('DECODING_BASIC_CHECKS:TestDataOnlyOneLabel',...
-        ['Test data in %i steps contains only one label and there is only ',...
-         'one decoding step. This might be a problem when using correlation, ',...
-         'AUC, sensitivity, specificity and similar measures!'],problem)
 end
 
 % Get number of sets
@@ -396,8 +405,12 @@ else
 end
 
 % Check if training data is balanced (problematic!) and test data (may matter)
-check_imbalance(cfg);
-
+if isfield(cfg, 'multitarget') && cfg.multitarget
+    warningv('decoding_basic_checks:multitarget_no_check_imbalance', 'Multitarget mode detected. Checks for labels currently not implemented. Skipping check_imbalance().')
+else
+    check_imbalance(cfg);
+end
+    
 if ischar(cfg.files.name)
     cfg.files.name = num2cell(cfg.files.name,2);
     warningv('DECODING_BASIC_CHECKS:FileNamesStringNotCell','File names provided as string, not as cell matrix. Converting to cell...')
@@ -424,7 +437,7 @@ if strcmpi(cfg.feature_selection.method,'filter') && strcmpi(cfg.feature_selecti
     else
         if ischar(cfg.feature_selection.external_fname)
             cfg.feature_selection.external_fname = num2cell(cfg.feature_selection.external_fname,2);
-            warning('DECODING_BASIC_CHECKS:convert_to_cell','Converting cfg.feature_selection.external_fname from character to cell. Try providing cell arrays in the future')
+            warningv('DECODING_BASIC_CHECKS:convert_to_cell','Converting cfg.feature_selection.external_fname from character to cell. Try providing cell arrays in the future')
         end
         n_external = length(cfg.feature_selection.external_fname);
         if  n_external ~= 1 && n_external ~= n_steps

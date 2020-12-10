@@ -1,6 +1,8 @@
 Potential todos for next release (for Kai):
 - Demo how to train and test on different data (make sure that an error occurs if data is not in same format or has different transformation matrices, but I guess that should throw an error already now)
 
+* 3.999C_beta 2020/12/10 BETA
+- Added functionality for multitarget (necessary scripts currently still in decoding_experimental)
 
 * 3.999B_beta 2020/06/17 BETA
 - Fixed bug that transres_accuracy_matrix & transres_accuracy_pairwise 

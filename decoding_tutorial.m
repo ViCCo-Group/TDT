@@ -234,6 +234,12 @@ cfg.results.output = 'accuracy_minus_chance';
 % parameters for libsvm (linear SV regression, cost = 1, no screen output)
 % cfg.decoding.train.classification.model_parameters = '-s 4 -t 0 -c 1 -b 0 -q'; 
 
+% if you like to change the decoding software (default: libsvm):
+% cfg.decoding.software = 'liblinear'; % for more, see decoding_toolbox\decoding_software\. 
+% Note: cfg.decoding.software and cfg.software are easy to confuse.
+% cfg.decoding.software contains the decoding software (standard: libsvm)
+% cfg.software contains the data reading software (standard: SPM/AFNI)
+
 %% Not necessary, but nice: Decide what you want to plot
 
 % It's really fascinating and informative to look at what a searchlight 

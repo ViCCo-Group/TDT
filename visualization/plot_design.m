@@ -34,7 +34,7 @@ end
 
 if ~isfield(cfg.files,'name')
     cfg.files.name = repmat({' '},size(cfg.files.label));
-end
+end     
 
 if ischar(cfg.files.name)
     cfg.files.name = num2cell(cfg.files.name,2);

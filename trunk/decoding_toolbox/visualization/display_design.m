@@ -12,6 +12,9 @@
 %
 % - Multiple blocks for long designs (e.g. after 20 steps)
 
+% Latest updates
+% Simon,Kai, 20-12-15: Multitarget support added
+
 function table = display_design(cfg)
 
 %% check if input is design subfield
@@ -28,6 +31,28 @@ end
 % add dummy entries for files
 if ~isfield(cfg, 'files')
     cfg.files.name(1:size(cfg.design.train, 1), 1) = {'.file not found'};
+end
+
+
+%% multitarget: create multiple tables, one per label
+if isfield(cfg, 'design') && isfield(cfg.design, 'label') && iscell(cfg.design.label)
+    dispv(1, 'Multitarget labels detected (multiple labels per sample), generating one table per target')
+    n_targets = unique(cellfun(@length, cfg.design.label));
+    if length(n_targets) ~= 1 % this REALLY needs to be length(n_targets), because we test if there is only 1 unique length
+        warningv('display_design:multitarget_failed_different_number_of_elements', 'Cannot dispay multitarget design: Some cells in cfg.design.label seem to have different numbers of elements. Please check')
+    else
+        table = cell(1, n_targets);
+        for target_ind = 1:n_targets
+            curr_cfg = cfg;
+            curr_cfg.design.label = cellfun(@(x)x(target_ind), cfg.design.label);
+            % add info about multitarget and target number
+            curr_cfg.results.dir = [curr_cfg.results.dir sprintf(' [MULTITARGET Labels: %i/%i]', target_ind, n_targets)];
+            table{target_ind} = display_design(curr_cfg); %#ok<AGROW>
+            % display table for the current model
+            disp(table{target_ind});
+        end
+    end
+    return
 end
 
 %% Check if the design is huuuugggeee - if so, just show summary

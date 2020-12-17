@@ -58,7 +58,7 @@ cfg.plot_selected_voxels = 500; % 0: no plotting, 1: every step, 2: every second
 
 cfg.multitarget = 1; % needed to avoid some basic checks
 cfg.decoding.software = 'libsvm_multitarget';
-cfg.results.output = {'predicted_labels_multitarget'};
+cfg.results.output = {'predicted_and_true_labels_multitarget'};
 % cfg.results.output = {'accuracy_minus_chance', 'AUC'}; % 'accuracy_minus_chance' by default
 
 %% CV design + run decoding
@@ -78,5 +78,7 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[labelval1 labelval2],r
 % This creates the leave-one-run-out cross validation design:
 cfg.design = make_design_cv(cfg); 
 
+
+
 %% Run decoding
-results = decoding(cfg);
+[results, cfg] = decoding(cfg);

@@ -28,6 +28,10 @@
 
 % Martin 2014/10/18
 
+% Latest updates
+% Simon,Kai, 20-12-15: Multitarget support added to create filenames for
+% cfg.files.name
+
 function [passed_data,cfg] = fill_passed_data(passed_data,cfg,label,chunk)
 
 %% FILL CFG.FILES (FOR PASSED_DATA)
@@ -56,12 +60,23 @@ if isfield(cfg.files,'name') && ~isempty(cfg.files.name)
     % do nothing
 else
     % save a description
-    cfg.files.name = {};
-    lst = zeros(0,2);
-    for ifile = 1:length(cfg.files.label)
-        lst(end+1,:) = [cfg.files.label(ifile) cfg.files.chunk(ifile)]; %#ok<AGROW>
-        ind = sum(ismember(lst,[cfg.files.label(ifile) cfg.files.chunk(ifile)],'rows'));
-        cfg.files.name(ifile,1) = {sprintf('class%ichunk%iindex%i', cfg.files.label(ifile), cfg.files.chunk(ifile),ind)};
+    cfg.files.name = cell(length(cfg.files.label),1);
+    for ifile = 1:length(cfg.files.name)
+        % increase index when identical filename has already been assigned
+        % to another sample
+        for ind = 1:length(cfg.files.name)
+            % assign names for both single- and multitarget conditions
+            if cfg.multitarget == 1
+                curr_name = sprintf('label%schunk%iindex%i', sprintf('_%g', cfg.files.label{ifile}), cfg.files.chunk(ifile), ind);
+            else
+                curr_name = sprintf('class%ichunk%iindex%i', cfg.files.label(ifile), cfg.files.chunk(ifile), ind);
+            end
+            if ~any(strcmp(curr_name, cfg.files.name))
+                cfg.files.name(ifile,1) = {curr_name};
+                break
+            end
+            assert(ind~=length(cfg.files.name), 'something went wrong, could not find a unique name during data generation - this should not happen, please check')
+        end 
     end
 end
 

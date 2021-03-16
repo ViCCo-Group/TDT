@@ -9,10 +9,11 @@
 % transres_confusion_matrix 
 % Reporting the multiclass accuracy of each class is not implemented yet.
 %
+% Demo: demo3_1_simpletoydata_multiclass_confusion.m
 %
 % OUT
 % The output will be an NxN matrix where n is the number of unique labels.
-% The accuracucy for classifiying label1 vs label2 is in 
+% The accuracucy for classifying label1 vs label2 is in 
 % acc(label1, label2). Labels are in increasing order.
 %
 % NOTE: If labels are missing, e.g. if only the labels [1, 2, 4] exist, the
@@ -29,9 +30,12 @@
 % Martin Hebart 2016-03-09
 % Kai, 2020-06-17: Major update to canonical dv format from libsvm_test.m
 %
-% See also decoding_transform_results 
+% See also 
+%   decoding_transform_results 
 %   transres_accuracy_pairwise transres_confusion_matrix
-%   transres_accuracy_pairwise_minus_chance transres_accuracy_matrix_minus_chance
+%   transres_confusion_matrix_plus_undecided
+%   transres_accuracy_pairwise_minus_chance 
+%   transres_accuracy_matrix_minus_chance
 
 % TODO: allow using subset of accuracy matrix
 

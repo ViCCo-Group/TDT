@@ -12,8 +12,10 @@
 %
 % OPTIONAL INPUT
 %   cfg.plot_design_formats: if this is a cell of strings, each string specifies one
-%       format to save the files as. E.g. {'-dpng', '-depsc2'} will save
-%       the figure as png and eps. See print.m for more formats.
+%       format to save the files as. E.g. {'-dpng', '-dpdf'} will save
+%       the figure as png and pef (note: matlab does not create .eps files
+%       as vectorgraphics anymore, but just puts a plain bitmap in a .eps. 
+%       That's why we switched to .pdf). See print.m for more formats.
 %       Other input types will be ignored (e.g. numbers), and the default
 %       file formats will be used. Add 'NOFIGFILE' to avoid writing the
 %       design as .fig (sometimes these can get very large).
@@ -24,7 +26,7 @@
 %   If fighdl contains multiple figures (e.g. for multitarget analyses),
 %   _1, _2, etc will be added to filename, e.g. filename_1.*
 
-% Last update: Kai, 2020-12-17 - multitarget compatibility
+% Last update: Kai, 2020-12-24 - multitarget compatibility, pdf instad 
 
 function save_fig(filename, cfg, fighdl)
 
@@ -49,11 +51,15 @@ end
 
 %% start processing of individual handles
 % replace '.' in filename by '_' to avoid problems with file ending
-if any(filename == '.')
-    disp(['Replacing''.'' in filename ''' filename ''' by ''_'' to avoid problems with file ending'])
-    filename(filename == '.') = '_';
-    disp(['New Filename: ' filename])
+[fdir, fname, fext] = fileparts(filename);
+if any(fname == '.')
+    disp(['Replacing''.'' in filename ''' fname ''' by ''_'' to avoid problems with file ending'])
+    fname(fname == '.') = '_';
+    disp(['New Filename: ' fname])
+    filename = fullfile(fdir, [fname, fext]); % updating filename
+    disp(['New Filename with directory: ' filename])
 end
+
 
 if isfield(cfg,'results') && isfield(cfg.results,'write') && cfg.results.write == 0
     dispv(1, 'Not writing any figures, because cfg.results.write == 0')
@@ -72,7 +78,7 @@ if isfield(cfg, 'plot_design_formats')
 end
 
 if ~exist('formats', 'var')
-    formats = {'-dpng', '-depsc2'}; % list all formats that you want to save the figure as
+    formats = {'-dpng', '-dpdf'}; % list all formats that you want to save the figure as
 end
 
 

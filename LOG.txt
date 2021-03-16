@@ -1,6 +1,12 @@
 Potential todos for next release (for Kai):
 - Demo how to train and test on different data (make sure that an error occurs if data is not in same format or has different transformation matrices, but I guess that should throw an error already now)
 
+* 3.999D_beta 2021/03/16 BETA
+- Added transres_confusion_matrix_plus_undecided plus demo, 
+- Changed .eps to .pdf as default (.eps are not vector graphic anymore)
+- Introduced parameter change and warning if libsvm is used without scaling
+  (can be extremely slow)
+
 * 3.999C_beta 2020/12/10 BETA
 - Added functionality for multitarget (necessary scripts currently still in decoding_experimental)
 
@@ -13,14 +19,12 @@ decoding_transform_results).
 
 * 3.999beta 2020/05/26 BETA
 REMOVED ipipi/itest again. 
-Reason: The test is currently not sufficiently characterized in the current version of the manuscript. Important information is missing, especially about the behaviour of the test in typical situations (low SNR). We add the test when the test is sufficiently described.
+Reason: ipipi/itest is currently not sufficiently characterized in the current version of the manuscript. Important information is missing, especially about the behaviour of the test in typical situations (low SNR). We add the test when the test is sufficiently described.
+- Different further improvements, incl. bugfixes that allow using decoding() in PARFOR.
 
-Different further improvements, incl. bugfixes that allow using decoding() in PARFOR.
 
-
-* 3.998beta 2020/01/17 BETA / NOT FOR PUBlIC RELEASE
+* 3.998beta 2020/01/17 BETA / REJECTED / NOT FOR PUBlIC RELEASE
     Reason: preliminary implementation of iPIPI/itest
-
 Further changes
 - typical errors detected when nans occur for corr and zcorr outputs
 - improved explanation & implementation of prevalence

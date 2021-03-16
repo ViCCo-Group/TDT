@@ -39,9 +39,6 @@ end
 defaults.toolbox_path = fpath;
 defaults.report = []; % init field
 
-% path to libSVM (set if version delivered with this package is not working)
-% addpath('/analysis/share/software/matlab_libraries/libsvm-3.11')
-
 %% Set defaults
 
 % General values
@@ -71,7 +68,7 @@ defaults.plot_design = 1; % decide whether you want to save the design as
                           %     0: no plotting (not recommended)
                           %     1: plot using the default files formats
                           %     2: will be plotted only at the end
-% default.plot_design_formats = {'-dpng', '-depsc2'}; % list all formats
+% default.plot_design_formats = {'-dpng', '-dpdf'}; % list all formats
                           %         that you want to save the figure as
                           %             (see "doc print" for possible file
                           %             formats)
@@ -88,9 +85,9 @@ defaults.plot_selected_voxels = 0; % a value of n means that the currently
                                % writer) and pass it as
                                % cfg.plot_selected_voxels_writerObj to
                                % store each image 
-                               % (see "help plot_selected_voxels)
+                               % (see "help plot_selected_voxels")
 
-% specification of scaling
+% specification of scaling: see decoding_scale_data
 defaults.scale.method = 'none';
 defaults.scale.estimation = 'none';
 defaults.scale.cutoff = [-inf inf];

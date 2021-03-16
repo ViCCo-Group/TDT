@@ -286,9 +286,9 @@ if cfg.results.write == 1 && (strcmpi(cfg.analysis,'roi') || strcmpi(cfg.analysi
             curr_output = results.(outputname).output(i_roi);
             
             [resultsvol,continueflag] = assign_output(cfg,resultsvol_hdr,curr_output,mask_index_each,i_roi);
-            if continueflag == 1,
-                str = sprintf('Results for output %s and roi ''%s'' cannot be written, because the format is wrong (e.g. leave-one-run-out with more than one output per run).',outputname,roi_names{i_roi});
-                warning('DECODING_WRITE_RESULTS:cannot_write',str) %#ok<SPWRN>
+            if continueflag == 1
+                str = sprintf('Results for output %s and roi ''%s'' cannot be saved as brain map, because the format is wrong (e.g. leave-one-run-out with more than one output per run). Find the results in the corresponding .mat file',outputname,roi_names{i_roi});
+                warning('decoding_write_results:cannot_write',str) %#ok<SPWRN>
             end
             
             if ~continueflag

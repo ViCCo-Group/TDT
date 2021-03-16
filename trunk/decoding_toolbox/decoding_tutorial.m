@@ -130,6 +130,10 @@ cfg = decoding_describe_data(cfg,{labelname1 labelname2},[1 -1],regressor_names,
 %       together for cross-validation (typically runs, so enter run numbers)
 %   cfg.files.label: a nx1 vector of labels (for decoding, you can choose 
 %       any two numbers as class labels, but normally we use 1 and -1)
+% and highly recommended but not strictly necessary:
+%   cfg.files.mask: string or cellstr, e.g.
+%       'c:\exp\glm\model_button\mask.img' for wholebrain or SL, or
+%       {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'} for ROI
 
 %% Third, create your design for the decoding analysis
 

@@ -34,6 +34,14 @@ if vers(1) < 7 || (vers(1)==7 && vers(2) < 3)
            'decoding_basic_checks.m, but also remove the -v7.3 flag in decoding_write_results.m'])
 end
 
+% Warn if default directory is used
+if cfg.results.write > 0
+    default_cfg = decoding_defaults;
+    if strcmp(cfg.results.dir, default_cfg.results.dir)
+        warningv('decoding_basic_checks:default_result_dir', 'Saving results to default location cfg.results.dir: %s. We strongly recommend to set cfg.results.dir to a custom diretory if you want to store the data.\nHere the command to do so: cfg.results.dir = ''YOURDIR''.', cfg.results.dir)
+    end
+end
+
 % Display what data is saved
 switch cfg.results.write
     case 0
@@ -144,6 +152,19 @@ if use_kernel && (strcmpi(cfg.scale.estimation,'across') || strcmpi(cfg.scale.es
     warningv('DECODING_BASIC_CHECKS:KernelAndScaling',str)
     cfg.decoding.method = newmethod;
     cfg.decoding.use_kernel = 0;
+end
+
+% Warning if libsvm is used without scaling
+if strcmp(cfg.decoding.software, 'libsvm') && strcmp(cfg.scale.method, 'none')
+    if ~isfield(cfg.scale, 'IKnowThatLibsvmCanBeSlowWithoutScaling')
+        warning('decoding_basic_checks:setting_default_scaling_for_libsvm', ...
+           ['Libsvm can be VERY slow for some datasets (e.g. some subjects or folds) when data is not scaled. ' ...
+            'To prevent this, we change the scaling method to the recommended by libsvm: ''min0max1'' for ''all'' data. '...
+            'If you really dont want to do any scaling, set cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1 (but be prepared - it can be SLOW). ' ...
+            'To avoid this warning, set cfg.scale, e.g. cfg.scale.method = ''min0max1'' and cfg.scale.estimation = ''all'' (see decoding_scale_data)'])
+        cfg.scale.method = 'min0max1';
+        cfg.scale.estimation = 'all';
+    end
 end
 
 if use_kernel && strcmpi(cfg.feature_transformation.estimation,'across')
@@ -378,7 +399,7 @@ end
 
 
 % Checking for independence of training and test data
-if isfield(cfg.design,'train_eq_test') && cfg.design.train_eq_test == 1; % this may avoid the call to the non-independence check, but should never be set manually!
+if isfield(cfg.design,'train_eq_test') && cfg.design.train_eq_test == 1 % this may avoid the call to the non-independence check, but should never be set manually!
     warningv('DECODING_BASIC_CHECKS:TRAINEQTEST','cfg.design.train_eq_test == 1. You are assuming that training data equals test data. If this assumption is wrong, then your results are not interpretable!')
 else
     if any(cfg.design.train(:) ~= 0 & cfg.design.test(:) ~=0)

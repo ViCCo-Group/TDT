@@ -16,6 +16,8 @@
 % lower figure will have the number of the left column of the upper figure
 % as a combination of left column and 'undecided')
 
+% Kai 2021/03/16
+
 fpath = fileparts(fileparts(mfilename('fullpath')));
 addpath(fpath)
 
@@ -23,7 +25,7 @@ clear variables
 dbstop if error % if something goes wrong
 
 
-nrep = 1 % choose this if you only want 1 realisation
+nrep = 1 % choose this to visualize 1 realisation
 % nrep = 1000 % uncomment if you like to get mean and ci95 for many
               % realisations
 

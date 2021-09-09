@@ -129,7 +129,7 @@ end
 
 % check if beta_loc is a directory or a cellstr (in this case, assume it's the name of the input files directly)
 if iscellstr(beta_loc)
-    warningv('suppress_beta_loc_is_cellstr_output', 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')
+    warningv('decoding_describe_data:suppress_beta_loc_is_cellstr_output', 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')
     beta_names = beta_loc;
     % check if beta_loc is a file (in this case, assume it is a 4D volume containing all files)
 elseif exist(beta_loc,'file') == 2

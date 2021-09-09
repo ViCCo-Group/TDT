@@ -23,6 +23,8 @@
 %   max_n_fnames: number of maximal displayed file names (default: 16)
 %   cfg.fighandles.plot_design: Figure handle to which design
 %       will be plotted to (default: new figure)
+%   cfg.plotinfo: a string that should be added to the plot (e.g. used for 
+%       multitarget designs)
 %
 % OUT
 %   figure_handle: handle(s) to produced figures (more than one for
@@ -71,7 +73,19 @@ if isfield(cfg, 'design') && isfield(cfg.design, 'label') && iscell(cfg.design.l
             curr_cfg = cfg;
             curr_cfg.design.label = cellfun(@(x)x(target_ind), cfg.design.label);
             % add info about multitarget and target number
-            curr_cfg.results.dir = [curr_cfg.results.dir sprintf(' [MULTITARGET Labels: %i/%i]', target_ind, n_targets)];
+            if isfield(cfg, 'plotinfo')
+                orgplotinfo = cfg.plotinfo;
+            else
+                orgplotinfo = '';
+            end
+            curr_cfg.plotinfo = [orgplotinfo sprintf('[MULTITARGET Labels: %i/%i]', target_ind, n_targets)];
+            % split figure handles, if exist
+            try
+                curr_cfg.fighandles.plot_design = cfg.fighandles.plot_design(target_ind);
+            catch % no handle exists yet
+                curr_cfg.fighandles.plot_design = '';
+            end
+            % plot design for current target
             figure_handle(end+1) = plot_design(curr_cfg,visible_on,max_n_fnames); %#ok<AGROW>
         end
     end
@@ -450,6 +464,11 @@ if isfield(cfg, 'progress') && isfield(cfg.progress, 'starttime')
     end
 else
     outtext{end+1} = ['Start/Endtime not available'];
+end
+
+% extra info text, if exist
+if isfield(cfg, 'plotinfo')
+    outtext{end+1} = cfg.plotinfo;
 end
 
 axis off

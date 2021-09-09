@@ -69,6 +69,11 @@ cfg.results.output = 'other';
 %   combine_designs(cfg, cfg2)
 % if you like to combine multiple designs in one cfg.
 
+% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
+% if you dont need model parameters, and if you use libsvm, use:
+cfg.scale.method = 'min0max1';
+cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+
 % Decide whether you want to see the searchlight/ROI/... during decoding
 cfg.plot_selected_voxels = 0; % 0: no plotting, 1: every step, 2: every second step, 100: every hundredth step...
 

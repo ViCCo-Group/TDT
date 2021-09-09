@@ -88,9 +88,9 @@
 % the different sets.
 % 
 % Finally, note that the sets are averaged in the output unless you use the
-% cfg.results.setwise = 1 option (by default as of 12-4-2013 the option is
-% 0).
+% cfg.results.setwise = 1 option (default: 0).
 
+% 2021/08/03 Kai: Corrected minibug cfg.files.labelname was not handled
 % Version 12-4-2013, Dan Birman
 % 2013/09/08 Martin: Generalized to n designs entered as a cell matrix or
 % more inputs
@@ -98,8 +98,6 @@
 % instead of it's number of rows. Thus combining did not work when
 % different labels where used and more decoding sets than input files...
 %   clen = size(ocfg.design.label, 1);
-
-% TODO: change field cfg.files.set to match the final design!
 
 function ocfg = combine_designs(varargin)
 
@@ -182,6 +180,9 @@ for si = 1:length(cfg2.design.set) % si == set index
             end
             if isfield(cfg2.files,'descr')
                 ocfg.files.descr{clen+1} = cfg2.files.descr{z_ind};
+            end
+            if isfield(cfg2.files,'labelname')
+                ocfg.files.labelname{clen+1} = cfg2.files.labelname{z_ind};
             end
         end
     end

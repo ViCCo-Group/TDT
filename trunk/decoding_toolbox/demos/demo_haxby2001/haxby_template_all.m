@@ -63,6 +63,11 @@ labelnames = {
 % decoding_defaults.m). Below some example parameters that you might want 
 % to use:
 
+% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
+% if you dont need model parameters, and if you use libsvm, use:
+cfg.scale.method = 'min0max1';
+cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+
 % cfg.searchlight.unit = 'mm';
 % cfg.searchlight.radius = 12; % this will yield a searchlight radius of 12mm.
 % cfg.searchlight.spherical = 1;

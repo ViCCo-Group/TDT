@@ -109,6 +109,15 @@ cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see 
 cfg.design = make_design_cv(cfg); 
 display_design(cfg);
 
+%% Disable scaling min0max1 to allow estimating model_parameters
+% if you dont need model parameters, and if you use libsvm, we would use:
+% cfg.scale.method = 'min0max1';
+% cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+% because we want model parameters, we disable scaling
+cfg.scale.method = 'none';
+% and acknowledge that you know that libsvm can be very slow without scaling
+cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; 
+
 %% Decoding Parameters
 
 % default: -s 0 -t 0 -c 1 -b 0 -q
@@ -117,6 +126,7 @@ display_design(cfg);
 % e.g., if we use 5 times as much examples for class 1, we need
 %   -w-1 1 -w1 5
 % so in the example here, we just use .fact of the other set
+
 
 legstr = {'data'}; % caption for legend
 

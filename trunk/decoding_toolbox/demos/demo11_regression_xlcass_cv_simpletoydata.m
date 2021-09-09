@@ -108,6 +108,15 @@ cfg.plot_selected_voxels = 1;
 %% Acknowledge that label 0 occurs more often than -1 and 1
 cfg.design.unbalanced_data = 'ok';
 
+%% Disable scaling min0max1 to allow estimating model_parameters
+% if you dont need model parameters, and if you use libsvm, we would use:
+% cfg.scale.method = 'min0max1';
+% cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+% because we want model parameters, we disable scaling
+cfg.scale.method = 'none';
+% and acknowledge that you know that libsvm can be very slow without scaling
+cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; 
+
 %% Change the design: Remove one class 0 in test and the other in train
 % get index of class B
 class_B_filt = strncmp(cfg.files.name, 'classB', length('classB'));

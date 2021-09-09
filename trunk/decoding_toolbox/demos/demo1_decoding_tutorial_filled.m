@@ -172,6 +172,11 @@ cfg.results.output = {'accuracy_minus_chance', 'binomial_probability'};
 
 cfg.plot_selected_voxels = 30; % Plot every 30' step
 
+% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
+% if you dont need model parameters, and if you use libsvm, use:
+cfg.scale.method = 'min0max1';
+cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+
 %% Fifth, run the decoding analysis
 
 % Fingers crossed it will not generate any error messages ;)

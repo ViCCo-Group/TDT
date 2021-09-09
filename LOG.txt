@@ -1,35 +1,30 @@
-Potential todos for next release (for Kai):
-- Demo how to train and test on different data (make sure that an error occurs if data is not in same format or has different transformation matrices, but I guess that should throw an error already now)
+* 3.999E 2021/09/09
+Quite some changes (despite the seemingly small change of the little E added 
+to the version number):
+- Added a confusion matrix with an undecided column (the standard confusion 
+  matrix adds undecided test cases to the first class), see demo3_1
+- Changed extension to store design matrices: using .pdf instead of .eps as default 
+  (Matlab decided to store .eps no longer as vector graphics)
+- Introduced parameter change and a error if libsvm is used without scaling
+  (can be extremely slow). Note: Change the error to an warning if to be 
+  backward-compatible.
+- Add multitarget functionality, see demo12
 
-* 3.999D_beta 2021/03/16 BETA
-- Added transres_confusion_matrix_plus_undecided plus demo, 
-- Changed .eps to .pdf as default (.eps are not vector graphic anymore)
-- Introduced parameter change and warning if libsvm is used without scaling
-  (can be extremely slow)
+* 3.999D_beta 2021/03/16 BETA not for public release
+* 3.999C_beta 2020/12/10 BETA not for public release
 
-* 3.999C_beta 2020/12/10 BETA
-- Added functionality for multitarget (necessary scripts currently still in decoding_experimental)
-
-* 3.999B_beta 2020/06/17 BETA
+* 3.999 2020/06/17
+(identical to 3.999B_beta 2020/06/17)
 - Fixed bug that transres_accuracy_matrix & transres_accuracy_pairwise 
-and both _minus_chance versions produced wrong results (only worse, not too 
-systematically to good) when label order was not increasing.
+  and both _minus_chance versions produced wrong results (only worse, not too 
+  systematically to good) when label order was not increasing.
 - Introduced option to add chancelevel from transres functions (see 
-decoding_transform_results).
-
-* 3.999beta 2020/05/26 BETA
-REMOVED ipipi/itest again. 
-Reason: ipipi/itest is currently not sufficiently characterized in the current version of the manuscript. Important information is missing, especially about the behaviour of the test in typical situations (low SNR). We add the test when the test is sufficiently described.
+  decoding_transform_results).
 - Different further improvements, incl. bugfixes that allow using decoding() in PARFOR.
-
-
-* 3.998beta 2020/01/17 BETA / REJECTED / NOT FOR PUBlIC RELEASE
-    Reason: preliminary implementation of iPIPI/itest
-Further changes
+- Further changes:
 - typical errors detected when nans occur for corr and zcorr outputs
 - improved explanation & implementation of prevalence
 - weights for regression
-- slighlty improved documentation
 
 * 3.997 2019/04/29
 - reporting searchlight size (e.g. in number of voxels) in results file

@@ -66,7 +66,7 @@ else
         % to another sample
         for ind = 1:length(cfg.files.name)
             % assign names for both single- and multitarget conditions
-            if cfg.multitarget == 1
+            if isfield(cfg, 'multitarget') && cfg.multitarget == 1
                 curr_name = sprintf('label%schunk%iindex%i', sprintf('_%g', cfg.files.label{ifile}), cfg.files.chunk(ifile), ind);
             else
                 curr_name = sprintf('class%ichunk%iindex%i', cfg.files.label(ifile), cfg.files.chunk(ifile), ind);

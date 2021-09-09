@@ -51,9 +51,9 @@
 %       (if you want to classify X vs. Y, then they would be 1 1 -1 -1).
 %       The vector xclass is just used to keep the cross-classification
 %       samples separate.
-%   Option for speedup: if you have many files and create many designs, use 
-%       cfg.dont_read_headers_in_decoding_describe_data = 1 if you are sure 
-%       that you have no 4d data. This  avoids timeconsuming calls to 
+%   Option for speedup: if you have many files and create many designs, use
+%       cfg.dont_read_headers_in_decoding_describe_data = 1 if you are sure
+%       that you have no 4d data. This  avoids timeconsuming calls to
 %       read_hdr to determine data dimensionality.
 %
 % OUTPUT:
@@ -63,7 +63,7 @@
 %         cfg.files.chunk: run/session number of each file; can be used to
 %           keep runs separate for later cross-validation in decoding
 %         cfg.files.label: label for each file
-%         cfg.files.labelname: string in labelsnames that triggered label 
+%         cfg.files.labelname: string in labelsnames that triggered label
 %           selection
 %         cfg.files.set: set number for each file
 %         cfg.files.xclass: cross-class information for each file (only
@@ -78,7 +78,7 @@
 % SEE ALSO DESIGN_FROM_SPM
 
 % Update Kai 20/05/19
-%   Labelname expression for each cfg.file; saving input to 
+%   Labelname expression for each cfg.file; saving input to
 %   cfg.log.decoding_describe_data
 % Update Kai 20/03/24
 %   Introduced cfg.dont_read_headers_in_decoding_describe_data
@@ -131,11 +131,11 @@ end
 if iscellstr(beta_loc)
     warningv('suppress_beta_loc_is_cellstr_output', 'Data mapping: beta_loc is a cellstr, using these inputs directly for extracting betas.')
     beta_names = beta_loc;
-% check if beta_loc is a file (in this case, assume it is a 4D volume containing all files)    
+    % check if beta_loc is a file (in this case, assume it is a 4D volume containing all files)
 elseif exist(beta_loc,'file') == 2
     dispv(1, 'Data mapping: beta_loc is a file, assuming that it contains 4D volumes.');
     beta_names = {beta_loc};
-% else is usual case    
+    % else is usual case
 elseif exist(beta_loc,'dir') == 7
     if strfind(lower(cfg2.software),'spm') %#ok<STRIFCND>
         if beta_loc(end) == filesep % prevents some stupid spm_select bug
@@ -156,12 +156,12 @@ elseif exist(beta_loc,'dir') == 7
         end
     else
         error(['Current setting for cfg.software = ''' cfg2.software '''. ' ...
-               'This might be because TDT found neither SPM or AFNI_matlab on the path. ',...
-               'Alternatively, you were passing a directory as variable ',...'
-               'beta_loc, but that is currently only possible with SPM as ',...
-               'decoding software (see cfg.software). If you are not using SPM, ',...
-               'try passing file names as beta_loc directly or use passed_data ',...
-               'as input to pass data directly to TDT (see ''help decoding'''])
+            'This might be because TDT found neither SPM or AFNI_matlab on the path. ',...
+            'Alternatively, you were passing a directory as variable ',...'
+            'beta_loc, but that is currently only possible with SPM as ',...
+            'decoding software (see cfg.software). If you are not using SPM, ',...
+            'try passing file names as beta_loc directly or use passed_data ',...
+            'as input to pass data directly to TDT (see ''help decoding'''])
     end
 else
     error('Data mapping not possible: file or directory passed in variable ''beta_loc'' does not exist.')
@@ -187,17 +187,18 @@ for i_beta = 1:length(beta_names_orig)
             hdr = read_header(cfg2.software,beta_names_orig{i_beta});
             n_subvol = numel(hdr); % this is testing the SPM standard (multiple headers)
             if n_subvol == 1 && length(hdr.dim) > 3 % this is testing the AFNI standard (one header)
-            n_subvol = hdr.dim(4);
+                n_subvol = hdr.dim(4);
                 % TODO: for other standards, we might need to create separate mapping files (i.e. decoding_describe_data files)
             end
         catch e %#ok<NASGU>
             % something failed while reading the header, maybe the file does
             % not exist or its not a file but some simulations. We assume it
             % has length 1 and continue.
+            warning('decoding_describe_data:reading_hdr_failed', 'Reading header for file %s failed when trying to determine if the file contains multiple images (e.g 4d NIFTI). Maybe the file does not exist (or its not a file but some simulation). Assuming the file is not a 4d file. Assuming the file only contains 1 volume. Consider setting cfg.dont_read_headers_in_decoding_describe_data = 1 if all files contain 1 volume for speedup', beta_names_orig{i_beta})
             n_subvol = 1;
         end
     end
-        
+    
     if n_subvol == 1
         beta_names(end+1,1) = beta_names_orig(i_beta); %#ok<AGROW>
     else
@@ -206,80 +207,80 @@ for i_beta = 1:length(beta_names_orig)
         beta_names(end+1:end+length(curr_beta_names),1) = curr_beta_names;
     end
 end
-    
+
 
 
 %% Typical case
 if labels_provided
-
-if length(labelnames) ~= length(labels)
-    if length(labelnames)==1 && length(labelnames{1}) == length(labels)
-        warningv('DECODING_DESCRIBE_DATA:CELL','Label names were passed as cells in a cell (e.g. {labelnames}), rather than just as a 1xn cell vector. Changing automatically!')
-        labelnames = labelnames{1};
-    else
-        error('Variables "labelnames" and "labels" have to be equal size!')
-    end
-end
-
-n_inputs = length(labelnames);
-orig_labelnames = labelnames;
-
-for i_input = 1:n_inputs
     
-    % check if current labelname starts with 'regexp:'
-    if length(labelnames{i_input}) >= length('regexp:') && strcmp('regexp:', labelnames{i_input}(1:length('regexp:')))
-        % only remove leading regexp
-        labelnames{i_input}(1:length('regexp:')) = [];
-    else
-        % convert labelnames to regular expression
-        labelnames{i_input} = wildcard2regexp(orig_labelnames{i_input});
+    if length(labelnames) ~= length(labels)
+        if length(labelnames)==1 && length(labelnames{1}) == length(labels)
+            warningv('DECODING_DESCRIBE_DATA:CELL','Label names were passed as cells in a cell (e.g. {labelnames}), rather than just as a 1xn cell vector. Changing automatically!')
+            labelnames = labelnames{1};
+        else
+            error('Variables "labelnames" and "labels" have to be equal size!')
+        end
     end
     
-    % Apply regular expression
-    ind = regexp(regressor_names(1,:),labelnames{i_input});
-    try label_index = ~cellfun(@isempty,ind);
-        % catch for users without cellfun
-    catch, label_index = zeros(1,length(ind)); for i = 1:length(ind), label_index(i) = ~isempty(ind{i}); end %#ok<CTCH>
-    end
+    n_inputs = length(labelnames);
+    orig_labelnames = labelnames;
     
-    
-    if ~any(label_index)
-        error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',orig_labelnames{i_input})
-    end
-    cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
-    cfg.files.chunk = [cfg.files.chunk cell2mat(regressor_names(2,label_index))];
-    cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
-    cfg.files.labelname = [cfg.files.labelname repmat(labelnames_org(i_input),1,sum(label_index))];    
-    if exist('xclass','var')
-        cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
-    end
+    for i_input = 1:n_inputs
         
-    % also add the regressor name of each of those
-    if size(regressor_names, 1) == 3 % full name has been submitted, use this
-        for curr_index = find(label_index)
-            cfg.files.descr{end+1} = regressor_names{3,curr_index}; % maybe nicer, but not real SPM name: [regressor_names{1,curr_index} '_' int2str(regressor_names{2,curr_index})];
+        % check if current labelname starts with 'regexp:'
+        if length(labelnames{i_input}) >= length('regexp:') && strcmp('regexp:', labelnames{i_input}(1:length('regexp:')))
+            % only remove leading regexp
+            labelnames{i_input}(1:length('regexp:')) = [];
+        else
+            % convert labelnames to regular expression
+            labelnames{i_input} = wildcard2regexp(orig_labelnames{i_input});
         end
-    else
-        % create a description that is similar to the original SPM name
-        for curr_index = find(label_index)
-            cfg.files.descr{end+1} = [regressor_names{1,curr_index} '_' int2str(regressor_names{2,curr_index})];
+        
+        % Apply regular expression
+        ind = regexp(regressor_names(1,:),labelnames{i_input});
+        try label_index = ~cellfun(@isempty,ind);
+            % catch for users without cellfun
+        catch, label_index = zeros(1,length(ind)); for i = 1:length(ind), label_index(i) = ~isempty(ind{i}); end %#ok<CTCH>
+        end
+        
+        
+        if ~any(label_index)
+            error('Could not find any file associated with label ''%s''. Check input label names (case sensitive!)!',orig_labelnames{i_input})
+        end
+        cfg.files.name = [cfg.files.name; beta_names(label_index,:)];
+        cfg.files.chunk = [cfg.files.chunk cell2mat(regressor_names(2,label_index))];
+        cfg.files.label = [cfg.files.label repmat(labels(i_input),1,sum(label_index))];
+        cfg.files.labelname = [cfg.files.labelname repmat(labelnames_org(i_input),1,sum(label_index))];
+        if exist('xclass','var')
+            cfg.files.xclass = [cfg.files.xclass repmat(xclass(i_input),1,sum(label_index))];
+        end
+        
+        % also add the regressor name of each of those
+        if size(regressor_names, 1) == 3 % full name has been submitted, use this
+            for curr_index = find(label_index)
+                cfg.files.descr{end+1} = regressor_names{3,curr_index}; % maybe nicer, but not real SPM name: [regressor_names{1,curr_index} '_' int2str(regressor_names{2,curr_index})];
+            end
+        else
+            % create a description that is similar to the original SPM name
+            for curr_index = find(label_index)
+                cfg.files.descr{end+1} = [regressor_names{1,curr_index} '_' int2str(regressor_names{2,curr_index})];
+            end
         end
     end
-end
-
-if ischar(cfg.files.name), cfg.files.name = num2cell(cfg.files.name,2); end
-cfg.files.chunk = cfg.files.chunk';
-cfg.files.label = cfg.files.label';
-cfg.files.labelname = cfg.files.labelname';
-cfg.files.set = cfg.files.set';
-cfg.files.xclass = cfg.files.xclass';
-
-%% if no labels have been provided, automatically fill everything
+    
+    if ischar(cfg.files.name), cfg.files.name = num2cell(cfg.files.name,2); end
+    cfg.files.chunk = cfg.files.chunk';
+    cfg.files.label = cfg.files.label';
+    cfg.files.labelname = cfg.files.labelname';
+    cfg.files.set = cfg.files.set';
+    cfg.files.xclass = cfg.files.xclass';
+    
+    %% if no labels have been provided, automatically fill everything
 else
     
     if exist('xclass','var') && ~isempty(xclass)
         error('Cannot deal with input variable xclass when no labels or label names have been provided (enter "help decoding_describe_data" for more details).')
-    end        
+    end
     
     ind = regexp(regressor_names(1,:),'(^R\d+$|^SPM constant$)');
     try label_index = find(cellfun(@isempty,ind));
@@ -318,12 +319,12 @@ else
     end
     labels = labels(orig_index);
     if length(uniqueq(labels))==2
-       labels(labels==1) = -1;
-       labels(labels==2) =  1;
+        labels(labels==1) = -1;
+        labels(labels==2) =  1;
     end
     cfg.files.label = labels;
-        
+    
     % Set other fields
     cfg.files.set = cfg.files.set';
     cfg.files.xclass = cfg.files.xclass';
-end 
+end

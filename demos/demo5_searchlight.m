@@ -29,13 +29,17 @@ cfg.plot_design = 1;
 cfg.results.output = {'accuracy_minus_chance'}; % Hint: If you like to know the SL size at around a voxel, add 'ninputdim';
 cfg.decoding.method = 'classification_kernel';
 
+%% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
+% if you dont need model parameters, and if you use libsvm, use:
+cfg.scale.method = 'min0max1';
+cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+
 %% Set the output directory where data will be saved
 % cfg.results.dir = % e.g. 'toyresults'
 cfg.results.write = 0; % no results are written to disk
 
 
 %% Create simulated data
-
 snr = 0.8;
 n_runs = 6;
 n_files_per_run = 8;

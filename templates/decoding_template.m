@@ -55,6 +55,11 @@ labelvalue2 = -1; % value for labelname2
 % cfg.verbose = 2; % you want all information to be printed on screen
 % cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; 
 
+% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
+% if you dont need model parameters, and if you use libsvm, use:
+cfg.scale.method = 'min0max1';
+cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+
 % if you like to change the decoding software (default: libsvm):
 % cfg.decoding.software = 'liblinear'; % for more, see decoding_toolbox\decoding_software\. 
 % Note: cfg.decoding.software and cfg.software are easy to confuse.

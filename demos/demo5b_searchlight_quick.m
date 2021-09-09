@@ -43,6 +43,11 @@ cfg.results.write = 0; % no results are written to disk
 
 cfg.decoding.method = 'classification';
 
+%% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
+% if you dont need model parameters, and if you use libsvm, use:
+cfg.scale.method = 'min0max1';
+cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+
 %% generate some toy data
 % define number of "runs" and center means
 nruns = 4; % lets simulate we have n runs

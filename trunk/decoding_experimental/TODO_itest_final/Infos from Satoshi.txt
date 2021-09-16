@@ -1,0 +1,12 @@
+Here's a link for the free download of the paper
+Also, I attach the pdf.
+https://www.sciencedirect.com/science/article/pii/S1053811921007308?via%3Dihub
+
+The codes for itest are available at
+https://github.com/satoshi-hirose/i-test/
+
+If you will use implementation-level codes, please see implementation/itest_unif_bino.m (or other implementation in the same directory, if you prefer)
+If you will implement by yourself, please check Replication_of_Study/Sec4_Empirical_Data_Analysis.m.
+With Sec4_Empirical_Data_Analysis.m, You'll find the main calculation process for the test.
+I coded the main calculation for performing itest-unif-bino using MATLAB default functions only and
+I skipped minor processes such as error handling or input parser.

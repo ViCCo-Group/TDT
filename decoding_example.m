@@ -45,7 +45,7 @@ function [results, cfg] = decoding_example(decoding_type,labelname1,labelname2,b
 if ~exist('cfg', 'var')
     cfg = [];
 else
-    display('Using default arguments provided by cfg')
+    disp('Using default arguments provided by cfg')
 end
 
 cfg = decoding_defaults(cfg);
@@ -53,6 +53,23 @@ cfg = decoding_defaults(cfg);
 cfg.testmode = 0;
 cfg.analysis = decoding_type;
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % linear classification
+
+try
+    if strcmp(cfg.decoding.software, 'libsvm') && strcmp(cfg.scale.method, 'none')
+        warning('decoding_example:notify_that_libsvm_can_be_slow', ...
+            ['cfg.decoding.software=''libsvm'' can be slow with cfg.scale.method=''none''. ' ...
+            'We recommend cfg.scale.method = ''min0max1'', except if you want to get model parameters (e.g. SVM weights). ' ...
+            'For this example, we will now set ' ...
+            'cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1 ' ...
+            'which you also can do if you don''t want to use scaling for whatever reason - ' ...
+            'but remember that libsvm without scaling can be VERY slow'])
+        cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
+        pause(2)
+    end
+catch
+    disp('Something did not work while checking for the min0max1 scaling warning')
+end
+    
 try
     cfg.software = spm('ver');
 catch % else try out spm8

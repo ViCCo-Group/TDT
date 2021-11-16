@@ -22,11 +22,14 @@
 %
 %   cfg.results.output = {'confusion_matrix_plus_undecided'}
 %
-% Kai, 2021-03-16: Created from transres_accuracy_matrix
+% Kai, 2021-11-16: Bugfix for more than 3 classes
 %
 % See also decoding_transform_results 
 %   transres_accuracy_pairwise transres_confusion_matrix
 %   transres_accuracy_pairwise_minus_chance transres_accuracy_matrix_minus_chance
+
+% Hist
+%   Kai, 2021-03-16: Created from transres_accuracy_matrix
 
 function output = transres_confusion_matrix_plus_undecided(decoding_out, chancelevel, varargin)
 
@@ -117,7 +120,7 @@ for i_step = 1:n_step
     % init class prediction with nan, undecided row comes later
     pred_class_mat = nan(size(dv));
     % get class predicted by each classifier and get majority vote 
-    % plus undecided if not class gets a majority
+    % plus undecided if no class gets a majority
     if isequal(all_ulabels(:),uniqueq(test_labels)) && size(dv, 2) == size(classes_per_classifier, 2) % each label occurs only once and in the correct order
         % dv now sorted by libsvm_test.m, not necessary to check label order anymore
         dv_plus = dv>0;
@@ -139,7 +142,7 @@ for i_step = 1:n_step
         % get indices of each predicted label (e.g. if negative labels
         % exist of or some do not exist) (I guess there are more elegent
         % versions than this, but this works)
-        majority_pred_ind = repmat(all_ulabels', size(dv, 1), 1) == repmat(majority_pred_class, 1, size(dv, 2));
+        majority_pred_ind = repmat(1:size(all_ulabels,1), size(dv, 1), 1) == repmat(majority_pred_class, 1, size(all_ulabels,1));
         
         % assign all rows that have no entries to the undecided class
         undecided_filter = sum(majority_pred_ind, 2)~=1;

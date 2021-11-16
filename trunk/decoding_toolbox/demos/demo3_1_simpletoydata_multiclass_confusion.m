@@ -43,38 +43,41 @@ for rep_ind = 1:nrep
     ntrial_per_run = 20;
     ntrial_tot = nruns * ntrial_per_run;
     
-    demomode = 'samemeans'; % alternative 1: same means for all data: that should show a bias for the first class for libsvm
-    % demomode = 'diffmeans'; % alternative 2: that probably shows only
+%     demomode = 'samemeans'; % alternative 1: same means for all data: that should show a bias for the first class for libsvm
+    demomode = 'diffmeans'; % alternative 2: that probably shows only
     % very little bias, as there are hardly any ties (unclear classifications)
     switch demomode
-        case 'diffmeans'
+        case 'diffmeans' % MAKE SURE TO SET demomode = 'diffmeans' ABOVE to use different means
             set1.mean = [0 0];
             set2.mean = [1 1]; % should have the same dim as set1, otherwise it wont work (and would not make sense, either)
             set3.mean = [-1 1];
+            set4.mean = [-1 -1];
         case 'samemeans'
             set1.mean = [0 0];
             set2.mean = [0 0]; % should have the same dim as set1, otherwise it wont work (and would not make sense, either)
             set3.mean = [0 0];
+            set4.mean = [0 0]
     end
     
     % add gaussian noise around the mean
-    data1 = randn(ntrial_tot, length(set1.mean)) + repmat(set1.mean, ntrial_tot, 1);
-    data2 = randn(ntrial_tot, length(set2.mean)) + repmat(set2.mean, ntrial_tot, 1);
-    data3 = randn(ntrial_tot, length(set3.mean)) + repmat(set3.mean, ntrial_tot, 1);
-    
+    data1 = 1 * randn(ntrial_tot, length(set1.mean)) + repmat(set1.mean, ntrial_tot, 1);
+    data2 = 1 * randn(ntrial_tot, length(set2.mean)) + repmat(set2.mean, ntrial_tot, 1);
+    data3 = 1 * randn(ntrial_tot, length(set3.mean)) + repmat(set3.mean, ntrial_tot, 1);
+    data4 = 1 * randn(ntrial_tot, length(set4.mean)) + repmat(set4.mean, ntrial_tot, 1);
     
     % put all together in a data matrix
-    data = [data1; data2; data3];
+    data = [data1; data2; data3; data4];
     
     %% add data description
     % save labels
-    cfg.files.label = [ones(size(data1,1), 1); 2*ones(size(data2,1), 1); 3*ones(size(data3,1), 1)];
+    cfg.files.label = [-2*ones(size(data1,1), 1); 7*ones(size(data2,1), 1); 5*ones(size(data3,1), 1); 4*ones(size(data4,1), 1)];
     
     % save "run" as chunk number
     cfg.files.chunk = [
         sort(repmat(1:nruns, 1, ntrial_per_run)), ... % class 1
         sort(repmat(1:nruns, 1, ntrial_per_run)), ... % class 2
         sort(repmat(1:nruns, 1, ntrial_per_run)), ... % class 3
+        sort(repmat(1:nruns, 1, ntrial_per_run)), ... % class 4
         ]';
     % join run 1 2 to run 1, run 3 4 to run 2, etc, to get two sample per run
     % per class
@@ -98,7 +101,11 @@ for rep_ind = 1:nrep
     
     %% plot the data (if 2d)
     if size(data, 2) == 2
-        resfig = figure('name', 'Data');
+        try
+            figure(resfig);
+        catch
+            resfig = figure('name', 'Data');
+        end
         scatter(data(:, 1), data(:, 2), 30, cfg.files.label);
     end
     
@@ -136,7 +143,6 @@ for rep_ind = 1:nrep
     
     %% Run decoding
     [results, cfg] = decoding(cfg, passed_data);
-    close all
     coll1(:, :, rep_ind) = results.confusion_matrix.output{1};
     coll2(:, :, rep_ind) = results.confusion_matrix_plus_undecided.output{1};
 
@@ -186,7 +192,7 @@ if nrep > 1
     
 %% Show original confusion matrix and confusion matrix with undecided cases
 else
-    figure('name', 'demo3_1:confusion_matrix vs confusion_matrix_plus_undecided')
+    figure('name', 'demo3_1:confusion_matrix vs confusion_matrix_plus_undecided', 'Position', [27 407 890 573])
     subplot(2,2,1)
     confmat = results.confusion_matrix.output{1};
     imagesc(confmat)
@@ -219,6 +225,12 @@ else
 
     subplot(2,2,2)
     infotext = {
+        ['Current demomode: ' demomode]
+     'demomode samemeans means: no difference between classes';
+     'demomode diffmeans means: some differnce between the classes';
+     'you can change the mode and the means in the demo script';
+     ' ';
+     'About this script:';
      'This script is a demo showing';
     '  1. that libsvm handles assigns samples for which no clear class can be';
     '     predicted to label 1, and';

@@ -1,3 +1,6 @@
+* 3.999E1 2021/11/16
+Fixed bug in transres_confusion_matrix_plus_undecided, see demo3_1
+
 * 3.999E 2021/09/09
 Quite some changes (despite the seemingly small change of the little E added 
 to the version number):

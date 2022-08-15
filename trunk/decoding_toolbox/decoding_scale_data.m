@@ -21,9 +21,25 @@
 %   'min0max1': will set max = min+1
 %          'z': will set std = 1
 %
+% The option 'min0max1global' will scale across all features, which can
+% help reduce issues with speed for analyses with libsvm (see below).
+%
 % Input variables:
 %    cfg                 : struct containing configuration information
-%    cfg.scale.method    : 'min0max1', 'mean', 'z', 'cov', 'none'. Defines type of scaling.
+%    cfg.scale.method    : 'min0max1', 'min0max1global','mean', 'z', 'cov', 'none'. 
+%                          Defines type of scaling. For libsvm users:
+%                          'min0max1global' is the recommended scaling for 
+%                          libsvm. It scales all data equally, across 
+%                          features and samples. The same scaling should be 
+%                          applied for all training and test data. This
+%                          will then produce the same classification
+%                          results as for unscaled data, but can be much
+%                          faster during computation. It does however 
+%                          change the model and the weights.  If you want 
+%                          to use model, weights or pattern, set
+%                            cfg.scale.force_libsvm_no_scaling = 1;
+%                          and
+%                            cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
 %    cfg.scale.estimation: 'all', 'all_iter', 'across', 'separate', or 'none'.
 %                          When 'all' is selected, the scaling parameter 
 %                          are estimated and applied to all data. When
@@ -72,6 +88,7 @@
 % DECODING_PARAMETER_SELECTION, DECODING_FEATURE_TRANSFORMATION
 
 % History:
+% Kai 2022/08/15: Added explanation for min0max1global and on slow libsvm
 % MH: 2018/5/27: Introduced mean scaling only
 % Martin H. 2015: Introduced method 'separate' and possibility to do cov-scaling
 % Kai: removed bug that min0max1 did not work when min==max
@@ -99,6 +116,9 @@ if ~exist('scaleparams','var') || isempty(scaleparams)
             scaleparams.samples_max = max(data,[],1);
             min_eq_max = scaleparams.samples_min==scaleparams.samples_max; % check if in any dimension min == max
             scaleparams.samples_max(min_eq_max) = scaleparams.samples_min(min_eq_max) + 1; % prevents divide by 0, if min == max
+        case 'min0max1global'
+            scaleparams.samples_min = min(data,[],'all');
+            scaleparams.samples_max = max(data,[],'all');
         case 'mean'
             scaleparams.samples_mean = mean(data);            
         case 'z'
@@ -144,6 +164,12 @@ if exist('bsxfun','builtin') % New method for Matlab 7.4+ (fast)
         case 'min0max1'
             data = bsxfun(@minus, data, scaleparams.samples_min);
             data = bsxfun(@rdivide, data, scaleparams.samples_max - scaleparams.samples_min);
+        case 'min0max1global'
+            scalefactor = (scaleparams.samples_max - scaleparams.samples_min);
+            if scalefactor == 0
+                scalefactor = 1; % if min == max
+            end
+            data = (data - scaleparams.samples_min)./scalefactor;
         case 'mean'
             data = bsxfun(@minus, data, scaleparams.samples_mean);
         case 'z'
@@ -165,6 +191,12 @@ else % Old method for < Matlab 7.4 (slow)
             minmat = repmat(scaleparams.samples_min,size(data,1),1);
             maxmat = repmat(scaleparams.samples_max,size(data,1),1);
             data = (data - minmat)./(maxmat - minmat);
+        case 'min0max1global'
+            scalefactor = (scaleparams.samples_max - scaleparams.samples_min);
+            if scalefactor == 0
+                scalefactor = 1; % if min == max
+            end
+            data = (data - scaleparams.samples_min)./scalefactor;            
         case 'mean'
             meanmat = repmat(scaleparams.samples_mean,size(data,1),1);
             data = (data - meanmat);

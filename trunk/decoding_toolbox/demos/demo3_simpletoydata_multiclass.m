@@ -80,6 +80,8 @@ cfg.results.output = {'accuracy', 'model_parameters'}; % 'model_parameters' retu
                                                        
 % cfg.results.output = {'accuracy', 'model_parameters', 'SVM_weights', 'SVM_weights_plusbias'}; % example for more possible outputs
 
+cfg.scale.check_datatrans_ok = true; % for model parameters: acknowledge that data will be globally scaled (set automatically in decoding_basic_checks, otherwise libsvm is really slow)
+
 %% Nothing needs to be changed below for a standard leave-one-run out cross validation analysis.
 % Create a leave-one-run-out cross validation design:
 % cfg.design = make_design_cv(cfg); 
@@ -94,14 +96,18 @@ plot_design(cfg);
 cfg.decoding.method = 'classification'; % the calculation will also work with _kernel methods, but plotting of the classification surface below is only implemented for the non-kernel method
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q';
 
-%% Disable scaling min0max1 to allow estimating model_parameters
+%% Disable scaling min0max1global to allow estimating model_parameters
 % if you dont need model parameters, and if you use libsvm, we would use:
-% cfg.scale.method = 'min0max1';
-% cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
-% because we want model parameters, we disable scaling
-cfg.scale.method = 'none';
-% and acknowledge that you know that libsvm can be very slow without scaling
-cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; 
+% cfg.scale.method = 'min0max1global';
+% cfg.scale.estimation = 'all'; % scaling 'all' data with ''min0max1global'
+% This will be set automatically for libsvm if no scaling method is specified.
+%   is equivalent to no scaling for decoding results, i.e. it will yield 
+%   the same decoding results. It will however changes the data range, and
+%   thus model parameters, such as weights and patterns. Because we want 
+%   the model parameters for visualisation, we set
+cfg.scale.method = 'none'; % first disable scaling
+cfg.scale.force_libsvm_no_scaling = 1; % then force that it stays disabled
+cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; % and acknowledge that we know that libsvm can be very slow without scaling
 
 %% Run decoding
 [results, cfg] = decoding(cfg, passed_data);

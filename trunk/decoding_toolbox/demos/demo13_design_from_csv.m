@@ -3,7 +3,7 @@
 % Kai, 2021/06/09
 
 cfg = decoding_defaults;
-designfile = 'demo12_design_from_csv_example.txt'
+designfile = 'demo13_design_from_csv_example.txt'
 
 %% step 1: load the description as table
 % load data as table

@@ -117,14 +117,14 @@
 
 % Fixed missing set2conditions_map_str. Does not make this on default. 
 %   Call cfg.design.make_set2conditions_map_str = 1 
-%   to get it. Ingmar & Kai 13-07-21
+%   to get it. Ingmar & Kai 21-07-13
 % Maybe todo: consider adding option to provide condition_list and the maps 
 %   that are used to create text representations directly
 
 function design = make_design_timeresolved(cfg)
 %% return version information if wanted (to check cache validity only)
 
-ver = 'v2020-07-01';
+ver = 'v2021-07-13';
 if nargin == 1 && ischar(cfg) && strcmp(cfg, 'ver')
     design = ver;
     return

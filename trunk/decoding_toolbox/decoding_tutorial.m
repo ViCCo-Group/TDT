@@ -30,7 +30,7 @@ addpath('$ADD FULL PATH AS STRING$')
 clear cfg
 
 % To set the path and add subdirectories to the path, run
-decoding_defaults; % use cfg = decoding_defaults to set the defaults, too
+cfg = decoding_defaults; % use cfg = decoding_defaults to set the defaults, too
 
 % Since SPM is our default software, if you use AFNI set
 % cfg.software = 'afni';
@@ -238,10 +238,22 @@ cfg.results.output = 'accuracy_minus_chance';
 % parameters for libsvm (linear SV regression, cost = 1, no screen output)
 % cfg.decoding.train.classification.model_parameters = '-s 4 -t 0 -c 1 -b 0 -q'; 
 
-% Enable scaling min0max1 (otherwise libsvm can get VERY slow)
-% if you dont need model parameters, and if you use libsvm, use:
-cfg.scale.method = 'min0max1';
-cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
+% Scaling (see "help decoding_scale_data")
+% If you want to employ a scaling methods, uncomment and set it in the next lines
+% cfg.scale.method = 'min0max1global';
+% cfg.scale.estimation = 'all';
+% 
+% One special problem occurs if libsvm is used without scaling - this can
+% take VERY long. Libsvm expects data scaled in a range between 0 and 1.
+% We now automatically set use "min0max1global" scaling if libsvm is used and 
+% no method for scaling is manually specified and and the output will be 
+% the same. This is the case if the internal model parameters are not of 
+% interest .If you want the model parameters / weights / pattern and are
+% using libsvm, use the following lines:
+% %% Disable scaling min0max1global to allow estimating model_parameters
+% cfg.scale.method = 'none'; % first disable scaling
+% cfg.scale.force_libsvm_no_scaling = 1; % then force that it stays disabled
+% cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; % and acknowledge that we know that libsvm can be very slow without scaling
 
 % if you like to change the decoding software (default: libsvm):
 % cfg.decoding.software = 'liblinear'; % for more, see decoding_toolbox\decoding_software\. 

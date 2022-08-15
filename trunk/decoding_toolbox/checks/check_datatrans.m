@@ -45,7 +45,7 @@ for cf_ind = 1:length(check_fields)
                 % check has been acknowledged by the user
                 warningv('check_datatrans:data_transformation_ok', ...
                     [error_string caller_function_name ' creates an output that depends on the model parameter, but the input data is transformed by cfg.' check_fields{cf_ind} '.method=''' cfg.(check_fields{cf_ind}).method '''.' char(10) ...
-                     'This is ok, because it has been acknowledged that by the user: cfg.' check_fields{cf_ind} '.check_datatrans_ok = true'])
+                     'This is ok, because it has been acknowledged by the user: cfg.' check_fields{cf_ind} '.check_datatrans_ok = true'])
             end
         end
     catch %#ok<CTCH>

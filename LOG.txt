@@ -1,3 +1,8 @@
+* 3.999F 2022/08/15
+- Added min0max1global scaling and improved auto-speedup detection for libsvm
+- Added demo13 how to load a design from a .csv
+- Added make_design_timeresolved to create time-resolved designs
+
 * 3.999E2 2021/11/16
 Fixed bug in transres_confusion_matrix_plus_undecided, see demo3_1
 

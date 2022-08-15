@@ -76,8 +76,7 @@ passed_data.dim = [length(set1.mean), 1, 1]; % add dimension information of the 
 %% Add defaults for the remaining parameters that we did not specify
 cfg = decoding_defaults(cfg);
 
-% Set the analysis that should be performed (here we only want to do 1
-% decoding)
+% Set the analysis that should be performed (here we only want to do one decoding analysis on all data, so we choose wholebrain)
 cfg.analysis = 'wholebrain';
 cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see the model
 
@@ -95,14 +94,18 @@ cfg.plot_selected_voxels = 1;
 cfg.decoding.method = 'classification';
 cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q';
 
-%% Disable scaling min0max1 to allow estimating model_parameters
+%% Disable scaling min0max1global to allow estimating model_parameters
 % if you dont need model parameters, and if you use libsvm, we would use:
-% cfg.scale.method = 'min0max1';
-% cfg.scale.estimation = 'all'; % scaling across all data is equivalent to no scaling (i.e. will yield the same results), it only changes the data range which allows libsvm to compute faster
-% because we want model parameters, we disable scaling
-cfg.scale.method = 'none';
-% and acknowledge that you know that libsvm can be very slow without scaling
-cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; 
+% cfg.scale.method = 'min0max1global';
+% cfg.scale.estimation = 'all'; % scaling 'all' data with ''min0max1global'
+% This will be set automatically for libsvm if no scaling method is specified.
+%   is equivalent to no scaling for decoding results, i.e. it will yield 
+%   the same decoding results. It will however changes the data range, and
+%   thus model parameters, such as weights and patterns. Because we want 
+%   the model parameters for visualisation, we set
+cfg.scale.method = 'none'; % first disable scaling
+cfg.scale.force_libsvm_no_scaling = 1; % then force that it stays disabled
+cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; % and acknowledge that we know that libsvm can be very slow without scaling
 
 %% Run decoding
 [results, cfg] = decoding(cfg, passed_data);

@@ -1,4 +1,9 @@
+%% Benchmark for TDT
+% Adapted to new default scaling ('min0max1global', estimate: 'all')
+% runs from Version:3.999F 2022/08/15
+
 tests.basic = 1;
+tests.basic_without_default_scaling = 1; % old "test.basic", libsvm with scaling "none" (can take ages to run, that's why we changed the default to scale data when using libsvm) 
 tests.subset = 1;
 tests.nokernel = 1;
 tests.multiple = 1; % multiple results
@@ -37,8 +42,11 @@ defaults.files.mask = fullfile(beta_dir,'mask.img');
 defaults = decoding_describe_data(defaults,{labelname1 labelname2},[1 -1],design_from_spm(beta_dir),beta_dir);
 defaults.design = make_design_cv(defaults); 
 
-%% First test:
+%% First test
 % Check that normal searchlight analysis runs and returns correct results
+% In the past, we used "scaling: none" as default, also for libsvm. This
+% can take ages to compute, so we use now "min0max1global". The results thus
+% changed slightly. Below is the old tests.basic.
 
 if tests.basic
     
@@ -49,6 +57,7 @@ if tests.basic
     cfg.searchlight.unit = 'mm';
     cfg.searchlight.radius = 10;
     cfg.searchlight.spherical = 1;
+
     cfg.verbose = 2; % checked verbosity: all good
     cfg.results.overwrite = 1;
     cfg.plot_design = 0;
@@ -56,13 +65,48 @@ if tests.basic
     results = decoding(cfg);
         
     fnames = spm_select('fplistrec',fdir,['^' cfg.results.filestart '_accuracy_minus_chance.*\.img$']);
-    [all_same, diff_vol, diff_ind] = compare_volumes(fnames);
+    [all_same, diff_vol, diff_ind,maxabs_diff] = compare_volumes(fnames);
     if ~all_same
         error('Some voxels are not the same as the reference. Please check!')
     end
-        
-    
 end
+
+    %% First test without default scaling for libsvm (takes a bit longer, you can skip it):
+    % Old tests.basic. Like above, but without scaling the data. This can take
+    % ages to run, which is why we decided to change the default behaviour.
+    % The results are not numerically identical when using scaling, but in
+    % quite similar.
+    % Check that normal searchlight analysis runs and returns correct results
+    
+    if tests.basic_without_default_scaling
+        
+        clear cfg M
+        cfg = defaults;
+        cfg.results.filestart = 'SL10mm_makedesigncv_kernel_noscaling';
+        cfg.results.dir = fullfile(fdir,'results');
+        cfg.searchlight.unit = 'mm';
+        cfg.searchlight.radius = 10;
+        cfg.searchlight.spherical = 1;
+        % cfg.searchlight.wrap_control = 1;
+    
+        % do not use the following lines in your code except if neccessary
+        % check " >> help decoding_scale_data "
+        cfg.scale.method = 'none';
+        cfg.scale.force_libsvm_no_scaling = 1;
+        cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
+    
+        cfg.verbose = 2; % checked verbosity: all good
+        cfg.results.overwrite = 1;
+        cfg.plot_design = 0;
+    %     cfg.files = rmfield(cfg.files,'mask'); % checked: running analysis without providing mask works just as well
+        results = decoding(cfg);
+            
+        fnames = spm_select('fplistrec',fdir,['^' cfg.results.filestart '_accuracy_minus_chance.*\.img$']);
+        [all_same, diff_vol, diff_ind,maxabs_diff] = compare_volumes(fnames);
+        if ~all_same
+            error('Some voxels are not the same as the reference. Please check!')
+        end
+    end
 
 %% Second test
 % Check that subset of searchlights are calculated correctly (then we can
@@ -130,6 +174,7 @@ end
 
 %% Third test
 % repeat without kernel method and compare
+% this test also uses the default scaling (min0max1global and estimate all)
 
 if tests.nokernel
     
@@ -145,14 +190,18 @@ if tests.nokernel
     cfg.results.overwrite = 1;
     cfg.plot_design = 0;
     cfg.searchlight.subset = (30001:30050)';
+
+    % set 'classification' instead of 'classification_kernel' (the default)
     cfg.decoding.method = 'classification';
-    
+%             method: 'min0max1global'
+%     estimation: 'all'
+
     % Now run searchlight analysis
-    results = decoding(cfg);
+    [results, rcfg] = decoding(cfg); % rcfg returns the cfg with all values that will be set during the process of decoding
     
     % Finally, compare results at all 50 coordinates to the same
     % coordinates in the real brain volume
-    origfname = spm_select('fplistrec',fullfile(fdir,'reference'),'^SL10mm_makedesigncv_kernel_subset_acc.*\.img$');
+    origfname = spm_select('fplistrec',fullfile(fdir,'reference'),'^SL10mm_makedesigncv_kernel_acc.*\.img$');
     currfname = spm_select('fplistrec',fullfile(fdir,'results'),['^' cfg.results.filestart '_acc.*\.img$']);
     
     Vorig = spm_vol(char(origfname));
@@ -168,6 +217,9 @@ if tests.nokernel
         error('Wrong data in comparison!')
     end
     if any(Xorig-Xcurr)
+        figure('name', 'test3-differences')
+        subplot(2,1,1), scatter(Xorig, Xcurr)
+        subplot(2,1,2), hist3([Xorig, Xcurr])
         error('Difference in results detected')
     end
 
@@ -332,7 +384,12 @@ if tests.wholebrain
     cfg.decoding.method = 'classification';
     cfg.results.write = 2;
     cfg.results.output = {'accuracy_minus_chance','SVM_weights'};
-    
+    % getting weights is an exception where switching scaling off is neccessary
+    % check " >> help decoding_scale_data "
+    cfg.scale.method = 'none';
+    cfg.scale.force_libsvm_no_scaling = 1;
+    cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
+
     % Now run searchlight analysis
     results = decoding(cfg);
     
@@ -355,7 +412,12 @@ if tests.roi
     cfg.results.write = 2;
     cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     cfg.plot_selected_voxels = 1;
-    
+    % getting weights is an exception where switching scaling off is neccessary
+    % check " >> help decoding_scale_data "
+    cfg.scale.method = 'none';
+    cfg.scale.force_libsvm_no_scaling = 1;
+    cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
+
     % Now run searchlight analysis
     results = decoding(cfg);
     
@@ -387,7 +449,12 @@ if tests.roi_setwise
     cfg.results.write = 2;
     cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_weights_plusbias'};
     cfg.results.backgroundvalue = NaN;
-    
+    % getting weights is an exception where switching scaling off is neccessary
+    % check " >> help decoding_scale_data "
+    cfg.scale.method = 'none';
+    cfg.scale.force_libsvm_no_scaling = 1;
+    cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
+
     % Now run searchlight analysis
     results = decoding(cfg);
     
@@ -410,6 +477,11 @@ if tests.sl_setwise
     cfg.plot_design = 1;
     cfg.decoding.method = 'classification';
     cfg.results.output = {'accuracy_minus_chance','AUC_minus_chance','SVM_weights','SVM_pattern'};
+    % getting weights & patterns is an exception where switching scaling off is neccessary
+    % check " >> help decoding_scale_data "
+    cfg.scale.method = 'none';
+    cfg.scale.force_libsvm_no_scaling = 1;
+    cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1;
 
     results = decoding(cfg);
       

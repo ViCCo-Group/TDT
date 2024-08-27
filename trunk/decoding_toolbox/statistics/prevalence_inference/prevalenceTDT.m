@@ -73,6 +73,7 @@
 % Author: Kai, adapted from Code by Carsten Allefeld
 %
 % HIST:
+%   2024/08/27: Bugfix for ROI results (data of ROI1 written to all .img files -- thanks to Marie!)
 %   2016/08/03: Version 1 for TDT based on Carstens function from  2016/08/02
 %
 % DISCLAIMER: This function is in beta stage. It seem to work as it should,
@@ -203,7 +204,7 @@ else
             else
                 curr_outputfilename = [outputfilename '_mask' int2str(m_ind)]; % add mask number to image
             end
-            prevalence_savedata_to_images(curr_outputfilename, mask{1}, vol, results, m_ind); % save value of current ROI to all voxels of the current ROI
+            prevalence_savedata_to_images(curr_outputfilename, mask{m_ind}, vol, results, m_ind); % save value of current ROI to all voxels of the current ROI
         end
     else
         

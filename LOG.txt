@@ -1,3 +1,6 @@
+* 3.999G 2024/08/27
+Fixed bug that all prevalence result img files for ROIs contained results of first ROI
+
 * 3.999F 2022/08/15
 - Added min0max1global scaling and improved auto-speedup detection for libsvm
 - Added demo13 how to load a design from a .csv

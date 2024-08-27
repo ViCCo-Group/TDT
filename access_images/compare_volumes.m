@@ -57,3 +57,16 @@ end
 diff_vol = sum(abs(diff(V,1,4)),4);
 diff_ind = find(diff_vol());
 maxabs_diff = max(abs(diff_vol));
+
+if size(V, 4) == 2
+    v1 = V(:,:,:,1);
+    v2 = V(:,:,:,2);
+    figure('Name','Current result vs expected Reference, hist3')
+    v_hist = [v1(:), v2(:)];
+    disp('remove rows with only 0 for hist3 plot')
+    v_hist = v_hist(v_hist(:, 1) ~=0 | v_hist(:, 2) ~= 0, :);
+    hist3(v_hist)
+    figure('Name','Current result vs expected Reference, scatter')
+    scatter(v1(:), v2(:));
+    title('Current result vs expected Reference')
+end

@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version:3.999F 2022/08/15, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version:3.999G 2024/08/27, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable

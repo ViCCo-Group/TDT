@@ -1,3 +1,7 @@
+* 3.999H 2024/10/11
+Fixed liblinear train and test (parameters not correct for regression, no 
+model was returned) & fixed transres_signed_decision_values
+
 * 3.999G 2024/08/27
 Fixed bug that all prevalence result img files for ROIs contained results of first ROI
 

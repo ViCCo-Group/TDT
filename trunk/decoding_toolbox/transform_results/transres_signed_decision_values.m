@@ -43,22 +43,27 @@ n_label = size(all_labels,1);
 
 if size(keepind,1) ~= n_label % if this is the first iteration or there was any change
     
-    % we will run a check if all training labels in all runs are the same and have the same identity and count (not necessarily order) as the test labels
-    test_labels = decoding_out(1).true_labels;
-    if ~isequal(all_labels,uniqueq(test_labels))
-        error('Some runs have different labels than others. transres_accuracy_matrix cannot deal with this case yet (sorry, it''s really difficult to code, see code for a detailed description). Please set up a design that does all pairwise classifications and use output sensitivity and specificity.')
-    end
-    prev = sort(decoding_out(1).model.Label);
-    for i_step = 2:length(decoding_out)
-        s = sort(decoding_out(i_step).model.Label);
-        test_labels = decoding_out(i_step).true_labels;
-        if (length(prev) ~= length(s)) || any(prev ~= s) || (n_label == length(s) && any(all_labels ~= s))
-            error('Number and/or identity of training labels and/or test labels is not the same across all steps. Unfortunately transres_accuracy_matrix cannot deal with this case yet.  Please set up a design that does all pairwise classifications and use output sensitivity and specificity.')
-        end
+    % this check is for libsvm
+    try
+        % we will run a check if all training labels in all runs are the same and have the same identity and count (not necessarily order) as the test labels
+        test_labels = decoding_out(1).true_labels;
         if ~isequal(all_labels,uniqueq(test_labels))
             error('Some runs have different labels than others. transres_accuracy_matrix cannot deal with this case yet (sorry, it''s really difficult to code, see code for a detailed description). Please set up a design that does all pairwise classifications and use output sensitivity and specificity.')
         end
-        prev = s;
+        prev = sort(decoding_out(1).model.Label);
+        for i_step = 2:length(decoding_out)
+            s = sort(decoding_out(i_step).model.Label);
+            test_labels = decoding_out(i_step).true_labels;
+            if (length(prev) ~= length(s)) || any(prev ~= s) || (n_label == length(s) && any(all_labels ~= s))
+                error('Number and/or identity of training labels and/or test labels is not the same across all steps. Unfortunately transres_signed_decision_values cannot deal with this case yet. ')
+            end
+            if ~isequal(all_labels,uniqueq(test_labels))
+                error('Some runs have different labels than others. transres_signed_decision_values cannot deal with this case yet (sorry, it''s really difficult to code, see code for a detailed description).')
+            end
+            prev = s;
+        end
+    catch
+        warningv('TRANSRES_SIGNED_DECISION_VALUES:NOLIBSVM','Running transres_signed_decision_values without libsvm, assuming label sorting does not affect results (should be fine if the same 2 labels are used throughout).')
     end
     
     % For speeding everything up, we will use a matrix that we define here that
@@ -90,7 +95,11 @@ for i_step = 1:n_step
     test_labels = decoding_out(i_step).true_labels;
     
     % get the unique labels and their order for the model
+    try % assuming libsvm
     ulabel = decoding_out(i_step).model.Label;
+    catch
+        warningv('TRANSRES_SIGNED_DECISION_VALUES:NOLIBSVM','Running transres_signed_decision_values without libsvm, assuming label sorting does not affect results (should be fine if the same 2 labels are used throughout).')
+    end
     % get the decision values
     dv  = decoding_out(i_step).decision_values;
     

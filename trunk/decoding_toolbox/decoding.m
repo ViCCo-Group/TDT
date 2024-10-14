@@ -1,6 +1,6 @@
 % function [results, cfg, passed_data, misc] = decoding(cfg, passed_data, misc)
 %
-% The Decoding Toolbox, Version:3.999H 2024/10/11, by Martin Hebart & Kai Goergen
+% The Decoding Toolbox, Version:3.999H 2024/10/14, by Martin Hebart & Kai Goergen
 %
 % This is the main function of The Decoding Toolbox which links to all
 % subfunctions performed for brain image decoding. This toolbox is capable
@@ -180,7 +180,7 @@
 % previously identical training data
 
 % HISTORY (only major changes)
-% 2024-10 Kai & Martin & Tobi - fixed liblinear
+% 2024-14 Kai & Martin & Tobi - fixed liblinear
 % 2022-08 Kai & Martin
 %   Added min0max1global scaling and auto-speedup for libsvm decoding
 % 2016-07 Martin
@@ -252,7 +252,7 @@ verbose = cfg.verbose;
 reports = []; % init
 
 % Display version
-ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), 3.999H 2024/10/11'; % also change header of this file and in LOG.txt (maybe year in LICENSE.txt)
+ver = 'The Decoding Toolbox (by Martin Hebart & Kai Goergen), 3.999H 2024/10/14'; % also change header of this file and in LOG.txt (maybe year in LICENSE.txt)
 cfg.info.ver = ver;
 dispv(1,ver)
 dispv(1,'Preparing analysis: ''%s''',cfg.analysis)

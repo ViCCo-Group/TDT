@@ -1,4 +1,4 @@
-* 3.999H 2024/10/11
+* 3.999H 2024/10/14
 Fixed liblinear train and test (parameters not correct for regression, no 
 model was returned) & fixed transres_signed_decision_values
 

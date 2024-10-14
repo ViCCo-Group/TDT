@@ -3,7 +3,7 @@
 % Wrapper function for liblinear. For paramters etc, see 
 %   "help liblinear_train"
 %
-% Last adapted by Kai, 2024-10-11 (thanks Tobi!)
+% Last adapted by Kai, 2024-10-14 (thanks Tobi!)
 
 function decoding_out = liblinear_test(labels_test,data_test,cfg,model)
 
@@ -25,3 +25,4 @@ decoding_out.predicted_labels = predicted_labels;
 decoding_out.true_labels = labels_test;
 decoding_out.decision_values = decision_values;
 decoding_out.model = model;
+decoding_out.opt = [];

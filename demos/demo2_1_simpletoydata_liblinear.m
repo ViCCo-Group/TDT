@@ -1,5 +1,8 @@
 % This script is a demo showing some simple decoding on simulated toy data.
 % The toy data are simple matlab matrices and no "real" fMRI or EEG data.
+%
+% This is an adaptation of demo2 which uses the liblinear classifier
+% instead of the libsvm classifier.
 
 clear all
 dbstop if error % if something goes wrong
@@ -14,8 +17,11 @@ cfg = decoding_defaults;
 % cfg.results.dir = % e.g. 'toyresults'
 cfg.results.write = 0; % no results are written to disk
 
+% set liblinear as software and specify parameters
+% parameters specification needed for liblinear, see "help liblinear_train"
+cfg.decoding.software = 'liblinear';
 cfg.decoding.method = 'classification';
-cfg.decoding.train.classification.model_parameters = '-s 0 -t 0 -c 1 -b 0 -q'; % default for libsvm: -s 0 -t 0 -c 1 -b 0 -q
+cfg.decoding.train.classification.model_parameters = '-s 1 -B 0 -q';
 
 %% generate some toy data
 % define number of "runs" and center means
@@ -79,7 +85,7 @@ cfg = decoding_defaults(cfg);
 
 % Set the analysis that should be performed (here we only want to do one decoding analysis on all data, so we choose wholebrain)
 cfg.analysis = 'wholebrain';
-cfg.results.output = {'accuracy', 'model_parameters'}; % add if you want to see the model
+cfg.results.output = {'accuracy'} % 'model_parameters'; % add if you want to see the model
 
 %% Nothing needs to be changed below for a standard leave-one-run out cross validation analysis.
 % Create a leave-one-run-out cross validation design:
@@ -99,6 +105,7 @@ cfg.plot_selected_voxels = 1;
 %   thus model parameters, such as weights and patterns. Because we want 
 %   the model parameters for visualisation, we set
 cfg.scale.method = 'none'; % first disable scaling
+% the following are only important for libsvm, but dont hurt for liblinear
 cfg.scale.force_libsvm_no_scaling = 1; % then force that it stays disabled
 cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; % and acknowledge that we know that libsvm can be very slow without scaling
 
@@ -107,7 +114,7 @@ cfg.scale.IKnowThatLibsvmCanBeSlowWithoutScaling = 1; % and acknowledge that we 
 
 %% Print decision boundary in figure
 
-if isfield(results, 'model_parameters')
+if isfield(results, 'model_parameters') %% will currently not work for liblinear
     if length(cfg.decoding.method) >= 6 && strcmp(cfg.decoding.method(end-6:end), '_kernel')
         error('Sorry, plotting does only work for non-kernel methods at the moment')
     end
@@ -121,5 +128,3 @@ if isfield(results, 'model_parameters')
     contour(X,Y,Z, -1:1);
     hold off
 end
-
-dbclear if error

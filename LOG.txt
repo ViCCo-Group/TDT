@@ -1,3 +1,7 @@
+* 3.999I 2025/02/19
+Fixed libsvm_multitarget test (model was returned with wrong name) & 
+adapted transres_predicted_(and_true_)labels_multitarget + demo12
+
 * 3.999H 2024/10/14
 Fixed liblinear train and test (parameters not correct for regression, no 
 model was returned) & fixed transres_signed_decision_values

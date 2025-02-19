@@ -50,7 +50,7 @@ P2 = 20000; % number of 2nd level permutations, should be put to something like 
 %    make_design_permutation()
 % to create permutations for each subject in TDT (see e.g. demo8 and demo9)
 % or you can download searchlight, wholebrain and ROI example data here:
-   https://sites.google.com/site/tdtdecodingtoolbox/home/download
+%   https://sites.google.com/site/tdtdecodingtoolbox/home/download
 % and then demo_prevalenceInference_TDTdata_demodata.zip.
 
 %% Load data

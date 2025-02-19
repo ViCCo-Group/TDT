@@ -25,7 +25,11 @@ decoding_out = struct;
 for model_ind = 1:n_models
     curr_labels_test = cellfun(@(x)x(model_ind), labels_test);
     curr_model = model{model_ind};
-    decoding_out.output{model_ind} = libsvm_test(curr_labels_test,data_test,cfg,curr_model); % forward current model and respective labels to standard function
+    
+    % old name for model (model was stored but not with standard name)
+    % decoding_out.output{model_ind} = libsvm_test(curr_labels_test,data_test,cfg,curr_model); % forward current model and respective labels to standard function
+    decoding_out.model{model_ind} = libsvm_test(curr_labels_test,data_test,cfg,curr_model); % forward current model and respective labels to standard function
+    decoding_out.opt{model_ind} = []; % not stored originally
 end
 
 % alternative way for e.g. one output per test (e.g. calculate euclidean

@@ -1,0 +1,9 @@
+for a new version:
+
+1. Make sure all files are added to the SVN
+2. Change Version number + date (I think only in LOG and decoding)
+3. Create folder tdt_XXX and tdt_XXX/decoding_toolbox
+4. SVN EXPORT to this folder
+5. zip
+6. Upload (currently shared folder in gdrive)
+7. Check that all links on our webpage work

@@ -15,17 +15,17 @@ cfg = decoding_defaults;
 cfg.analysis = 'searchlight';
 
 % Set the output directory where data will be saved, e.g. 'c:\exp\results\buttonpress'
-cfg.results.dir = '/Users/hebartmn/Downloads/temptemp2';
+cfg.results.dir = '/path/to/results';
 
 % Set the filepath where your SPM.mat and all related betas are, e.g. 'c:\exp\glm\model_button'
-beta_loc = '/Users/hebartmn/Downloads/sub01_firstlevel/sub01_GLM';
+beta_loc = '/path/to/first_level_model';
 
 % Set the filename of your brain mask (or your ROI masks as cell matrix) 
 % for searchlight or wholebrain e.g. 'c:\exp\glm\model_button\mask.img' OR 
 % for ROI e.g. {'c:\exp\roi\roimaskleft.img', 'c:\exp\roi\roimaskright.img'}
 % You can also use a mask file with multiple masks inside that are
 % separated by different integer values (a "multi-mask")
-cfg.files.mask = '/Users/hebartmn/Downloads/sub01_firstlevel/sub01_GLM/mask.img';
+cfg.files.mask = fullfile(beta_loc,'mask.nii');
 
 % Set the label names to the regressor names which you want to use for 
 % your similarity analysis, e.g.

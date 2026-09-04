@@ -25,7 +25,7 @@ if cfg.testmode, display('Testmode'), keyboard, end
 % Add path to this toolbox
 % If this function is in same path as the toolbox, simply comment the line
 % (then the path will be set automatically).
-addpath(['/Users/kai/Documents/!Projekte/Decoding_Toolbox/trunk/decoding_toolbox/'])
+addpath(fileparts(fileparts(mfilename('fullpath'))))
 
 % Enter which analysis method you like
 % The standard decoding method is searchlight, but we should still enter 
@@ -33,7 +33,7 @@ addpath(['/Users/kai/Documents/!Projekte/Decoding_Toolbox/trunk/decoding_toolbox
 cfg.analysis = 'searchlight';
 
 % Specify where the results should be saved
-cfg.results.dir = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/results/buttonpress_onehand1']; 
+cfg.results.dir = '/path/to/results';
 cfg.results.overwrite = 1;
 %% Second, get the file names, labels and run number of each brain image
 % file to use for decoding.
@@ -52,7 +52,7 @@ cfg.results.overwrite = 1;
 % the following block.
 
 % Specify the directory to your SPM.mat and all related beta images:
-beta_loc = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/Martin buttonpresses onehand/buttonpress_onehand'];
+beta_loc = '/path/to/first_level_model';
 % Specify the label names that you gave your regressors of interest in the 
 % SPM analysis (e.g. 'button left' and 'button right').
 % Case sensitive!
@@ -62,7 +62,7 @@ labelname2 = ['right'];
 % Also set the path to the brain mask(s) (e.g.  created by SPM: mask.img). 
 % Alternatively, you can specify (multiple) ROI masks as a cell or string 
 % matrix).
-cfg.files.mask = ['/Users/kai/Documents/!Projekte/Decoding_Toolbox/testdata/Martin buttonpresses onehand/buttonpress_onehand/mask.img'];
+cfg.files.mask = fullfile(beta_loc,'mask.nii');
 
 % The following function extracts all beta names and corresponding run
 % numbers from the SPM.mat (and adds 'bin 1' to 'bin m', if a FIR design 

@@ -1,4 +1,4 @@
-* 3.999J 2026/09/04
+* 3.999K 2026/09/04
 - Added SPM25 support using SPM12-compatible image-access adapters, plus
   forward-compatible SPM26 dispatch adapters.
 - Fixed class-order-dependent multiclass confusion matrices by resolving

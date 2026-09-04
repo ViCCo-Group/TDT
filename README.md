@@ -2,12 +2,12 @@
 
 TDT is a MATLAB toolbox for multivariate analysis of functional and structural MRI data. It supports searchlight, region-of-interest, and whole-brain analyses, together with classification, regression, representational similarity analysis, feature selection, and parameter selection.
 
-The current stable version is **3.999J**. Download the ready-to-use ZIP from the [latest GitHub release](https://github.com/ViCCo-Group/TDT/releases/latest). The default `main` branch tracks stable releases; ongoing development is kept on the `develop` branch.
+The current stable version is **3.999K**. Download the ready-to-use ZIP from the [latest GitHub release](https://github.com/ViCCo-Group/TDT/releases/latest). The default `main` branch tracks stable releases; ongoing development is kept on the `develop` branch.
 
 ## Requirements
 
-- MATLAB 7.3 or later. Version 3.999J was release-tested with MATLAB R2021b.
-- SPM or AFNI for reading and writing brain images. TDT 3.999J adds tested SPM25 support. It also includes forward-compatible SPM26 dispatch adapters, but SPM26 was not available for direct release testing.
+- MATLAB 7.3 or later. Version 3.999K was release-tested with MATLAB R2021b.
+- SPM or AFNI for reading and writing brain images. TDT 3.999K adds tested SPM25 support. It also includes forward-compatible SPM26 dispatch adapters, but SPM26 was not available for direct release testing.
 - A working MEX build of LIBSVM or LIBLINEAR when using those classifiers. Precompiled builds are included for several platforms; see [README.txt](decoding_toolbox/README.txt) if recompilation is necessary.
 
 ## Installation
@@ -17,7 +17,7 @@ The current stable version is **3.999J**. Download the ready-to-use ZIP from the
 3. Add SPM or AFNI to the MATLAB path if you will work with brain-image files.
 
 ```matlab
-addpath('/path/to/tdt_3.999J/decoding_toolbox')
+addpath('/path/to/tdt_3.999K/decoding_toolbox')
 cfg = decoding_defaults;
 ```
 

@@ -402,6 +402,28 @@ else
     end
     cfg.design.n_cond_per_step = n_unique_labels(1);
 
+    if cfg.design.n_cond_per_step > 2
+        output_names = cell(size(cfg.results.output));
+        for i_output = 1:length(cfg.results.output)
+            output_names{i_output} = char(cfg.results.output{i_output});
+        end
+        if any(strcmpi(output_names,'confusion_matrix'))
+            compatible_method = any(strcmpi(cfg.decoding.method,{'classification','classification_kernel'}));
+            probability_output = false;
+            if compatible_method
+                test_parameters = cfg.decoding.test.(cfg.decoding.method).model_parameters;
+                probability_output = ~isempty(regexp(test_parameters,'(^|\s)-b\s+1(\s|$)','once'));
+            end
+            resolve_multiclass_vote_ties = strcmpi(cfg.decoding.software,'libsvm') && compatible_method && ~probability_output;
+            if resolve_multiclass_vote_ties
+                dispv(1,'Multiclass confusion-matrix information: tied one-vs-one votes are resolved using decision-value strength. The tied class with the largest total absolute decision-value support is selected; exact strength ties use the first sorted label. Rows with exact-zero margins retain LIBSVM''s label.')
+            end
+        end
+        if any(strcmpi(output_names,'confusion_matrix_plus_undecided'))
+            dispv(1,'Multiclass confusion-matrix information: confusion_matrix_plus_undecided retains non-unique one-vs-one vote outcomes in its additional undecided column.')
+        end
+    end
+
 
     problem = 0;
     for i_step = 1:n_steps

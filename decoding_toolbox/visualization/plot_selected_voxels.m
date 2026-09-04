@@ -142,7 +142,7 @@ if  cfg.handle_focus
     try
         set(0,'CurrentFigure',fighdl)
     catch %#ok<CTCH>
-        display('Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
+        dispv(2,'Could not select previous figure handle, maybe figure has been closed. Creating a new one.')
         fig_name = ['Online ROI, showing 1/' num2str(cfg.plot_selected_voxels) ' steps (cfg.plot_selected_voxels=0 for more speed)'];
         do_labeling_and_view = true;
         % check if a design figure exists, if so, put this figure next to it

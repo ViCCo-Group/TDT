@@ -1,3 +1,11 @@
+* 3.999J 2026/09/04
+- Added SPM25 support using SPM12-compatible image-access adapters, plus
+  forward-compatible SPM26 dispatch adapters.
+- Fixed class-order-dependent multiclass confusion matrices by resolving
+  tied LIBSVM one-vs-one votes using decision-value strength.
+- Fixed LIBSVM probability output when model labels are not sorted.
+- Reduced routine output for passed-data, plotting, and disabled result writing.
+
 * 3.999I 2025/02/19
 Fixed libsvm_multitarget test (model was returned with wrong name) & 
 adapted transres_predicted_(and_true_)labels_multitarget + demo12

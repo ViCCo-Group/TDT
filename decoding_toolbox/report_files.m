@@ -10,7 +10,6 @@ local_verbose = 2; % verbosity of current file
 
 if ~cfg.results.write
     if verbose < local_verbose
-        dispv(1, ['report_files:Skipping reporting files because cfg.results.write=1 and (global verbose) ' num2str(verbose) ' >= ' num2str(local_verbose) ' (local verbosity level)'])
         return % nothing to do
     end
     inputfilenames_fid = ''; % this will prevent writing to file/only to screen

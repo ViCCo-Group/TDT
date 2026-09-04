@@ -90,7 +90,11 @@ if exist('passed_data', 'var')
     % check mask(s)
     if length(cfg.files.mask) ~= length(passed_data.files.mask)
         if isempty(passed_data.files.mask) && length(cfg.files.mask) == 1
-            warningv('decoding_load_data:passed_data_not_equal_but_probably_ok', 'No mask file names are provided in passed_data, but there is only 1 mask file in cfg.files.mask, assuming that is ok.')
+            if isempty(cfg.files.mask{1}) || strcmpi(cfg.files.mask{1},'all voxels')
+                dispv(2,'No mask file names are provided in cfg or passed_data; using passed_data.mask_index.')
+            else
+                warningv('decoding_load_data:passed_data_not_equal_but_probably_ok','No mask file names are provided in passed_data, but there is only 1 mask file in cfg.files.mask, assuming that is ok.')
+            end
         else
             warningv('decoding_load_data:passed_data_not_equal', 'Number of mask files in passed_data is not equal to number of mask files in cfg.files.mask')
             checks_ok = 0;

@@ -1,0 +1,8 @@
+.DS_Store
+*.asv
+*.m~
+*.swp
+
+# Generated release-test output that must not enter the repository.
+decoding_toolbox/decoding_searchlight/
+decoding_toolbox/stuff_image_info.csv

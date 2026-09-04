@@ -18,9 +18,12 @@
 %                          values are in CANONCIAL  form, i.e. as if the 
 %                          labels would have been provided to libsvm sorted.
 %                          I.e. this is then NOT the output of libsvm.
-%                          E.g.: columns of dv for labels [2 4 1] are 
-%                          1vs2 1vs4 2vs4. 
-%                          For more on multiclass, see text in the header 
+%                          E.g.: columns of dv for labels [2 4 1] are
+%                          1vs2 1vs4 2vs4.
+%                          With LIBSVM probability output (-b 1), this
+%                          field contains one probability column per
+%                          class, reordered to ascending label order.
+%                          For more on multiclass, see text in the header
 %                          below this (i.e. type edit libsvm_test.m and 
 %                          scroll down).
 %            decoding_out.model: the libsvm model as from libsvm_train
@@ -45,9 +48,11 @@
 % predicted, the value will be positive, if the second is predicted, the
 % value will be negative. Now there are three predictions for one
 % predicted label where all will definitely be wrong because the comparison
-% doesn't contain the predicted label. One-vs-one chooses the label by 
+% doesn't contain the predicted label. One-vs-one chooses the label by
 % majority vote. If there is a draw, the first label is chosen by default
-% (which is maybe a strange choice, but reproducible).
+% by libsvm. transres_confusion_matrix instead resolves these draws using
+% decision-value strength; transres_confusion_matrix_plus_undecided reports
+% them in an additional undecided column.
 
 function decoding_out = libsvm_test(labels_test,data_test,cfg,model)
 
@@ -56,16 +61,16 @@ try
 
         case 'classification'
             if isstruct(data_test), error('Classification wiithout kernel needs the data in vector format'), end
-            [predicted_labels, accuracy, decision_values] = svmpredict(labels_test,data_test,model,cfg.decoding.test.classification.model_parameters); %#ok<*ASGLU>
-            % The following line brings the decision value matrix in canonical form
-            decision_values = sort_results(decision_values,model.Label);
+            test_parameters = cfg.decoding.test.classification.model_parameters;
+            [predicted_labels,accuracy,decision_values] = svmpredict(labels_test,data_test,model,test_parameters); %#ok<*ASGLU>
+            decision_values = sort_results(decision_values,model.Label,test_parameters);
             
         case 'classification_kernel'
             % libsvm needs labels for each input, if a kernel is given, thus we
             % add (1:size(data_test,1))' as first column to input data
-            [predicted_labels, accuracy, decision_values] = svmpredict(labels_test,[(1:size(data_test.kernel,1))'  data_test.kernel],model,cfg.decoding.test.classification_kernel.model_parameters);
-            % The following line brings the decision value matrix in canonical form
-            decision_values = sort_results(decision_values,model.Label);
+            test_parameters = cfg.decoding.test.classification_kernel.model_parameters;
+            [predicted_labels,accuracy,decision_values] = svmpredict(labels_test,[(1:size(data_test.kernel,1))'  data_test.kernel],model,test_parameters);
+            decision_values = sort_results(decision_values,model.Label,test_parameters);
 
         case 'regression'
             if isstruct(data_test), error('Regression without kernel needs the data in vector format'), end
@@ -101,12 +106,29 @@ end
 
 
 
-function decision_values = sort_results(decision_values,labelorder)
+function decision_values = sort_results(decision_values,labelorder,test_parameters)
+
+% With -b 1, LIBSVM returns one probability column per model label rather
+% than one decision-value column per label pair. Put those columns in TDT's
+% ascending label order, but do not apply the pairwise sign correction.
+persistent previous_test_parameters probability_output
+if isempty(previous_test_parameters) || ~isequal(test_parameters,previous_test_parameters)
+    previous_test_parameters = []; %#ok<NASGU> % invalidate before rebuilding
+    new_probability_output = ~isempty(regexp(test_parameters,'(^|\s)-b\s+1(\s|$)','once'));
+    probability_output = new_probability_output;
+    previous_test_parameters = test_parameters; % commit cache key last so interrupted rebuilds remain safe
+end
+if probability_output
+    [~,probability_sort_vector] = sort(labelorder);
+    decision_values = decision_values(:,probability_sort_vector);
+    return
+end
 
 if issorted(labelorder)
     return
 end
 
+persistent previous_labelorder sort_vector sorted_sign_vector
 n_label = size(labelorder,1);
 
 if n_label == 2 % if two labels
@@ -116,18 +138,29 @@ if n_label == 2 % if two labels
     end
     
 else % if more than two labels
-  
-    [a,b] = meshgrid(1:n_label,1:n_label);
-    c = tril(true(n_label),-1); % this is our logical index selecting the lower triangular matrix
-    d = [a(c) b(c)];
-    e = labelorder(d);
-    sign_vector = 2*double( e(:,2) > e(:,1) ) -1;
-    [trash,sort_vector] = sortrows( [min(e,[],2) max(e,[],2)]); % just sorting is not enough, they also need to be put in the correct order
+
+    % The permutation and signs depend only on model.Label, which normally
+    % repeats across many calls. Cache only this mapping; decision values
+    % themselves are always taken from the current svmpredict call.
+    if isempty(previous_labelorder) || ~isequal(labelorder,previous_labelorder)
+        % Invalidate first and commit the key last. If the user interrupts
+        % rebuilding, the next call rebuilds instead of using partial data.
+        previous_labelorder = []; %#ok<NASGU> % invalidate before rebuilding
+        [a,b] = meshgrid(1:n_label,1:n_label);
+        c = tril(true(n_label),-1); % this is our logical index selecting the lower triangular matrix
+        d = [a(c) b(c)];
+        e = labelorder(d);
+        sign_vector = 2*double(e(:,2)>e(:,1))-1;
+        [trash,sort_vector] = sortrows([min(e,[],2) max(e,[],2)]); % just sorting is not enough, they also need to be put in the correct order
+        sorted_sign_vector = sign_vector(sort_vector)';
+        previous_labelorder = labelorder; % commit cache key last so interrupted rebuilds remain safe
+    end
     
     % OLD BUG: wrong order of changing sign and resorting columns: changed
-    % sign of original column numbers but after sorting... (one step to hasty) 
+    % sign of original column numbers but after sorting... (one step to hasty)
 %     decision_values_old = bsxfun(@times,decision_values(:,sort_vector),sign_vector');
-    decision_values = bsxfun(@times,decision_values,sign_vector'); % change sign in each column to canoniccal order (e.g. 2vs1 -> 1vs2 by changing sign)  
-    decision_values = decision_values(:,sort_vector); % bring columns to canonical order
+    % Select the canonical columns first and apply their matching signs in
+    % the same operation. This is equivalent to the two former operations.
+    decision_values = bsxfun(@times,decision_values(:,sort_vector),sorted_sign_vector); % change sign and bring columns to canonical order (e.g. 2vs1 -> 1vs2)
     
 end

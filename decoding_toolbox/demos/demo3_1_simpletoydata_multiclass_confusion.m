@@ -1,16 +1,9 @@
-% This script is a demo showing 
-%   1. that libsvm handles assigns samples for which no clear class can be 
-%      predicted to label 1, and 
-% 2. that this can be visualised with 
-%           cfg.results.output = {'confusion_matrix_plus_undecided'};
-%       instead of 
-%           cfg.results.output = {'confusion_matrix'};
-% The reason why libsvm does this is that it is forced to do a decision,
-% and deciding for the first label is a) reproducibale and b) does not 
-% provide a systematic error for accuracy (but of course one for the
-% predictions). Look at the libsvm website for more on how libsvm handles 
-% multiclass cases (in short: they apply pairwise comparisons and then use
-% the majority vote).
+% This script compares two representations of tied multiclass votes:
+%   1. confusion_matrix resolves a vote tie using decision-value strength.
+%      The tied class with the largest total absolute decision-value
+%      support is selected.
+%   2. confusion_matrix_plus_undecided retains tied votes in an additional
+%      undecided column.
 %
 % You might need to run this function multiple times to see the effect (the
 % lower figure will have the number of the left column of the upper figure
@@ -160,35 +153,9 @@ if nrep > 1
     mean1_ci95_1 = [m1, ci95_1]
     mean2_ci95_2 = [m2, ci95_2]
 
-    % EXAMPLE result from this with nrep = 1000:
-    %
-    % mean1_ci95_1 =
-    %    Class1    Class2    Class3     CI95_1    CI95_2    CI95_3
-    %    35.1100   32.7275   32.1625    0.7280    0.6815    0.6908
-    %    35.3813   32.8075   31.8113    0.7075    0.7251    0.6967
-    %    35.2050   32.8950   31.9000    0.7009    0.6939    0.6942
-    % 
-    % 
-    % mean2_ci95_2 =
-    %    Class1    Class2    Class3     Undec     CI95_1    CI95_2    CI95_3    CI95_Undec
-    %    32.7488   32.7275   32.1625    2.3613    0.7184    0.6815    0.6908    0.1766
-    %    32.9838   32.8075   31.8113    2.3975    0.6976    0.7251    0.6967    0.1665
-    %    32.9387   32.8950   31.9000    2.2662    0.6845    0.6939    0.6942    0.1735
-    % 
-    % MEANING for (1) confusion matrix: about ~35.x % +-0.7x % CI95 fall in
-    %   the first class, in comparison to ~32.x % +-0.7x in class 2 and 3
-    %   (sig. difference and bias from about 2% for cass 1)
-    %
-    % which is shown in:
-    % 
-    % MEANING for (2) confusion matrix plus undecided:
-    %  about ~32.x % +-0.7x % CI95 fall in classes 1-3 (first three columns)
-    %  (no sig. difference)
-    %    and ~2.3x % +-0.17x % CI95 are undecided
-    %   
-    % NOTE that the amount of undecided classifications depends on many 
-    % things, including your signal and noise strength and type of your 
-    % data, the amount of classes in your multiclass, etc
+    % The first result assigns tied votes using their decision values. The
+    % second reports those samples in the final undecided column. The amount
+    % of tied classifications depends on the data and number of classes.
     
 %% Show original confusion matrix and confusion matrix with undecided cases
 else
@@ -232,23 +199,16 @@ else
      ' ';
      'About this script:';
      'This script is a demo showing';
-    '  1. that libsvm handles assigns samples for which no clear class can be';
-    '     predicted to label 1, and';
-    '2. that this can be visualised with';
-    '          cfg.results.output = {''confusion_matrix_plus_undecided''};';
-    '      instead of';
-    '          cfg.results.output = {''confusion_matrix''};';
-    'The reason why libsvm does this is that it is forced to do a decision,';
-    'and deciding for the first label is a) reproducibale and b) does not';
-    'provide a systematic error for accuracy (but of course one for the';
-    'predictions). Look at the libsvm website for more on how libsvm handles';
-    'multiclass cases (in short: they apply pairwise comparisons and then use';
-    'the majority vote).';
+    '1. confusion_matrix resolves tied one-vs-one votes using decision-value';
+    '   strength. The tied class with the largest total absolute support wins.';
+    '2. confusion_matrix_plus_undecided keeps tied votes in its additional';
+    '   undecided column.';
+    'If decision-value strengths are also exactly tied, confusion_matrix uses';
+    'the first label in sorted order.';
     ' ';
-    'You might need to run this function multiple times to see the effect (the';
-    'lower figure will have the number of the left column of the upper figure';
-    'as a combination of left column and ''undecided'')';
-    }
+    'You might need to run this function multiple times to see the effect; the';
+    'two outputs differ only for samples with a tied multiclass vote.';
+    };
     text(0, 0, infotext, 'Interpreter', 'None', 'FontSize', 8);
     axis off
 end
